@@ -65,6 +65,9 @@
   .dim { color: var(--dim); }
   strong { color: var(--accent); font-weight: 600; }
   ul { list-style: none; padding: 0; }
+  .skills { display: grid; grid-template-columns: max-content 1fr; gap: 0 1.5ch; margin: 0; }
+  .skills dt { color: var(--link); } .skills dd { margin: 0; }
+  @media (max-width: 480px) { .skills { grid-template-columns: 1fr; } .skills dd { padding-left: 2ch; } }
   li { padding-left: 2ch; text-indent: -2ch; }
   li::before { content: "› "; color: var(--dim); }
   a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
@@ -91,12 +94,25 @@
     <h1 class="out"><strong>Gabriel Martí</strong> <span class="dim">(@gabimarti)</span></h1>
     <p class="out"><span lang="en">Cybersecurity Consultant &amp; Developer · Spain</span><span lang="es">Consultor de Ciberseguridad y Desarrollador · España</span></p>
 
+    <p class="cmd">cat summary.txt</p>
+    <p class="out"><span lang="en">Cybersecurity consultant, reverser &amp; developer with 30+ years in software development, systems and training. Currently leading cybersecurity R&amp;D for wireless environments (hardware &amp; software), building with Python, AI agents and MCP. Former MSc lecturer in Reverse Engineering.</span><span lang="es">Consultor de ciberseguridad, reverser y desarrollador con más de 30 años en desarrollo de software, sistemas y formación. Actualmente lidero I+D en ciberseguridad para entornos inalámbricos (hardware y software), con Python, agentes de IA y MCP. Ex-docente de Ingeniería Inversa en máster.</span></p>
+
+    <h2 class="cmd">ls ~/skills</h2>
+    <dl class="out skills">
+      <dt>offensive/</dt><dd><span lang="en">pentesting · web &amp; mobile audits · DAST/SAST</span><span lang="es">pentesting · auditorías web y móvil · DAST/SAST</span></dd>
+      <dt>reversing/</dt><dd><span lang="en">reverse engineering · malware analysis · Ghidra</span><span lang="es">ingeniería inversa · análisis de malware · Ghidra</span></dd>
+      <dt>defense/</dt><dd><span lang="en">Wazuh · Fleet · Microsoft 365 security</span><span lang="es">Wazuh · Fleet · seguridad Microsoft 365</span></dd>
+      <dt>grc/</dt><dd><span lang="en">ENS · ISO 27001</span><span lang="es">ENS · ISO 27001</span></dd>
+      <dt>dev/</dt><dd><span lang="en">Python · C · AI agents &amp; MCP</span><span lang="es">Python · C · agentes de IA y MCP</span></dd>
+      <dt>languages/</dt><dd><span lang="en">Spanish · Catalan (native) · English</span><span lang="es">castellano · catalán (nativo) · inglés</span></dd>
+    </dl>
+
     <p class="cmd">cat interests.txt</p>
     <p class="out"><span lang="en">reverse engineering · forensics · red team<br>cryptography · wireless communications · ham radio</span><span lang="es">ingeniería inversa · análisis forense · red team<br>criptografía · comunicaciones inalámbricas · radioafición</span></p>
 
     <p class="cmd">cat about.txt</p>
     <ul class="out">
-      <li><span lang="en">MSc in Computer Security — La Salle (Barcelona)</span><span lang="es">Máster en Seguridad Informática — La Salle (Barcelona)</span></li>
+      <li><span lang="en">MSc in Cybersecurity — La Salle (Barcelona), thesis with honours</span><span lang="es">Máster en Ciberseguridad — La Salle (Barcelona), TFM con Matrícula de Honor</span></li>
       <li><span lang="en">Always learning a little bit of everything. There is always something to learn.</span><span lang="es">Siempre aprendiendo un poco de todo. Siempre hay algo que aprender.</span></li>
       <li><span lang="en">I like to collaborate on ambitious projects.</span><span lang="es">Me gusta colaborar en proyectos ambiciosos.</span></li>
     </ul>
