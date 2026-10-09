@@ -69,6 +69,11 @@
   .dim { color: var(--dim); }
   strong { color: var(--accent); font-weight: 600; }
   ul { list-style: none; padding: 0; }
+  .intro { display: grid; grid-template-columns: 1fr auto; gap: 0 2.5ch; align-items: start; }
+  .avatar { margin: 0; }
+  .avatar pre { margin: .3rem 0 0; font: 6.5px/1 ui-monospace, Consolas, "Cascadia Code", monospace; color: var(--fg); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (max-width: 640px) { .intro { grid-template-columns: 1fr; } .avatar { margin-top: 1rem; justify-self: center; } .avatar pre { font-size: 5px; } }
   .skills { display: grid; grid-template-columns: max-content 1fr; gap: 0 1.5ch; margin: 0; }
   .skills dt { color: var(--link); } .skills dd { margin: 0; }
   @media (max-width: 480px) { .skills { grid-template-columns: 1fr; } .skills dd { padding-left: 2ch; } }
@@ -95,12 +100,55 @@
     </div>
   </div>
   <main>
-    <p class="cmd">whoami</p>
-    <h1 class="out"><strong>Gabriel Martí</strong> <span class="dim">(@gabimarti)</span></h1>
-    <p class="out"><span lang="en">Cybersecurity Consultant &amp; Developer · Spain</span><span lang="es">Consultor de Ciberseguridad y Desarrollador · España</span></p>
-
-    <p class="cmd">cat summary.txt</p>
-    <p class="out"><span lang="en">Cybersecurity consultant, reverser &amp; developer with 30+ years in software development, systems and training. Currently leading cybersecurity R&amp;D for wireless environments (hardware &amp; software), building with Python, AI agents and MCP. Former MSc lecturer in Reverse Engineering.</span><span lang="es">Consultor de ciberseguridad, reverser y desarrollador con más de 30 años en desarrollo de software, sistemas y formación. Actualmente lidero I+D en ciberseguridad para entornos inalámbricos (hardware y software), con Python, agentes de IA y MCP. Ex-docente de Ingeniería Inversa en máster.</span></p>
+    <div class="intro">
+      <div>
+      <p class="cmd">whoami</p>
+      <h1 class="out"><strong>Gabriel Martí</strong> <span class="dim">(@gabimarti)</span></h1>
+      <p class="out"><span lang="en">Cybersecurity Consultant &amp; Developer · Spain</span><span lang="es">Consultor de Ciberseguridad y Desarrollador · España</span></p>
+  
+      <p class="cmd">cat summary.txt</p>
+      <p class="out"><span lang="en">Cybersecurity consultant, reverser &amp; developer with 30+ years in software development, systems and training. Currently leading cybersecurity R&amp;D for wireless environments (hardware &amp; software), building with Python, AI agents and MCP. Former MSc lecturer in Reverse Engineering.</span><span lang="es">Consultor de ciberseguridad, reverser y desarrollador con más de 30 años en desarrollo de software, sistemas y formación. Actualmente lidero I+D en ciberseguridad para entornos inalámbricos (hardware y software), con Python, agentes de IA y MCP. Ex-docente de Ingeniería Inversa en máster.</span></p>
+      </div>
+      <figure class="avatar">
+        <p class="cmd" aria-hidden="true">cat avatar.txt</p>
+        <pre aria-hidden="true">                   ..*@@@@@%%%%%%*:
+                .+%%%##********#*##%%-
+               +#*+=+++-------::....-+#+:
+             +*=-:::....        .....:::+*:
+            *+:--::...          ......:::=#-
+           +=---:::..             ......::=+.
+          =*=---::..                  ..:::+-
+         .=+=--::...                   ..::-=
+         .=+=--:::..       .        .  ..::=+.
+         :*+==-::......     .. .:-==:-=:.::=+.
+         :+***+++**+**==-:..:-=-=+=-:::-==-++:
+        :=+#*=+==+*=*#**#*::-=++*#***==--=**=::
+        :====--==--:-=+*#=...%-===-::::.:::::.:.
+        :--=-::::.::::::-:....:..:..::....:::.:.
+        :--=::::.....::--:................:.::..
+       .-----::.    :----:......-:.     ..:.:..:
+        .-:=---....:::==+++=---:.:::... .:: ..:
+           -=--::...:----::........::.:::::...
+           .--:::::.-===---::----:..   ......
+ .          --:::.::::--:.........:.    ......
+.....       :--:-::...::--::..  .  ..   .:....
+.............-=-:--:::::...    ..  :   .::....
+...............+=-==::::          :: ::-.......
+............. .-+**+==::.    .. :-----.  .....
+.....       ...:-=+**++==---=--===-::    ..
+....     . . ...-:-=====+++++=--:::.     ..
+       .  ::=@@%-::--:::..                  =#=:
+     .-=#@@@@@@+-..:::::::                   .@@@#+-
+ :=*%@@@@@@@@@@+:...:... :::..              =@@@@@@@@@*=.
+@@@@@@@@@@@@@@@#.. ....    .              =%@@@@@@@@@@@@@@#*
+@@@@@@@@@@@@@@@@*                      %@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@#-::.   .::-:-*%@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@%%%@@%@@@@@%@@%%%@%%%@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@%@%@%%@@%%%@%%%%%%@%%%%%%%%%%%%%%%%@%@@@@@@@@@@@@</pre>
+        <figcaption class="sr-only"><span lang="en">ASCII portrait of Gabriel Martí</span><span lang="es">Retrato ASCII de Gabriel Martí</span></figcaption>
+      </figure>
+    </div>
 
     <h2 class="cmd">ls ~/skills</h2>
     <dl class="out skills">
