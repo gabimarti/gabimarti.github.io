@@ -264,12 +264,12 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
         `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática")}`,
-        `<span class="dim">Shell:</span> gmsh 0.4`,
+        `<span class="dim">Shell:</span> gmsh 0.5`,
         `<span class="dim">${B("Languages", "Lenguajes")}:</span> Python, C, Delphi, ASM`,
         `<span class="dim">${B("Tools", "Herramientas")}:</span> Ghidra, Burp Suite, Wazuh`,
         `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz")}`,
       ];
-      pre(info.map((l, i) => `<span style="color:var(--accent)">${esc((logo[i] || "").padEnd(22))}</span>${l}`).join("\n"));
+      pre(info.map((l, i) => `<span class="ok">${esc((logo[i] || "").padEnd(22))}</span>${l}`).join("\n"));
     },
     fingerprint, myip, ping, dig, ifconfig, traceroute, nmap,
     netstat: () => pre(`Proto Local Address          Foreign Address        State
@@ -420,8 +420,8 @@ ${lab.join("\n")}
       if (!started) {
         started = true; setPrompt();
         type(print(""), es()
-          ? "gmsh 0.4 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
-          : "gmsh 0.4 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
+          ? "gmsh 0.5 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
+          : "gmsh 0.5 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
       }
       input.focus({ preventScroll: true });
     },

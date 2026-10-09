@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Gabriel Martí (@gabimarti) — Cybersecurity Consultant & Developer</title>
 <meta name="description" content="Gabriel Martí — Cybersecurity consultant & developer from Barcelona, Spain. Reverse engineering, malware and phishing analysis, pentesting, Python, C and AI agents.">
 <meta name="color-scheme" content="dark light">
@@ -24,11 +26,7 @@
 {"@context":"https://schema.org","@type":"Person","name":"Gabriel Martí","alternateName":"gabimarti","email":"mailto:contact@gabimarti.slmail.me","jobTitle":"Cybersecurity Consultant & Developer","url":"https://gabimarti.github.io/","address":{"@type":"PostalAddress","addressLocality":"Barcelona","addressCountry":"ES"},
 "sameAs":["https://github.com/gabimarti","https://x.com/310hkc41b","https://www.linkedin.com/in/gabimarti/","https://gabimarti.medium.com/"]}
 </script>
-<script>
-  // before first paint: JS flag (hides classic view until a mode is chosen) + saved theme
-  document.documentElement.classList.add("js");
-  try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
-</script>
+<script src="init.js"></script>
 <link rel="stylesheet" href="style.css">
 <script src="site.js" defer></script>
 </head>

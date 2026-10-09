@@ -11,6 +11,7 @@ A static site styled as a retro terminal, with no frameworks, no build step, no 
 - **Boot**: 90s-style BIOS POST (memory test, drive detection, system summary) with synthesized retro sounds (mute with 🔊), then a menu with two modes.
 - **Classic view**: everything on one page. It's also what you get without JavaScript, so search engines see the full content.
 - **Interactive shell** (`gmsh`, loaded only when chosen): a fake Linux terminal. Try `help`, `whoami`, `ls -a`, `cat avatar.txt`, `neofetch`, `myip`, `dig`… There are two flags to find, and a root challenge (`su`) that unlocks an encrypted CV.
+- Strict Content-Security-Policy (only own scripts and styles, no inline code).
 - Bilingual (EN/ES), light/dark theme toggle, fixed-size window, mobile-friendly, WCAG AA/AAA contrast.
 
 Direct links: [`?mode=classic`](https://gabimarti.github.io/?mode=classic) · [`?mode=shell`](https://gabimarti.github.io/?mode=shell) · [`#avatar`](https://gabimarti.github.io/#avatar)
@@ -28,7 +29,8 @@ Direct links: [`?mode=classic`](https://gabimarti.github.io/?mode=classic) · [`
 | `robots.txt` | Allows search engines, blocks AI training crawlers |
 | `.well-known/security.txt` | Security contact ([RFC 9116](https://www.rfc-editor.org/rfc/rfc9116)) |
 | `google*.html` | Google Search Console ownership verification |
-| `_config.yml` | GitHub Pages / Jekyll settings |
+| `init.js` | Pre-paint setup (JS flag + saved theme), a file so the CSP can forbid inline scripts |
+| `.nojekyll` | Publish files as-is (no Jekyll build) |
 
 ## Contact
 

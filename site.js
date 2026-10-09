@@ -21,7 +21,7 @@ const GM = (() => {
   // ---------- theme: saved override, otherwise system preference ----------
   const isLight = () => (root.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")) === "light";
   const themeIcon = () => { const b = $(".theme"); if (b) b.textContent = isLight() ? "☾" : "☀"; };
-  function setTheme(t) { root.dataset.theme = t; store("theme", t); themeIcon(); }
+  function setTheme(t) { if (t !== "light" && t !== "dark") return; root.dataset.theme = t; store("theme", t); themeIcon(); }
   const toggleTheme = () => setTheme(isLight() ? "dark" : "light");
 
   // ---------- sound: synthesized with Web Audio (no files). Browsers only allow it after a key/click. ----------
