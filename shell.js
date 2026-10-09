@@ -16,7 +16,8 @@
     const d = document.createElement("div"); d.className = "line " + cls; d.innerHTML = h; out.append(d);
     main.scrollTop = main.scrollHeight; return d;
   };
-  const err = h => print(h, "err"), pre = h => print(h, "pre");
+  const err = h => { GM.sfx.err(); return print(h, "err"); }, pre = h => print(h, "pre");
+  const rnd = n => Math.floor(Math.random() * n), pickN = (a, n) => [...a].sort(() => Math.random() - .5).slice(0, n);
   const disp = p => p === HOME || p.startsWith(HOME + "/") ? "~" + p.slice(HOME.length) : p;
   const promptHtml = () => `<span class="prompt${user === "root" ? " root" : ""}">${user}@${HOST}:${esc(disp(cwd))}${user === "root" ? "#" : "$"}</span>`;
   const setPrompt = txt => { promptEl.className = "prompt" + (user === "root" ? " root" : ""); promptEl.textContent = txt ?? `${user}@${HOST}:${disp(cwd)}${user === "root" ? "#" : "$"}`; };
@@ -58,7 +59,7 @@
       "TODO\n  [x] write 'El Arte de los Hashes' on Medium (cat ~/articles.txt)\n  [ ] stop forgetting the root password!!\n  [ ] delete the old backup in /var/backups — it's only ENCODED, not encrypted...\n      (my favourite chef's recipe: a classic Caesar shift of 13, then base 64, then base 16)\n  [ ] check /etc/shadow permissions (anyone can verify the hash there)",
       "TODO\n  [x] escribir 'El Arte de los Hashes' en Medium (cat ~/articles.txt)\n  [ ] ¡¡dejar de olvidar la contraseña de root!!\n  [ ] borrar el backup viejo de /var/backups — solo está CODIFICADO, no cifrado...\n      (la receta de mi chef favorito: un César clásico de 13, luego base 64, luego base 16)\n  [ ] revisar permisos de /etc/shadow (cualquiera puede verificar el hash)"),
     "/etc/hostname": () => HOST,
-    "/etc/motd": () => B("GMOS 1.0 — authorized users only. Curious ones too.", "GMOS 1.0 — solo usuarios autorizados. Y curiosos."),
+    "/etc/motd": () => B("GMOS 1.0.59 — authorized users only. Curious ones too.", "GMOS 1.0.59 — solo usuarios autorizados. Y curiosos."),
     "/etc/shadow": async () => { const v = await vault(); return `root:${v.sha256}:20370:0:99999:7:::\ngabimarti:!:20370:0:99999:7:::\n<span class="dim"># hash: SHA-256 (hex)</span>`; },
     "/var/backups/root_pw.bak": async () => { const v = await vault(); return `<span class="dim"># root password backup — 2019</span>\n${esc(v.backup)}`; },
     "/root/cv.txt": () => esc(cv),
@@ -117,7 +118,7 @@
   async function ping(args) {
     const h = host(args.find(a => !a.startsWith("-")));
     if (!h) return err(B("usage: ping <host>   e.g. ping github.com", "uso: ping <host>   p.ej. ping github.com"));
-    print(`PING ${esc(h)} <span class="dim">${B("(HTTPS ping: browsers can't send ICMP)", "(ping por HTTPS: los navegadores no pueden enviar ICMP)")}</span>`);
+    print(`PING ${esc(h)}`);
     const times = [];
     for (let i = 1; i <= 4; i++) {
       const t = performance.now();
@@ -173,17 +174,21 @@ ${B("Touch       ", "Táctil      ")} : ${n.maxTouchPoints > 0 ? "yes" : "no"}  
     const h = host(args.find(a => !a.startsWith("-"))) || "localhost";
     pre(`Starting Nmap 7.95 ( https://nmap.org )\nNmap scan report for ${esc(h)}`);
     await sleep(GM.reduce ? 0 : 700);
+    const st = () => ["open", "open", "closed", "filtered"][rnd(4)];
+    const ports = [[80, "http", "open"], [443, "https", "open"], ...pickN(NMAP_PORTS, 4).map(([n, sv]) => [n, sv, st()])].sort((a, b) => a[0] - b[0]);
     pre(`PORT      STATE    SERVICE
-22/tcp    closed   ssh
-80/tcp    open     http
-443/tcp   open     https
-1337/tcp  open     waste
-6667/tcp  filtered irc
-31337/tcp open     elite   (${B("just kidding", "es broma")})
+${ports.map(([n, sv, s]) => `${(n + "/tcp").padEnd(10)}${s.padEnd(9)}${sv}`).join("\n")}
 
-Nmap done: 1 IP address (1 host up) scanned in 0.42 seconds
+Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFixed(2)} seconds
 <span class="dim">${B("# simulated — no real scan is performed", "# simulado — no se escanea nada de verdad")}</span>`);
   }
+
+  // random pools for ps / nmap / netstat
+  const PS_LAB = ["nc -lvnp 4444            # honeypot", "keylogger_poc.exe        # TFM 2019, sandboxed", "mimikatz.exe             # quarantined",
+    "rev_shell.py             # lab only", "wannacry.exe             # defanged sample", "john --wordlist=rockyou.txt", "hashcat -m 1400 hashes.txt", "msfconsole -q"];
+  const NMAP_PORTS = [[21, "ftp"], [22, "ssh"], [23, "telnet"], [25, "smtp"], [53, "domain"], [110, "pop3"], [139, "netbios-ssn"], [445, "microsoft-ds"],
+    [1337, "waste"], [3306, "mysql"], [3389, "ms-wbt-server"], [5432, "postgresql"], [5900, "vnc"], [6379, "redis"], [6667, "irc"], [8080, "http-proxy"], [27017, "mongodb"], [31337, "elite"]];
+  const NETSTAT_SITES = ["gchq.github.io", "ghidra-sre.org", "virustotal.com", "shodan.io", "exploit-db.com", "hackthebox.com", "tryhackme.com", "x64dbg.com"];
 
   // ---------- commands ----------
   const HELP = [
@@ -200,8 +205,8 @@ Nmap done: 1 IP address (1 host up) scanned in 0.42 seconds
     ["su · sudo su", "become root (password required)", "hacerse root (requiere contraseña)"],
     ["history · clear · echo", "shell utilities", "utilidades de la shell"],
     ["lang <en|es> · theme [light|dark]", "language and colours", "idioma y colores"],
-    ["classic", "classic view (everything at once)", "vista clásica (todo de golpe)"],
-    ["exit · reboot · shutdown", "back to the start menu", "volver al menú inicial"],
+    ["classic · exit", "classic view (everything at once)", "vista clásica (todo de golpe)"],
+    ["reboot · shutdown", "restart the system (the shell starts from scratch)", "reiniciar el sistema (la shell empieza de cero)"],
   ];
   const CMDS = {
     help: () => print(`<div class="help">${HELP.map(([c, en, es_]) => {
@@ -247,11 +252,11 @@ Nmap done: 1 IP address (1 host up) scanned in 0.42 seconds
       const logo = [" ██████  ███    ███", "██       ████  ████", "██   ███ ██ ████ ██", "██    ██ ██  ██  ██", " ██████  ██      ██"];
       const info = [
         `<strong>${user}</strong>@<strong>${HOST}</strong>`, "--------------------",
-        `<span class="dim">OS:</span> GMOS 1.0 (reverse-engineered)`,
+        `<span class="dim">OS:</span> GMOS 1.0.59 (reverse-engineered)`,
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
-        `<span class="dim">Uptime:</span> ${B("30+ years in IT", "más de 30 años en informática")}`,
-        `<span class="dim">Shell:</span> gmsh 0.2`,
+        `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática")}`,
+        `<span class="dim">Shell:</span> gmsh 0.3`,
         `<span class="dim">${B("Languages", "Lenguajes")}:</span> Python, C, Delphi, ASM`,
         `<span class="dim">${B("Tools", "Herramientas")}:</span> Ghidra, Burp Suite, Wazuh`,
         `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz")}`,
@@ -262,6 +267,7 @@ Nmap done: 1 IP address (1 host up) scanned in 0.42 seconds
     netstat: () => pre(`Proto Local Address          Foreign Address        State
 tcp   10.13.37.42:51337      github.com:443         ESTABLISHED
 tcp   10.13.37.42:51338      medium.com:443         ESTABLISHED
+${pickN(NETSTAT_SITES, 1 + rnd(2)).map(h => `tcp   10.13.37.42:${50000 + rnd(15000)}      ${(h + ":443").padEnd(23)}${["ESTABLISHED", "TIME_WAIT", "SYN_SENT"][rnd(3)]}`).join("\n")}
 tcp   127.0.0.1:31337        0.0.0.0:*              LISTEN
 <span class="dim">${B("# simulated", "# simulado")}</span>`),
     mem: () => pre(`              total        used        free
@@ -272,11 +278,12 @@ Swap:            0B          0B          0B
 /dev/brain      100T    97T     3T  97% /
 /dev/coffee     500M   499M     1M  99% /var/caffeine
 /dev/ghidra      64G    42G    22G  66% /opt/reversing
+/dev/hacking    1337G  1336G     1G  99% /opt/redteam
 tmpfs            16K     1K    15K   7% /tmp/ideas`),
     dh: () => pre(`${B("SMART health check", "Comprobación SMART")}: <strong>PASSED</strong>
   ${B("Reallocated sectors", "Sectores reasignados")}:   0
   ${B("Pending ideas", "Ideas pendientes")}:         42
-  ${B("Power-on hours", "Horas encendido")}:        262800 (~30 ${B("years", "años")})
+  ${B("Power-on hours", "Horas encendido")}:        306600 (~35 ${B("years", "años")})
   ${B("Temperature", "Temperatura")}:           36.6 °C`),
     du: () => pre(`4.0K\tabout.txt\n4.0K\tsummary.txt\n4.0K\tinterests.txt\n4.0K\tarticles.txt\n12K\tavatar.txt\n4.0K\thint.txt\n32K\tskills/\n20K\tcontact/\n<strong>84K\ttotal</strong>`),
     ds: () => {
@@ -288,13 +295,17 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
       }
       pre(`<span class="dim">${B("stack dump @ rsp", "volcado de pila @ rsp")}</span>\n` + esc(t.trimEnd()));
     },
-    ps: () => pre(`  PID TTY          TIME CMD
-    1 ?        30y      curiosity
+    ps: () => {
+      const lab = pickN(PS_LAB, 2).map(c => `${String(2000 + rnd(28000)).padStart(5)} pts/${1 + rnd(3)}    00:${String(rnd(60)).padStart(2, "0")}:${String(rnd(60)).padStart(2, "0")} ${c}`);
+      pre(`  PID TTY          TIME CMD
+    1 ?        35y      curiosity
   137 ?        08:00:00 coffee.d
   404 pts/0    01:23:45 ghidra
  1337 pts/0    00:42:00 python3 agent.py --mcp
-31337 pts/0    00:00:01 gmsh`),
-    uptime: () => pre(`${new Date().toTimeString().slice(0, 8)} up 30+ ${B("years", "años")}, ${Math.round((Date.now() - t0) / 1000)}s ${B("on this page", "en esta página")}, 1 user, load average: 0.42, 0.13, 0.37`),
+${lab.join("\n")}
+31337 pts/0    00:00:01 gmsh`);
+    },
+    uptime: () => pre(`${new Date().toTimeString().slice(0, 8)} up 35+ ${B("years", "años")}, ${Math.round((Date.now() - t0) / 1000)}s ${B("on this page", "en esta página")}, 1 user, load average: 0.42, 0.13, 0.37`),
     uname: args => pre(args.includes("-a") ? `GMOS ${HOST} 6.6.6-curiosity #1 SMP x86_64 GNU/Linux` : "GMOS"),
     date: () => print(esc(new Date().toString())),
     hostname: () => print(HOST),
@@ -317,15 +328,15 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
     classic: () => GM.setMode("classic"),
     exit: () => {
       if (user === "root") { user = "gabimarti"; cwd = HOME; setPrompt(); return print("logout"); }
-      GM.showBoot();
+      GM.setMode("classic");
     },
     reboot: async () => {
       pre(B("Broadcast message: the system is going down for reboot NOW!", "Mensaje global: ¡el sistema se reinicia AHORA!"));
-      await sleep(GM.reduce ? 0 : 900); user = "gabimarti"; cwd = HOME; setPrompt(); GM.showBoot();
+      await sleep(GM.reduce ? 0 : 900); reset(); GM.showBoot();
     },
     shutdown: async () => {
       pre(B("Broadcast message: the system is going down for poweroff NOW!", "Mensaje global: ¡el sistema se apaga AHORA!"));
-      await sleep(GM.reduce ? 0 : 900); user = "gabimarti"; cwd = HOME; setPrompt();
+      await sleep(GM.reduce ? 0 : 900); reset();
       GM.halt(B("System halted.<br>It's now safe to turn off your computer.<br><br><small>press any key to boot</small>",
         "Sistema detenido.<br>Ya puede apagar el ordenador con seguridad.<br><br><small>pulsa una tecla para arrancar</small>"));
     },
@@ -336,6 +347,8 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
   Object.assign(CMDS, {
     free: CMDS.mem, top: CMDS.ps, ll: () => CMDS.ls(["-la"]), hint: () => CMDS.cat(["~/hint.txt"]), contact: () => CMDS.ls(["~/contact"]),
     ip: CMDS.ifconfig, nslookup: CMDS.dig, logout: CMDS.exit, quit: CMDS.exit, poweroff: CMDS.shutdown, halt: CMDS.shutdown,
+  });
+  Object.assign(CMDS, {
   });
 
   async function exec(line, silent = false) {
@@ -348,10 +361,16 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
     else err(`gmsh: ${B("command not found", "comando no encontrado")}: ${esc(cmd)} — ${B("type 'help'", "escribe 'help'")}`);
   }
 
+  function reset() {                       // reboot/shutdown: next time the shell starts like a fresh system
+    user = "gabimarti"; cwd = HOME; cv = null; hist.length = 0; hpos = 0; started = false;
+    if (pending) endPassword();
+    out.innerHTML = ""; input.value = ""; setPrompt();
+  }
+
   // ---------- input ----------
   form.addEventListener("submit", async e => {
     e.preventDefault();
-    const v = input.value; input.value = "";
+    const v = input.value; input.value = ""; GM.sfx.key();
     if (pending) { const cb = pending; print(esc(promptEl.textContent), "echo"); endPassword(); await cb(v); return; }
     await exec(v);
   });
@@ -389,8 +408,8 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
       if (!started) {
         started = true; setPrompt();
         type(print(""), es()
-          ? "gmsh 0.2 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
-          : "gmsh 0.2 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
+          ? "gmsh 0.3 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
+          : "gmsh 0.3 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
       }
       input.focus({ preventScroll: true });
     },
