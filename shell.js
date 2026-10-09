@@ -190,6 +190,14 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
     [1337, "waste"], [3306, "mysql"], [3389, "ms-wbt-server"], [5432, "postgresql"], [5900, "vnc"], [6379, "redis"], [6667, "irc"], [8080, "http-proxy"], [27017, "mongodb"], [31337, "elite"]];
   const NETSTAT_SITES = ["gchq.github.io", "ghidra-sre.org", "virustotal.com", "shodan.io", "exploit-db.com", "hackthebox.com", "tryhackme.com", "x64dbg.com"];
 
+  const SHOUT = [
+    ["NO NEED TO SHOUT. This is Linux, not MS-DOS: commands are lowercase.", "NO HACE FALTA GRITAR. Esto es Linux, no MS-DOS: los comandos van en minúsculas."],
+    ["Caps Lock detected. The kernel has feelings, you know.", "Bloq Mayús detectado. El kernel también tiene sentimientos, ¿sabes?"],
+    ["Command not found. Case-sensitive since 1991, deal with it.", "Comando no encontrado. Distingo mayúsculas desde 1991, asúmelo."],
+    ["Who taught you to type? Your fax machine?", "¿Quién te enseñó a escribir? ¿Tu fax?"],
+    ["Ugh. Lowercase, please. I'm old and my ears hurt.", "Uf. En minúsculas, por favor. Soy mayor y me duelen los oídos."],
+  ];
+
   // ---------- commands ----------
   const HELP = [
     ["help", "this help", "esta ayuda"],
@@ -256,7 +264,7 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
         `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática")}`,
-        `<span class="dim">Shell:</span> gmsh 0.3`,
+        `<span class="dim">Shell:</span> gmsh 0.4`,
         `<span class="dim">${B("Languages", "Lenguajes")}:</span> Python, C, Delphi, ASM`,
         `<span class="dim">${B("Tools", "Herramientas")}:</span> Ghidra, Burp Suite, Wazuh`,
         `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz")}`,
@@ -356,8 +364,12 @@ ${lab.join("\n")}
     const [cmd, ...args] = line.trim().split(/\s+/);
     if (!cmd) return;
     if (!silent) { hist.push(line.trim()); hpos = hist.length; }
-    const name = cmd.toLowerCase(), f = Object.hasOwn(CMDS, name) && CMDS[name];
+    const f = Object.hasOwn(CMDS, cmd) && CMDS[cmd], lower = cmd.toLowerCase();
     if (f) await f(args);
+    else if (cmd !== lower && Object.hasOwn(CMDS, lower)) {    // Linux is case-sensitive, and grumpy about it
+      const [en, es_] = SHOUT[rnd(SHOUT.length)];
+      err(`gmsh: ${esc(cmd)}: ${B(en, es_)} ${B(`Try '${esc(lower)}'.`, `Prueba '${esc(lower)}'.`)}`);
+    }
     else err(`gmsh: ${B("command not found", "comando no encontrado")}: ${esc(cmd)} — ${B("type 'help'", "escribe 'help'")}`);
   }
 
@@ -408,8 +420,8 @@ ${lab.join("\n")}
       if (!started) {
         started = true; setPrompt();
         type(print(""), es()
-          ? "gmsh 0.3 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
-          : "gmsh 0.3 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
+          ? "gmsh 0.4 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
+          : "gmsh 0.4 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
       }
       input.focus({ preventScroll: true });
     },
