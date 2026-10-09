@@ -27,12 +27,12 @@
 <style>
   :root {
     --bg: #0d1117; --panel: #161b22; --bar: #21262d; --fg: #c9d1d9; --dim: #8b949e;
-    --accent: #39d353; --link: #58a6ff; --border: #30363d;
+    --accent: #39d353; --link: #79c0ff; --border: #30363d;
   }
   @media (prefers-color-scheme: light) {
     :root {
       --bg: #f6f8fa; --panel: #ffffff; --bar: #eaeef2; --fg: #1f2328; --dim: #59636e;
-      --accent: #1a7f37; --link: #0969da; --border: #d0d7de;
+      --accent: #1a7f37; --link: #0550ae; --border: #d0d7de;
     }
   }
   * { box-sizing: border-box; }
@@ -74,7 +74,8 @@
   @media (max-width: 480px) { .skills { grid-template-columns: 1fr; } .skills dd { padding-left: 2ch; } }
   li { padding-left: 2ch; text-indent: -2ch; }
   li::before { content: "› "; color: var(--dim); }
-  a { color: var(--link); text-decoration: none; } a:hover { text-decoration: underline; }
+  a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
   .cursor { display: inline-block; width: .6em; height: 1.1em; vertical-align: text-bottom; background: var(--accent); animation: blink 1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
