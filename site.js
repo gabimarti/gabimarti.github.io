@@ -114,32 +114,39 @@ const GM = (() => {
   const CPU = "Curiosity(TM) 486DX2-66MHz";
   const DRIVES = [["Primary Master", "GM-HDD 1986MB"], ["Primary Slave", "None"], ["Secondary Master", "CD-ROM 52X"], ["Secondary Slave", "ZIP 100"]];
   const narrow = matchMedia("(max-width: 640px)");
+  // Some fonts (e.g. Android's monospace) lack box-drawing glyphs and fall back to a wider font,
+  // which breaks the frame. Measure them against plain ASCII and fall back to + - | if they differ.
+  function boxGlyphsOk() {
+    const m = s => { const e = document.createElement("span"); e.className = "measure"; e.textContent = s.repeat(30); bootOut.append(e); const w = e.getBoundingClientRect().width; e.remove(); return w; };
+    return Math.abs(m("─") - m("-")) < 1 && Math.abs(m("│") - m("-")) < 1;
+  }
   function summaryBox() {
-    const title = "System Configurations";
+    const g = boxGlyphsOk()
+      ? { h: "─", v: "│", tl: "┌", tr: "┐", bl: "└", br: "┘", lt: "├", rt: "┤", tt: "┬", bt: "┴", x: "┼" }
+      : { h: "-", v: "|", tl: "+", tr: "+", bl: "+", br: "+", lt: "+", rt: "+", tt: "+", bt: "+", x: "+" };
+    const title = "System Configurations", center = (t, w) => " ".repeat(Math.floor((w - t.length) / 2)) + t + " ".repeat(Math.ceil((w - t.length) / 2));
     if (narrow.matches) {                 // phones: one column, 34 chars wide, so lines never wrap
-      const W = 32, row = a => `│ ${a.padEnd(W - 1)}│`, line = (l, r) => l + "─".repeat(W) + r, pad = (W - title.length) / 2;
+      const W = 32, row = a => `${g.v} ${a.padEnd(W - 1)}${g.v}`, line = (l, r) => l + g.h.repeat(W) + r;
       return [
-        line("┌", "┐"), `│${" ".repeat(Math.floor(pad))}${title}${" ".repeat(Math.ceil(pad))}│`, line("├", "┤"),
+        line(g.tl, g.tr), g.v + center(title, W) + g.v, line(g.lt, g.rt),
         ...["CPU Type     : 486DX2", "Co-Processor : Curiosity", "CPU Clock    : 66MHz", "Base Memory  : 640K", "Ext. Memory  : 64512K", "Cache Memory : 256K"].map(row),
-        line("├", "┤"),
+        line(g.lt, g.rt),
         ...["Diskette A   : 1.44M, 3.5in", "Pri. Master  : GM-HDD 1986MB", "Sec. Master  : CD-ROM 52X", "Sec. Slave   : ZIP 100", "Display Type : VGA/EGA", "Profile      : gabimarti"].map(row),
-        line("└", "┘"),
+        line(g.bl, g.br),
       ].join("\n");
     }
-    const L = 30, R = 29, row = (a, b) => `│ ${a.padEnd(L - 1)}│ ${b.padEnd(R - 1)}│`;
-    const pad = (L + R + 1 - title.length) / 2;
+    const L = 30, R = 29, row = (a, b) => `${g.v} ${a.padEnd(L - 1)}${g.v} ${b.padEnd(R - 1)}${g.v}`, split = (l, m, r) => l + g.h.repeat(L) + m + g.h.repeat(R) + r;
     return [
-      `┌${"─".repeat(L + R + 1)}┐`, `│${" ".repeat(Math.floor(pad))}${title}${" ".repeat(Math.ceil(pad))}│`,
-      `├${"─".repeat(L)}┬${"─".repeat(R)}┤`,
+      g.tl + g.h.repeat(L + R + 1) + g.tr, g.v + center(title, L + R + 1) + g.v, split(g.lt, g.tt, g.rt),
       row("CPU Type     : 486DX2", "Base Memory     :   640K"),
       row("Co-Processor : Curiosity", "Extended Memory : 64512K"),
       row("CPU Clock    : 66MHz", "Cache Memory    :   256K"),
-      `├${"─".repeat(L)}┼${"─".repeat(R)}┤`,
+      split(g.lt, g.x, g.rt),
       row("Diskette A   : 1.44M, 3.5in", "Display Type    : VGA/EGA"),
       row("Pri. Master  : GM-HDD 1986MB", "Serial Port(s) : 3F8 2F8"),
       row("Sec. Master  : CD-ROM 52X", "Parallel Port  : 378"),
       row("Sec. Slave   : ZIP 100", "Profile        : gabimarti"),
-      `└${"─".repeat(L)}┴${"─".repeat(R)}┘`,
+      split(g.bl, g.bt, g.br),
     ].join("\n");
   }
   const OK = () => { const s = document.createElement("span"); s.className = "ok"; s.textContent = "[✓]"; return s; };
@@ -216,7 +223,7 @@ const GM = (() => {
   // ---------- modes ----------
   let shellReady = null;
   const loadShell = () => shellReady ||= new Promise((ok, ko) => {
-    const s = document.createElement("script"); s.src = "shell.js"; s.onload = ok; s.onerror = ko; document.head.append(s);
+    const s = document.createElement("script"); s.src = "shell.js?v=0.6"; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
   async function setMode(mode) {
     bootRun++; skip = true; typing = false; boot.hidden = true;
