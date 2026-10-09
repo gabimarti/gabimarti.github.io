@@ -1,0 +1,4 @@
+Contact: mailto:contact@gabimarti.slmail.me
+Expires: 2027-10-01T00:00:00.000Z
+Preferred-Languages: es, ca, en
+Canonical: https://gabimarti.github.io/.well-known/security.txt
