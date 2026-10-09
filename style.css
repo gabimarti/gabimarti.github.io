@@ -149,6 +149,6 @@ html:not(.js) .js-only { display: none; }
   .skills dd, .help > span:nth-child(even) { padding-left: 2ch; }
   .help > span:nth-child(even) { margin-bottom: .2rem; }
   #sh-in { font-size: 16px; }
-  #boot-out { font-size: min(13px, 2.45vw); }
+  #boot-out { font-size: min(13px, 2.9vw); }
   .prompt { font-size: 12px; align-self: center; }
 }

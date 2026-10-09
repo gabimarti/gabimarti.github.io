@@ -111,10 +111,22 @@ const GM = (() => {
     en: { load: "Loading profile .......... ", hello: "Hello, I'm Gabriel Martí — cybersecurity consultant, reverser & developer.\nHow would you like to explore this site?" },
     es: { load: "Cargando perfil .......... ", hello: "Hola, soy Gabriel Martí — consultor de ciberseguridad, reverser y desarrollador.\n¿Cómo quieres explorar este sitio?" },
   };
-  const CPU = "Curiosity(TM) 486DX2 CPU at 66MHz";
+  const CPU = "Curiosity(TM) 486DX2-66MHz";
   const DRIVES = [["Primary Master", "GM-HDD 1986MB"], ["Primary Slave", "None"], ["Secondary Master", "CD-ROM 52X"], ["Secondary Slave", "ZIP 100"]];
+  const narrow = matchMedia("(max-width: 640px)");
   function summaryBox() {
-    const L = 30, R = 29, row = (a, b) => `│ ${a.padEnd(L - 1)}│ ${b.padEnd(R - 1)}│`, title = "System Configurations";
+    const title = "System Configurations";
+    if (narrow.matches) {                 // phones: one column, 34 chars wide, so lines never wrap
+      const W = 32, row = a => `│ ${a.padEnd(W - 1)}│`, line = (l, r) => l + "─".repeat(W) + r, pad = (W - title.length) / 2;
+      return [
+        line("┌", "┐"), `│${" ".repeat(Math.floor(pad))}${title}${" ".repeat(Math.ceil(pad))}│`, line("├", "┤"),
+        ...["CPU Type     : 486DX2", "Co-Processor : Curiosity", "CPU Clock    : 66MHz", "Base Memory  : 640K", "Ext. Memory  : 64512K", "Cache Memory : 256K"].map(row),
+        line("├", "┤"),
+        ...["Diskette A   : 1.44M, 3.5in", "Pri. Master  : GM-HDD 1986MB", "Sec. Master  : CD-ROM 52X", "Sec. Slave   : ZIP 100", "Display Type : VGA/EGA", "Profile      : gabimarti"].map(row),
+        line("└", "┘"),
+      ].join("\n");
+    }
+    const L = 30, R = 29, row = (a, b) => `│ ${a.padEnd(L - 1)}│ ${b.padEnd(R - 1)}│`;
     const pad = (L + R + 1 - title.length) / 2;
     return [
       `┌${"─".repeat(L + R + 1)}┐`, `│${" ".repeat(Math.floor(pad))}${title}${" ".repeat(Math.ceil(pad))}│`,
@@ -155,8 +167,8 @@ const GM = (() => {
     // ---- screen 2: system summary ----
     bootOut.textContent = ""; snd(sfx.blip);
     if (!await say(summaryBox() + "\n\n", 700)) return;
-    if (!await say("Verifying DMI Pool Data ............ ", 500)) return;
-    if (!await say("Update Success\nBoot from GM-HDD ................... ", 400)) return;
+    if (!await say("Verifying DMI Pool Data ...... ", 500)) return;
+    if (!await say("Update Success\nBoot from GM-HDD .............. ", 400)) return;
     bootOut.append(OK(), "\n\n"); snd(sfx.ok); snd(() => sfx.fanStop(3));
     await type(bootOut, t.hello);
   }
@@ -228,6 +240,7 @@ const GM = (() => {
     setLang(pick(new URLSearchParams(location.search).get("lang")) || pick(load("lang")) || pick(navigator.language.slice(0, 2)) || "en", false);
     document.querySelectorAll("[data-set-lang]").forEach(b => b.addEventListener("click", () => setLang(b.dataset.setLang, true)));
     document.addEventListener("langchange", redrawBoot);
+    narrow.addEventListener("change", redrawBoot);   // phone rotated -> redraw the summary box
     $(".theme").addEventListener("click", toggleTheme); themeIcon();
     $(".snd").addEventListener("click", () => { sfx.toggle(); soundIcon(); }); soundIcon();
     addEventListener("pointerdown", sfx.unlock); addEventListener("keydown", sfx.unlock);
