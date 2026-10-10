@@ -248,7 +248,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.13", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.14", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
@@ -285,8 +285,8 @@ const GM = (() => {
       if (g) { grubLeft = 0; select(entries().indexOf(g)); }
       if (e.target.closest("[data-setup]") && delOk) { wantSetup = true; return; }
       if (e.target.closest("[data-reboot]")) { e.preventDefault(); showBoot(); return; }
-      const app = e.target.closest("[data-run]");
-      if (app) { e.preventDefault(); runApp(app.dataset.run); return; }
+      const app = e.target.closest("[data-app]");
+      if (app) { e.preventDefault(); runApp(app.dataset.app); return; }
       const m = e.target.closest("[data-mode]");
       if (m) { e.preventDefault(); setMode(m.dataset.mode); return; }
       if (!boot.hidden && typing) skip = true;
