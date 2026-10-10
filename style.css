@@ -128,7 +128,7 @@ html:not(.js) .js-only { display: none; }
 .halt { display: grid; place-items: center; min-height: 100%; text-align: center; color: #e3b341; white-space: normal; }
 .pwr { width: 3rem; height: 3rem; color: var(--accent); }   /* SVG: Android fonts lack the power glyph */
 #boot { height: 100%; }
-#boot-out:has(:is(.halt, .bios, .mt)) { height: 100%; }
+#boot-out:has(:is(.halt, .bios, .mt, .dos)) { height: 100%; }
 .del { font: inherit; color: inherit; background: none; border: 1px solid var(--dim); border-radius: 3px; padding: 0 .4ch; cursor: pointer; }
 /* Award CMOS Setup (bios.js): always blue, whatever the site theme */
 .bios { position: relative; display: flex; flex-direction: column; gap: .6rem; min-height: 100%; padding: .6rem; background: #0000aa; color: #fff; border: 3px double #fff; }
@@ -145,6 +145,15 @@ html:not(.js) .js-only { display: none; }
 .bios .b-help { text-align: center; }
 .bios .b-dlg { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); max-width: 92%; padding: .8rem 2ch; background: #aa0000; color: #ffff55; border: 3px double #fff; }
 .bios .b-dlg button { color: #fff; border: 1px solid #fff; padding: 0 1.5ch; }
+/* MS-DOS (dos.js): light grey on black, whatever the site theme */
+.dos { min-height: 100%; padding: .6rem 1ch; background: #000; color: #aaa; }
+.dos pre { margin: 0; font: inherit; white-space: pre; overflow-x: auto; }
+.dos :is(a, .fs) { color: #55ffff; }
+.dos .fs.file { color: #fff; }
+.dos .dos-file { color: #fff; }
+.dos .dos-form { display: flex; }
+.dos .dos-prompt { white-space: pre; }
+.dos #dos-in { flex: 1; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; caret-color: #aaa; }
 /* memtest86+ (memtest.js) */
 .mt { display: flex; flex-direction: column; justify-content: space-between; min-height: 100%; padding: .6rem 1ch; background: #0000aa; color: #fff; }
 .mt .mt-top { display: grid; grid-template-columns: 1fr 1fr; gap: 0 2ch; padding-bottom: .5rem; border-bottom: 1px solid #fff; }
@@ -182,7 +191,7 @@ html:not(.js) .js-only { display: none; }
   .skills, .help { grid-template-columns: 1fr; }
   .skills dd, .help > span:nth-child(even) { padding-left: 2ch; }
   .help > span:nth-child(even) { margin-bottom: .2rem; }
-  #sh-in { font-size: 16px; }
+  #sh-in, .dos #dos-in { font-size: 16px; }
   #boot-out { font-size: min(13px, 2.9vw); }
   .bios .b-menu { grid-auto-flow: row; grid-template-rows: none; }
   .mt .mt-top { grid-template-columns: 1fr; gap: .6rem; }
