@@ -26,9 +26,9 @@
 {"@context":"https://schema.org","@type":"Person","name":"Gabriel Martí","alternateName":"gabimarti","email":"mailto:contact@gabimarti.slmail.me","jobTitle":"Cybersecurity Consultant & Developer","url":"https://gabimarti.github.io/","address":{"@type":"PostalAddress","addressLocality":"Barcelona","addressCountry":"ES"},
 "sameAs":["https://github.com/gabimarti","https://x.com/310hkc41b","https://www.linkedin.com/in/gabimarti/","https://gabimarti.medium.com/"]}
 </script>
-<script src="init.js?v=0.8"></script>
-<link rel="stylesheet" href="style.css?v=0.8">
-<script src="site.js?v=0.8" defer></script>
+<script src="init.js?v=0.9"></script>
+<link rel="stylesheet" href="style.css?v=0.9">
+<script src="site.js?v=0.9" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -50,9 +50,18 @@
     <div id="boot" hidden>
       <div id="boot-out" aria-live="polite"></div>
       <div id="boot-opts" hidden>
-        <button type="button" data-mode="classic"><span class="key">[1]</span> <span lang="en">Classic view — everything at once</span><span lang="es">Vista clásica — todo de golpe</span></button>
-        <button type="button" data-mode="shell"><span class="key">[2]</span> <span lang="en">Interactive shell — explore with Linux-style commands</span><span lang="es">Shell interactiva — explora con comandos tipo Linux</span></button>
-        <p class="dim"><span lang="en">Press 1 or 2</span><span lang="es">Pulsa 1 o 2</span> <span class="cursor"></span></p>
+        <p class="grub-ttl">GNU GRUB  version 0.66</p>
+        <div class="grub">
+          <button type="button" data-mode="classic">Classic view</button>
+          <button type="button" data-mode="shell">Debian GNU/Linux</button>
+          <button type="button">MS-DOS 3.1</button>
+          <button type="button">Memory test (memtest86+)</button>
+        </div>
+        <p id="grub-hello"></p>
+        <div id="grub-help" hidden>
+          <p><span lang="en">Use the ↑ and ↓ keys (or tap) to select which entry is highlighted.<br>Press enter to boot the selected OS.</span><span lang="es">Usa las teclas ↑ y ↓ (o toca) para elegir la entrada resaltada.<br>Pulsa intro para arrancar el sistema elegido.</span></p>
+          <p id="grub-timer"></p>
+        </div>
       </div>
     </div>
 
@@ -119,7 +128,7 @@
           <li><span>Email</span><a href="mailto:contact@gabimarti.slmail.me">contact@gabimarti.slmail.me</a></li>
         </ul>
         <p class="cmd js-only"><a href="?mode=shell" data-mode="shell">./interactive.sh</a> <span class="dim"><span lang="en"># try the interactive shell</span><span lang="es"># prueba la shell interactiva</span></span></p>
-        <p class="cmd" aria-hidden="true"><span class="cursor"></span></p>
+        <p class="cmd"><a href="./" class="js-only" data-reboot>reboot</a><span class="cursor" aria-hidden="true"></span></p>
       </section>
     </div>
 

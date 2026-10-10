@@ -157,24 +157,46 @@ const GM = (() => {
     if (!await say("\n\n", 700)) return;
     if (!await say("Verifying DMI Pool Data ...... ", 500)) return;
     if (!await say("Update Success\nBoot from GM-HDD .............. ", 400)) return;
-    bootOut.append(OK(), "\n\n"); snd(sfx.ok); snd(() => sfx.fanStop(3));
-    await type(bootOut, t.hello);
+    bootOut.append(OK()); snd(sfx.ok); snd(() => sfx.fanStop(3));
+    if (!await say("", 900)) return;
+    // ---- screen 3: GRUB menu, greeting typed below the box ----
+    bootOut.textContent = ""; snd(sfx.blip);
+    bootOpts.hidden = false; select(grubSel); $("#grub-help").hidden = true;
+    const hello = $("#grub-hello"); hello.textContent = "";
+    await type(hello, t.hello); if (!alive()) return;
+    $("#grub-help").hidden = false;
+  }
+  // GRUB: entries without data-mode are shown but not bootable yet. Any key or tap stops the countdown.
+  const entries = () => [...bootOpts.querySelectorAll(".grub button")];
+  let grubSel = 0, grubLeft = 0;
+  function select(i) {
+    const e = entries(); grubSel = (i + e.length) % e.length;
+    e.forEach((b, j) => b.classList.toggle("sel", j === grubSel));
+    e[grubSel].focus({ preventScroll: true });
+  }
+  function grubTimer(run) {
+    const el = $("#grub-timer");
+    const tick = () => {
+      if (run !== bootRun || !grubLeft) { el.textContent = ""; return; }
+      el.innerHTML = B(`The highlighted entry will be executed automatically in ${grubLeft}s.`, `La entrada resaltada se ejecutará automáticamente en ${grubLeft}s.`);
+      setTimeout(() => { if (run === bootRun && grubLeft && !--grubLeft) entries()[grubSel].click(); else tick(); }, 1000);
+    };
+    tick();
   }
   async function showBoot() {
     const run = ++bootRun;
     root.classList.remove("mode-classic", "mode-shell");
     shellEl.hidden = true; boot.hidden = false; bootOpts.hidden = true;
-    skip = false; typing = true; setUrl(null);
+    skip = false; typing = true; setUrl(null); grubSel = 0; grubLeft = 10;
     await bootSeq(run);
     if (run !== bootRun) return;
-    typing = false; bootOpts.hidden = false;
-    bootOpts.querySelector("button").focus({ preventScroll: true });
+    typing = false; grubTimer(run);
   }
   async function redrawBoot() {          // finished boot screen in the new language
     if (!boot || boot.hidden || bootOut.querySelector(".halt")) return;
     const run = ++bootRun; skip = true; typing = true;
     await bootSeq(run);
-    if (run === bootRun) { typing = false; bootOpts.hidden = false; }
+    if (run === bootRun) { typing = false; grubTimer(run); }
   }
   // wait for a key or click (ignoring the title bar buttons); the event doesn't reach other handlers
   const waitKey = () => new Promise(res => {
@@ -204,7 +226,7 @@ const GM = (() => {
   // ---------- modes ----------
   let shellReady = null;
   const loadShell = () => shellReady ||= new Promise((ok, ko) => {
-    const s = document.createElement("script"); s.src = "shell.js?v=0.8"; s.onload = ok; s.onerror = ko; document.head.append(s);
+    const s = document.createElement("script"); s.src = "shell.js?v=0.9"; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
   async function setMode(mode) {
     bootRun++; skip = true; typing = false; boot.hidden = true;
@@ -235,15 +257,22 @@ const GM = (() => {
     addEventListener("hashchange", sfx.blip);                 // classic view <-> avatar
 
     document.addEventListener("click", e => {
+      const g = e.target.closest(".grub button");
+      if (g) { grubLeft = 0; select(entries().indexOf(g)); }
+      if (e.target.closest("[data-reboot]")) { e.preventDefault(); showBoot(); return; }
       const m = e.target.closest("[data-mode]");
       if (m) { e.preventDefault(); setMode(m.dataset.mode); return; }
       if (!boot.hidden && typing) skip = true;
     });
     document.addEventListener("keydown", e => {
+      if (root.classList.contains("mode-classic") && e.key === "Enter" && !e.target.closest("a, button, input")) { showBoot(); return; }
       if (boot.hidden || bootOut.querySelector(".halt")) return;
       if (typing) { skip = true; return; }
-      if (e.key === "1") setMode("classic");
-      if (e.key === "2") setMode("shell");
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      grubLeft = 0;
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); select(grubSel + (e.key === "ArrowDown" ? 1 : -1)); }
+      else if (e.key === "Enter") { e.preventDefault(); entries()[grubSel].click(); }
+      else if (e.key >= "1" && e.key <= String(entries().length)) select(+e.key - 1);
     });
 
     const mode = new URLSearchParams(location.search).get("mode");

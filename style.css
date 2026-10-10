@@ -115,14 +115,16 @@ html:not(.js) .js-only { display: none; }
 .sysbox .sec { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid; }
 .sysbox .col { padding: .45em 3ch; }
 .sysbox .col + .col { border-left: 1px solid; }
-#boot-opts { margin-top: 1rem; }
-#boot-opts button {
-  display: block; width: 100%; margin: .45rem 0; padding: .45rem .7rem; text-align: left; cursor: pointer;
-  font: inherit; color: var(--fg); background: transparent; border: 1px solid var(--border); border-radius: 6px;
+/* GRUB menu: the highlighted entry (.sel) is drawn in reverse video */
+.grub-ttl { text-align: center; margin: 1rem 0 1.2rem; white-space: pre; }
+.grub { border: 3px double var(--fg); padding: .3rem; }
+.grub button {
+  display: block; width: 100%; padding: .15rem 1ch; text-align: left; cursor: pointer;
+  font: inherit; color: var(--fg); background: transparent; border: 0; border-radius: 0; outline: none;
 }
-#boot-opts button:hover, #boot-opts button:focus-visible { border-color: var(--accent); outline: none; }
-#boot-opts .key { color: var(--accent); font-weight: 600; }
-#boot-opts p { margin-top: .8rem; }
+.grub button.sel { background: var(--fg); color: var(--panel); }
+#grub-hello { margin: 1.2rem 0 0; min-height: 3.9em; white-space: pre-wrap; }
+#grub-help p { margin-top: .8rem; }
 .halt { display: grid; place-items: center; min-height: 100%; text-align: center; color: #e3b341; white-space: normal; }
 .pwr { width: 3rem; height: 3rem; color: var(--accent); }   /* SVG: Android fonts lack the power glyph */
 #boot { height: 100%; }
