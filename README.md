@@ -8,7 +8,7 @@ Personal site of Gabriel Martí ([@gabimarti](https://github.com/gabimarti)): cy
 
 A static site styled as a retro terminal, with no frameworks, no build step, no cookies and no trackers.
 
-- **Boot**: 90s-style BIOS POST (memory test, drive detection, system summary) with synthesized retro sounds (mute with 🔊), then a GRUB boot menu (Quick view, Debian → shell; MS-DOS and memtest coming soon) that auto-boots the Quick view.
+- **Boot**: 90s-style BIOS POST (memory test, drive detection, system summary) with synthesized retro sounds (mute with 🔊) — press DEL (or tap it) for the BIOS Setup —, then a GRUB boot menu (Quick view, Debian → shell; MS-DOS and memtest coming soon) that auto-boots the Quick view.
 - **Quick view**: everything on one page. It's also what you get without JavaScript, so search engines see the full content.
 - **Interactive shell** (`gmsh`, loaded only when chosen): a fake Linux terminal. Try `help`, `whoami`, `ls -a`, `cat avatar.txt`, `neofetch`, `myip`, `dig`… There are two flags to find, and a root challenge (`su`) that unlocks an encrypted CV.
 - Strict Content-Security-Policy (only own scripts and styles, no inline code).
@@ -24,6 +24,7 @@ Direct links: [`?mode=classic`](https://gabimarti.github.io/?mode=classic) · [`
 | `style.css` | Styles |
 | `site.js` | Language, theme, boot menu and modes |
 | `shell.js` | Interactive shell, loaded on demand |
+| `bios.js` | Award-style CMOS Setup (press DEL during the POST), loaded on demand |
 | `vault.json` | Encrypted CV (AES-256-GCM, PBKDF2) and data for the `su` challenge |
 | `og-image.png` | Social share card (1200×630) |
 | `robots.txt` | Allows search engines, blocks AI training crawlers |

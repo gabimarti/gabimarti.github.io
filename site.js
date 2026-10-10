@@ -80,6 +80,11 @@ const GM = (() => {
       ok: () => { tone(988, .06, "square", .035); tone(1319, .08, "square", .035, .07); },
       blip: () => tone(660, .06, "triangle", .07),                               // screen change
       key: () => tone(1400, .02, "square", .025),                                // command entered
+      clack: c => {                                       // mechanical keyboard: every key a bit different, deeper spacebar
+        const r = Math.random();
+        if (c === " ") { noise(.05, .7, 800 + r * 300); tone(100 + r * 30, .05, "triangle", .05); }
+        else { noise(.025, .6, 2400 + r * 2400); tone(150 + r * 150, .025, "triangle", .035); }
+      },
       err: () => tone(170, .14, "sawtooth", .035),
     };
   })();
@@ -88,11 +93,12 @@ const GM = (() => {
   // ---------- typewriter + counters ----------
   let skip = false, typing = false;
   const fast = () => skip;              // boot always animates, even with reduced motion (user choice)
-  async function type(el, text, ms = 16) {
+  async function type(el, text, ms = 16, onChar) {       // ms: number or function (random human pace)
     for (let i = 0; i < text.length; i++) {
       if (fast()) { el.append(text.slice(i)); return; }
-      el.append(text[i]);
-      await sleep(text[i] === "\n" ? ms * 8 : text[i] === "." ? ms * 3 : ms);
+      el.append(text[i]); onChar?.(text[i]);
+      const d = typeof ms === "function" ? ms() : ms;
+      await sleep(text[i] === "\n" ? d * 8 : text[i] === "." ? d * 3 : d);
     }
   }
   async function count(el, from, to, step, fmt, ms, onStep) {
@@ -130,7 +136,7 @@ const GM = (() => {
     return box;
   }
   const OK = () => { const s = document.createElement("span"); s.className = "ok"; s.textContent = "[✓]"; return s; };
-  let bootRun = 0;
+  let bootRun = 0, wantSetup = false, delOk = false, setupOn = false;
   async function bootSeq(run) {
     const t = T[root.lang] || T.en, alive = () => run === bootRun, snd = f => { if (!fast()) f(); };
     const say = async (txt, ms = 90) => { bootOut.append(txt); if (!fast()) await sleep(ms); return alive(); };
@@ -139,7 +145,9 @@ const GM = (() => {
     if (!await say("GM Modular BIOS v4.51GM, An Energy Star Ally\nCopyright (C) 1986-2026, gabimarti\n\n", 500)) return;
     if (!await say("GM-80 ROM BIOS v1.0 — Profile Edition\n\n", 300)) return;
     if (!await say(`Main Processor : ${CPU}\nMemory Testing : `, 300)) return;
-    await count(bootOut, 512, 65536, 512, v => String(v).padStart(6) + "K", 30, sfx.tick);   // ~4 s, like a 486 with 64 MB if (!alive()) return;
+    const quick = api.bios?.quickPost;                   // BIOS Setup: Quick Power On Self Test
+    const step = quick ? 2048 : 512;                     // quick: ~1 s
+    await count(bootOut, step, 65536, step, v => String(v).padStart(6) + "K", 30, sfx.tick); if (!alive()) return;   // ~4 s, like a 486 with 64 MB
     bootOut.append(" OK\n\n"); snd(sfx.ok);
     if (!await say("GM Plug and Play BIOS Extension v1.0A\nInitialize Plug and Play Cards...\nPNP Init Completed\n\n", 400)) return;
     for (const [slot, dev] of DRIVES) {
@@ -150,7 +158,12 @@ const GM = (() => {
     if (!await say("\n" + t.load, 0)) return;
     await count(bootOut, 0, 100, 2, v => String(v).padStart(3) + "%", 18); if (!alive()) return;
     bootOut.append(" ", OK(), "\n\n"); snd(sfx.ok);
-    if (!await say("Press DEL to enter SETUP", 3500)) return;
+    const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.dataset.setup = ""; del.textContent = "DEL";
+    bootOut.append("Press ", del, " to enter SETUP");
+    for (let i = 0; i < 35 && !wantSetup && !fast(); i++) await sleep(100);
+    if (!alive()) return;
+    if (wantSetup) return enterSetup();
+    delOk = false;
     // ---- screen 2: system summary ----
     bootOut.textContent = ""; snd(sfx.blip);
     bootOut.append(summaryBox());
@@ -163,7 +176,7 @@ const GM = (() => {
     bootOut.textContent = ""; snd(sfx.blip);
     bootOpts.hidden = false; select(grubSel); $("#grub-help").hidden = true;
     const hello = $("#grub-hello"); hello.textContent = "";
-    await type(hello, t.hello); if (!alive()) return;
+    await type(hello, t.hello, () => 28 + Math.random() * 40, c => snd(() => sfx.clack(c))); if (!alive()) return;   // typed by a person
     $("#grub-help").hidden = false;
   }
   // GRUB: entries without data-mode are shown but not bootable yet. Any key or tap stops the countdown.
@@ -187,13 +200,21 @@ const GM = (() => {
     const run = ++bootRun;
     root.classList.remove("mode-classic", "mode-shell");
     shellEl.hidden = true; boot.hidden = false; bootOpts.hidden = true;
-    skip = false; typing = true; setUrl(null); grubSel = 0; grubLeft = 10;
+    skip = false; typing = true; setUrl(null); grubSel = 0; grubLeft = 10; wantSetup = false; delOk = true;
     await bootSeq(run);
     if (run !== bootRun) return;
     typing = false; grubTimer(run);
   }
+  async function enterSetup() {          // DEL during POST: Award CMOS Setup (bios.js), then the POST starts again
+    const run = ++bootRun; typing = false; delOk = false; setupOn = true;
+    bootOut.textContent = ""; sfx.blip();
+    try { await need("bios.js"); if (run === bootRun) await api.bios.open(bootOut); }
+    catch (e) { bootOut.textContent = "bios.js failed to load"; await sleep(1500); }
+    setupOn = false;
+    if (run === bootRun) showBoot();
+  }
   async function redrawBoot() {          // finished boot screen in the new language
-    if (!boot || boot.hidden || bootOut.querySelector(".halt")) return;
+    if (!boot || boot.hidden || setupOn || bootOut.querySelector(".halt")) return;
     const run = ++bootRun; skip = true; typing = true;
     await bootSeq(run);
     if (run === bootRun) { typing = false; grubTimer(run); }
@@ -224,9 +245,9 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  let shellReady = null;
-  const loadShell = () => shellReady ||= new Promise((ok, ko) => {
-    const s = document.createElement("script"); s.src = "shell.js?v=0.10"; s.onload = ok; s.onerror = ko; document.head.append(s);
+  const V = "0.11", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const need = f => loaded[f] ||= new Promise((ok, ko) => {
+    const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
   async function setMode(mode) {
     bootRun++; skip = true; typing = false; boot.hidden = true;
@@ -237,7 +258,7 @@ const GM = (() => {
     $("main").scrollTop = 0;
     if (mode === "shell") {
       shellEl.hidden = false;
-      try { await loadShell(); skip = false; api.shell.open(); }
+      try { await need("shell.js"); skip = false; api.shell.open(); }
       catch (e) { $("#sh-out").textContent = "shell.js failed to load — try the quick view."; }
     } else shellEl.hidden = true;
   }
@@ -259,6 +280,7 @@ const GM = (() => {
     document.addEventListener("click", e => {
       const g = e.target.closest(".grub button");
       if (g) { grubLeft = 0; select(entries().indexOf(g)); }
+      if (e.target.closest("[data-setup]") && delOk) { wantSetup = true; return; }
       if (e.target.closest("[data-reboot]")) { e.preventDefault(); showBoot(); return; }
       const m = e.target.closest("[data-mode]");
       if (m) { e.preventDefault(); setMode(m.dataset.mode); return; }
@@ -266,7 +288,8 @@ const GM = (() => {
     });
     document.addEventListener("keydown", e => {
       if (root.classList.contains("mode-classic") && e.key === "Enter" && !e.target.closest("a, button, input")) { showBoot(); return; }
-      if (boot.hidden || bootOut.querySelector(".halt")) return;
+      if (boot.hidden || setupOn || bootOut.querySelector(".halt")) return;
+      if (e.key === "Delete" && delOk) { wantSetup = true; return; }
       if (typing) { skip = true; return; }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       grubLeft = 0;
