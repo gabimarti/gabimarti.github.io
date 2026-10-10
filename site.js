@@ -205,14 +205,16 @@ const GM = (() => {
     if (run !== bootRun) return;
     typing = false; grubTimer(run);
   }
-  // full-screen programs loaded on demand (bios.js: DEL during POST, memtest.js: GRUB entry); when they end, the POST starts again
+  // full-screen programs loaded on demand (bios.js: DEL during POST; memtest.js, debian.js: GRUB entries).
+  // When they end, open() may resolve a mode to switch to ("shell"); otherwise the POST starts again.
   async function runApp(name) {
     const run = ++bootRun; typing = false; delOk = false; appOn = true;
     bootOpts.hidden = true; bootOut.textContent = ""; sfx.blip();
-    try { await need(name + ".js"); if (run === bootRun) await api[name].open(bootOut); }
+    let next;
+    try { await need(name + ".js"); if (run === bootRun) next = await api[name].open(bootOut); }
     catch (e) { bootOut.textContent = name + ".js failed to load"; await sleep(1500); }
     appOn = false;
-    if (run === bootRun) showBoot();
+    if (run === bootRun) next ? setMode(next) : showBoot();
   }
   async function redrawBoot() {          // finished boot screen in the new language
     if (!boot || boot.hidden || appOn || bootOut.querySelector(".halt")) return;
@@ -246,7 +248,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.12", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.13", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
