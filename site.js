@@ -136,7 +136,7 @@ const GM = (() => {
     return box;
   }
   const OK = () => { const s = document.createElement("span"); s.className = "ok"; s.textContent = "[✓]"; return s; };
-  let bootRun = 0, wantSetup = false, delOk = false, setupOn = false;
+  let bootRun = 0, wantSetup = false, delOk = false, appOn = false;
   async function bootSeq(run) {
     const t = T[root.lang] || T.en, alive = () => run === bootRun, snd = f => { if (!fast()) f(); };
     const say = async (txt, ms = 90) => { bootOut.append(txt); if (!fast()) await sleep(ms); return alive(); };
@@ -162,7 +162,7 @@ const GM = (() => {
     bootOut.append("Press ", del, " to enter SETUP");
     for (let i = 0; i < 35 && !wantSetup && !fast(); i++) await sleep(100);
     if (!alive()) return;
-    if (wantSetup) return enterSetup();
+    if (wantSetup) return runApp("bios");
     delOk = false;
     // ---- screen 2: system summary ----
     bootOut.textContent = ""; snd(sfx.blip);
@@ -205,16 +205,17 @@ const GM = (() => {
     if (run !== bootRun) return;
     typing = false; grubTimer(run);
   }
-  async function enterSetup() {          // DEL during POST: Award CMOS Setup (bios.js), then the POST starts again
-    const run = ++bootRun; typing = false; delOk = false; setupOn = true;
-    bootOut.textContent = ""; sfx.blip();
-    try { await need("bios.js"); if (run === bootRun) await api.bios.open(bootOut); }
-    catch (e) { bootOut.textContent = "bios.js failed to load"; await sleep(1500); }
-    setupOn = false;
+  // full-screen programs loaded on demand (bios.js: DEL during POST, memtest.js: GRUB entry); when they end, the POST starts again
+  async function runApp(name) {
+    const run = ++bootRun; typing = false; delOk = false; appOn = true;
+    bootOpts.hidden = true; bootOut.textContent = ""; sfx.blip();
+    try { await need(name + ".js"); if (run === bootRun) await api[name].open(bootOut); }
+    catch (e) { bootOut.textContent = name + ".js failed to load"; await sleep(1500); }
+    appOn = false;
     if (run === bootRun) showBoot();
   }
   async function redrawBoot() {          // finished boot screen in the new language
-    if (!boot || boot.hidden || setupOn || bootOut.querySelector(".halt")) return;
+    if (!boot || boot.hidden || appOn || bootOut.querySelector(".halt")) return;
     const run = ++bootRun; skip = true; typing = true;
     await bootSeq(run);
     if (run === bootRun) { typing = false; grubTimer(run); }
@@ -245,7 +246,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.11", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.12", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
@@ -282,13 +283,15 @@ const GM = (() => {
       if (g) { grubLeft = 0; select(entries().indexOf(g)); }
       if (e.target.closest("[data-setup]") && delOk) { wantSetup = true; return; }
       if (e.target.closest("[data-reboot]")) { e.preventDefault(); showBoot(); return; }
+      const app = e.target.closest("[data-run]");
+      if (app) { e.preventDefault(); runApp(app.dataset.run); return; }
       const m = e.target.closest("[data-mode]");
       if (m) { e.preventDefault(); setMode(m.dataset.mode); return; }
       if (!boot.hidden && typing) skip = true;
     });
     document.addEventListener("keydown", e => {
       if (root.classList.contains("mode-classic") && e.key === "Enter" && !e.target.closest("a, button, input")) { showBoot(); return; }
-      if (boot.hidden || setupOn || bootOut.querySelector(".halt")) return;
+      if (boot.hidden || appOn || bootOut.querySelector(".halt")) return;
       if (e.key === "Delete" && delOk) { wantSetup = true; return; }
       if (typing) { skip = true; return; }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
