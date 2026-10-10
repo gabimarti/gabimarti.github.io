@@ -226,7 +226,7 @@ const GM = (() => {
   // ---------- modes ----------
   let shellReady = null;
   const loadShell = () => shellReady ||= new Promise((ok, ko) => {
-    const s = document.createElement("script"); s.src = "shell.js?v=0.9"; s.onload = ok; s.onerror = ko; document.head.append(s);
+    const s = document.createElement("script"); s.src = "shell.js?v=0.10"; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
   async function setMode(mode) {
     bootRun++; skip = true; typing = false; boot.hidden = true;
@@ -238,7 +238,7 @@ const GM = (() => {
     if (mode === "shell") {
       shellEl.hidden = false;
       try { await loadShell(); skip = false; api.shell.open(); }
-      catch (e) { $("#sh-out").textContent = "shell.js failed to load — try the classic view."; }
+      catch (e) { $("#sh-out").textContent = "shell.js failed to load — try the quick view."; }
     } else shellEl.hidden = true;
   }
 

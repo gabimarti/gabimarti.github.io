@@ -59,7 +59,7 @@
       "TODO\n  [x] write 'El Arte de los Hashes' on Medium (cat ~/articles.txt)\n  [ ] stop forgetting the root password!!\n  [ ] delete the old backup in /var/backups — it's only ENCODED, not encrypted...\n      (my favourite chef's recipe: a classic Caesar shift of 13, then base 64, then base 16)\n  [ ] check /etc/shadow permissions (anyone can verify the hash there)",
       "TODO\n  [x] escribir 'El Arte de los Hashes' en Medium (cat ~/articles.txt)\n  [ ] ¡¡dejar de olvidar la contraseña de root!!\n  [ ] borrar el backup viejo de /var/backups — solo está CODIFICADO, no cifrado...\n      (la receta de mi chef favorito: un César clásico de 13, luego base 64, luego base 16)\n  [ ] revisar permisos de /etc/shadow (cualquiera puede verificar el hash)"),
     "/etc/hostname": () => HOST,
-    "/etc/motd": () => B("GMOS 1.2.59 — authorized users only. Curious ones too.", "GMOS 1.2.59 — solo usuarios autorizados. Y curiosos."),
+    "/etc/motd": () => B("GMOS 1.3.59 — authorized users only. Curious ones too.", "GMOS 1.3.59 — solo usuarios autorizados. Y curiosos."),
     "/etc/shadow": async () => { const v = await vault(); return `root:${v.sha256}:20370:0:99999:7:::\ngabimarti:!:20370:0:99999:7:::\n<span class="dim"># hash: SHA-256 (hex)</span>`; },
     "/var/backups/root_pw.bak": async () => { const v = await vault(); return `<span class="dim"># root password backup — 2019</span>\n${esc(v.backup)}`; },
     "/root/cv.txt": () => esc(cv),
@@ -213,7 +213,7 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
     ["su · sudo su", "become root (password required)", "hacerse root (requiere contraseña)"],
     ["history · clear · echo", "shell utilities", "utilidades de la shell"],
     ["lang <en|es> · theme [light|dark]", "language and colours", "idioma y colores"],
-    ["classic · exit", "classic view (everything at once)", "vista clásica (todo de golpe)"],
+    ["quick · exit", "quick view (everything at once)", "vista rápida (todo de golpe)"],
     ["reboot · shutdown", "restart the system (the shell starts from scratch)", "reiniciar el sistema (la shell empieza de cero)"],
   ];
   const CMDS = {
@@ -260,11 +260,11 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
       const logo = [" ██████  ███    ███", "██       ████  ████", "██   ███ ██ ████ ██", "██    ██ ██  ██  ██", " ██████  ██      ██"];
       const info = [
         `<strong>${user}</strong>@<strong>${HOST}</strong>`, "--------------------",
-        `<span class="dim">OS:</span> GMOS 1.2.59 (reverse-engineered)`,
+        `<span class="dim">OS:</span> GMOS 1.3.59 (reverse-engineered)`,
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
         `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática")}`,
-        `<span class="dim">Shell:</span> gmsh 0.9`,
+        `<span class="dim">Shell:</span> gmsh 0.10`,
         `<span class="dim">${B("Languages", "Lenguajes")}:</span> Python, C, Delphi, ASM`,
         `<span class="dim">${B("Tools", "Herramientas")}:</span> Ghidra, Burp Suite, Wazuh`,
         `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz")}`,
@@ -333,7 +333,8 @@ ${lab.join("\n")}
       args[0] ? GM.setTheme(args[0]) : GM.toggleTheme();
       print(`theme: ${GM.isLight() ? "light" : "dark"}`);
     },
-    classic: () => GM.setMode("classic"),
+    quick: () => GM.setMode("classic"),
+    classic: () => GM.setMode("classic"),   // old name, still accepted
     exit: () => {
       if (user === "root") { user = "gabimarti"; cwd = HOME; setPrompt(); return print("logout"); }
       GM.setMode("classic");
@@ -420,8 +421,8 @@ ${lab.join("\n")}
       if (!started) {
         started = true; setPrompt();
         type(print(""), es()
-          ? "gmsh 0.9 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
-          : "gmsh 0.9 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
+          ? "gmsh 0.10 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
+          : "gmsh 0.10 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
       }
       input.focus({ preventScroll: true });
     },
