@@ -110,7 +110,11 @@ html.js:not(.mode-classic) :is(.info, #avatar) { display: none !important; }
 html:not(.js) .js-only { display: none; }
 #boot-out { white-space: pre-wrap; word-break: break-word; line-height: 1.3; }
 .ok { color: var(--accent); }
-.measure { position: absolute; visibility: hidden; white-space: pre; }
+.sysbox { display: inline-grid; vertical-align: top; border: 1px solid; white-space: pre; }
+.sysbox .ttl { text-align: center; padding: .45em 3ch; }
+.sysbox .sec { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid; }
+.sysbox .col { padding: .45em 3ch; }
+.sysbox .col + .col { border-left: 1px solid; }
 #boot-opts { margin-top: 1rem; }
 #boot-opts button {
   display: block; width: 100%; margin: .45rem 0; padding: .45rem .7rem; text-align: left; cursor: pointer;

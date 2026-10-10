@@ -88,7 +88,7 @@ const GM = (() => {
 
   // ---------- typewriter + counters ----------
   let skip = false, typing = false;
-  const fast = () => skip || reduce;
+  const fast = () => skip;              // boot always animates, even with reduced motion (user choice)
   async function type(el, text, ms = 16) {
     for (let i = 0; i < text.length; i++) {
       if (fast()) { el.append(text.slice(i)); return; }
@@ -114,40 +114,21 @@ const GM = (() => {
   const CPU = "Curiosity(TM) 486DX2-66MHz";
   const DRIVES = [["Primary Master", "GM-HDD 1986MB"], ["Primary Slave", "None"], ["Secondary Master", "CD-ROM 52X"], ["Secondary Slave", "ZIP 100"]];
   const narrow = matchMedia("(max-width: 640px)");
-  // Some fonts (e.g. Android's monospace) lack box-drawing glyphs and fall back to a wider font,
-  // which breaks the frame. Measure them against plain ASCII and fall back to + - | if they differ.
-  function boxGlyphsOk() {
-    const m = s => { const e = document.createElement("span"); e.className = "measure"; e.textContent = s.repeat(30); bootOut.append(e); const w = e.getBoundingClientRect().width; e.remove(); return w; };
-    return Math.abs(m("─") - m("-")) < 1 && Math.abs(m("│") - m("-")) < 1;
-  }
+  // Frame drawn with CSS borders, not box-drawing characters: some fonts (e.g. Android's monospace) lack them.
   function summaryBox() {
-    const g = boxGlyphsOk()
-      ? { h: "─", v: "│", tl: "┌", tr: "┐", bl: "└", br: "┘", lt: "├", rt: "┤", tt: "┬", bt: "┴", x: "┼" }
-      : { h: "-", v: "|", tl: "+", tr: "+", bl: "+", br: "+", lt: "+", rt: "+", tt: "+", bt: "+", x: "+" };
-    const title = "System Configurations", center = (t, w) => " ".repeat(Math.floor((w - t.length) / 2)) + t + " ".repeat(Math.ceil((w - t.length) / 2));
-    if (narrow.matches) {                 // phones: one column, 34 chars wide, so lines never wrap
-      const W = 32, row = a => `${g.v} ${a.padEnd(W - 1)}${g.v}`, line = (l, r) => l + g.h.repeat(W) + r;
-      return [
-        line(g.tl, g.tr), g.v + center(title, W) + g.v, line(g.lt, g.rt),
-        ...["CPU Type     : 486DX2", "Co-Processor : Curiosity", "CPU Clock    : 66MHz", "Base Memory  : 640K", "Ext. Memory  : 64512K", "Cache Memory : 256K"].map(row),
-        line(g.lt, g.rt),
-        ...["Diskette A   : 1.44M, 3.5in", "Pri. Master  : GM-HDD 1986MB", "Sec. Master  : CD-ROM 52X", "Sec. Slave   : ZIP 100", "Display Type : VGA/EGA", "Profile      : gabimarti"].map(row),
-        line(g.bl, g.br),
-      ].join("\n");
-    }
-    const L = 30, R = 29, row = (a, b) => `${g.v} ${a.padEnd(L - 1)}${g.v} ${b.padEnd(R - 1)}${g.v}`, split = (l, m, r) => l + g.h.repeat(L) + m + g.h.repeat(R) + r;
-    return [
-      g.tl + g.h.repeat(L + R + 1) + g.tr, g.v + center(title, L + R + 1) + g.v, split(g.lt, g.tt, g.rt),
-      row("CPU Type     : 486DX2", "Base Memory     :   640K"),
-      row("Co-Processor : Curiosity", "Extended Memory : 64512K"),
-      row("CPU Clock    : 66MHz", "Cache Memory    :   256K"),
-      split(g.lt, g.x, g.rt),
-      row("Diskette A   : 1.44M, 3.5in", "Display Type    : VGA/EGA"),
-      row("Pri. Master  : GM-HDD 1986MB", "Serial Port(s) : 3F8 2F8"),
-      row("Sec. Master  : CD-ROM 52X", "Parallel Port  : 378"),
-      row("Sec. Slave   : ZIP 100", "Profile        : gabimarti"),
-      split(g.bl, g.bt, g.br),
-    ].join("\n");
+    const div = (cls, text) => { const d = document.createElement("div"); d.className = cls; if (text) d.textContent = text; return d; };
+    const sec = (...cols) => { const s = div("sec"); s.append(...cols.map(c => div("col", c.join("\n")))); return s; };
+    const box = div("sysbox");
+    box.append(div("ttl", "System Configurations"));
+    if (narrow.matches) box.append(       // phones: one column, so lines never wrap
+      sec(["CPU Type     : 486DX2", "Co-Processor : Curiosity", "CPU Clock    : 66MHz", "Base Memory  : 640K", "Ext. Memory  : 64512K", "Cache Memory : 256K"]),
+      sec(["Diskette A   : 1.44M, 3.5in", "Pri. Master  : GM-HDD 1986MB", "Sec. Master  : CD-ROM 52X", "Sec. Slave   : ZIP 100", "Display Type : VGA/EGA", "Profile      : gabimarti"]));
+    else box.append(
+      sec(["CPU Type     : 486DX2", "Co-Processor : Curiosity", "CPU Clock    : 66MHz"],
+          ["Base Memory     :   640K", "Extended Memory : 64512K", "Cache Memory    :   256K"]),
+      sec(["Diskette A   : 1.44M, 3.5in", "Pri. Master  : GM-HDD 1986MB", "Sec. Master  : CD-ROM 52X", "Sec. Slave   : ZIP 100"],
+          ["Display Type    : VGA/EGA", "Serial Port(s) : 3F8 2F8", "Parallel Port  : 378", "Profile        : gabimarti"]));
+    return box;
   }
   const OK = () => { const s = document.createElement("span"); s.className = "ok"; s.textContent = "[✓]"; return s; };
   let bootRun = 0;
@@ -173,7 +154,8 @@ const GM = (() => {
     if (!await say("Press DEL to enter SETUP", 1000)) return;
     // ---- screen 2: system summary ----
     bootOut.textContent = ""; snd(sfx.blip);
-    if (!await say(summaryBox() + "\n\n", 700)) return;
+    bootOut.append(summaryBox());
+    if (!await say("\n\n", 700)) return;
     if (!await say("Verifying DMI Pool Data ...... ", 500)) return;
     if (!await say("Update Success\nBoot from GM-HDD .............. ", 400)) return;
     bootOut.append(OK(), "\n\n"); snd(sfx.ok); snd(() => sfx.fanStop(3));
@@ -223,7 +205,7 @@ const GM = (() => {
   // ---------- modes ----------
   let shellReady = null;
   const loadShell = () => shellReady ||= new Promise((ok, ko) => {
-    const s = document.createElement("script"); s.src = "shell.js?v=0.6"; s.onload = ok; s.onerror = ko; document.head.append(s);
+    const s = document.createElement("script"); s.src = "shell.js?v=0.7"; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
   async function setMode(mode) {
     bootRun++; skip = true; typing = false; boot.hidden = true;
@@ -268,7 +250,6 @@ const GM = (() => {
     const mode = new URLSearchParams(location.search).get("mode");
     if (location.hash === "#avatar" || mode === "classic") setMode("classic");
     else if (mode === "shell") setMode("shell");
-    else if (reduce) showBoot();
     else powerOn();
   });
   return api;
