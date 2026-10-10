@@ -124,7 +124,7 @@ html:not(.js) .js-only { display: none; }
 #boot-opts .key { color: var(--accent); font-weight: 600; }
 #boot-opts p { margin-top: .8rem; }
 .halt { display: grid; place-items: center; min-height: 100%; text-align: center; color: #e3b341; white-space: normal; }
-.pwr { font-size: 3rem; line-height: 1; color: var(--accent); }
+.pwr { width: 3rem; height: 3rem; color: var(--accent); }   /* SVG: Android fonts lack the power glyph */
 #boot { height: 100%; }
 #boot-out:has(.halt) { height: 100%; }
 

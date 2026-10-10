@@ -59,7 +59,7 @@
       "TODO\n  [x] write 'El Arte de los Hashes' on Medium (cat ~/articles.txt)\n  [ ] stop forgetting the root password!!\n  [ ] delete the old backup in /var/backups — it's only ENCODED, not encrypted...\n      (my favourite chef's recipe: a classic Caesar shift of 13, then base 64, then base 16)\n  [ ] check /etc/shadow permissions (anyone can verify the hash there)",
       "TODO\n  [x] escribir 'El Arte de los Hashes' en Medium (cat ~/articles.txt)\n  [ ] ¡¡dejar de olvidar la contraseña de root!!\n  [ ] borrar el backup viejo de /var/backups — solo está CODIFICADO, no cifrado...\n      (la receta de mi chef favorito: un César clásico de 13, luego base 64, luego base 16)\n  [ ] revisar permisos de /etc/shadow (cualquiera puede verificar el hash)"),
     "/etc/hostname": () => HOST,
-    "/etc/motd": () => B("GMOS 1.0.59 — authorized users only. Curious ones too.", "GMOS 1.0.59 — solo usuarios autorizados. Y curiosos."),
+    "/etc/motd": () => B("GMOS 1.1.59 — authorized users only. Curious ones too.", "GMOS 1.1.59 — solo usuarios autorizados. Y curiosos."),
     "/etc/shadow": async () => { const v = await vault(); return `root:${v.sha256}:20370:0:99999:7:::\ngabimarti:!:20370:0:99999:7:::\n<span class="dim"># hash: SHA-256 (hex)</span>`; },
     "/var/backups/root_pw.bak": async () => { const v = await vault(); return `<span class="dim"># root password backup — 2019</span>\n${esc(v.backup)}`; },
     "/root/cv.txt": () => esc(cv),
@@ -260,11 +260,11 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
       const logo = [" ██████  ███    ███", "██       ████  ████", "██   ███ ██ ████ ██", "██    ██ ██  ██  ██", " ██████  ██      ██"];
       const info = [
         `<strong>${user}</strong>@<strong>${HOST}</strong>`, "--------------------",
-        `<span class="dim">OS:</span> GMOS 1.0.59 (reverse-engineered)`,
+        `<span class="dim">OS:</span> GMOS 1.1.59 (reverse-engineered)`,
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
         `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática")}`,
-        `<span class="dim">Shell:</span> gmsh 0.7`,
+        `<span class="dim">Shell:</span> gmsh 0.8`,
         `<span class="dim">${B("Languages", "Lenguajes")}:</span> Python, C, Delphi, ASM`,
         `<span class="dim">${B("Tools", "Herramientas")}:</span> Ghidra, Burp Suite, Wazuh`,
         `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz")}`,
@@ -420,8 +420,8 @@ ${lab.join("\n")}
       if (!started) {
         started = true; setPrompt();
         type(print(""), es()
-          ? "gmsh 0.7 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
-          : "gmsh 0.7 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
+          ? "gmsh 0.8 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
+          : "gmsh 0.8 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
       }
       input.focus({ preventScroll: true });
     },

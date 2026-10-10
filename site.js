@@ -41,7 +41,7 @@ const GM = (() => {
       g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(1e-4, t + dur);
       o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + dur + .02);
     }
-    function brown() {                                     // brown noise: fan rumble / disk seeks
+    function brown() {                                     // brown noise: fan rumble
       if (noiseBuf) return noiseBuf;
       noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
       const d = noiseBuf.getChannelData(0); let last = 0;
@@ -78,7 +78,6 @@ const GM = (() => {
       post: () => tone(1000, .25, "square", .06),                                // the classic single POST beep
       tick: () => tone(2100, .01, "square", .015),                               // memory counter
       ok: () => { tone(988, .06, "square", .035); tone(1319, .08, "square", .035, .07); },
-      seek: n => { for (let i = 0; i < n; i++) noise(.04, .9, 1800 + Math.random() * 2200, i * .08 + Math.random() * .03); },
       blip: () => tone(660, .06, "triangle", .07),                               // screen change
       key: () => tone(1400, .02, "square", .025),                                // command entered
       err: () => tone(170, .14, "sawtooth", .035),
@@ -140,18 +139,18 @@ const GM = (() => {
     if (!await say("GM Modular BIOS v4.51GM, An Energy Star Ally\nCopyright (C) 1986-2026, gabimarti\n\n", 500)) return;
     if (!await say("GM-80 ROM BIOS v1.0 — Profile Edition\n\n", 300)) return;
     if (!await say(`Main Processor : ${CPU}\nMemory Testing : `, 300)) return;
-    await count(bootOut, 8, 640, 8, v => String(v).padStart(4) + "K", 14, sfx.tick); if (!alive()) return;
+    await count(bootOut, 512, 65536, 512, v => String(v).padStart(6) + "K", 30, sfx.tick);   // ~4 s, like a 486 with 64 MB if (!alive()) return;
     bootOut.append(" OK\n\n"); snd(sfx.ok);
     if (!await say("GM Plug and Play BIOS Extension v1.0A\nInitialize Plug and Play Cards...\nPNP Init Completed\n\n", 400)) return;
     for (const [slot, dev] of DRIVES) {
-      if (!await say(`Detecting ${slot.padEnd(16)} ... `, dev === "None" ? 300 : 0)) return;
-      if (dev !== "None") { snd(() => sfx.seek(7)); if (!fast()) await sleep(700); if (!alive()) return; }
-      bootOut.append(dev + "\n"); if (dev !== "None") snd(sfx.ok);
+      snd(sfx.tick);
+      if (!await say(`Detecting ${slot.padEnd(16)} ... `, dev === "None" ? 300 : 700)) return;
+      bootOut.append(dev + "\n");
     }
     if (!await say("\n" + t.load, 0)) return;
     await count(bootOut, 0, 100, 2, v => String(v).padStart(3) + "%", 18); if (!alive()) return;
     bootOut.append(" ", OK(), "\n\n"); snd(sfx.ok);
-    if (!await say("Press DEL to enter SETUP", 1000)) return;
+    if (!await say("Press DEL to enter SETUP", 3500)) return;
     // ---- screen 2: system summary ----
     bootOut.textContent = ""; snd(sfx.blip);
     bootOut.append(summaryBox());
@@ -192,7 +191,7 @@ const GM = (() => {
     bootOut.innerHTML = `<div class="halt"><div>${msg}</div></div>`;
     await waitKey(); sfx.unlock(); showBoot();
   }
-  const powerOn = () => screen(`<span class="pwr">⏻</span><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar")}</small>`);
+  const powerOn = () => screen(`<svg class="pwr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar")}</small>`);
   const halt = msg => { sfx.fanStop(.5); return screen(msg); };
 
   function setUrl(mode) {
@@ -205,7 +204,7 @@ const GM = (() => {
   // ---------- modes ----------
   let shellReady = null;
   const loadShell = () => shellReady ||= new Promise((ok, ko) => {
-    const s = document.createElement("script"); s.src = "shell.js?v=0.7"; s.onload = ok; s.onerror = ko; document.head.append(s);
+    const s = document.createElement("script"); s.src = "shell.js?v=0.8"; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
   async function setMode(mode) {
     bootRun++; skip = true; typing = false; boot.hidden = true;
