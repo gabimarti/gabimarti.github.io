@@ -129,7 +129,8 @@ html:not(.js) .js-only { display: none; }
 .pwr { width: 3rem; height: 3rem; color: var(--accent); }   /* SVG: Android fonts lack the power glyph */
 #boot { height: 100%; }
 #boot-out:has(:is(.halt, .bios, .mt, .dos)) { height: 100%; }
-.del { font: inherit; color: inherit; background: none; border: 1px solid var(--dim); border-radius: 3px; padding: 0 .4ch; cursor: pointer; }
+.del { font: inherit; color: var(--accent); background: none; border: 1px solid var(--accent); border-radius: 3px; padding: 0 .4ch; cursor: pointer; animation: del-blink 1s steps(1) infinite; }
+@keyframes del-blink { 50% { color: var(--panel); background: var(--accent); } }
 /* Award CMOS Setup (bios.js): always blue, whatever the site theme */
 .bios { position: relative; display: flex; flex-direction: column; gap: .6rem; min-height: 100%; padding: .6rem; background: #0000aa; color: #fff; border: 3px double #fff; }
 .bios button { font: inherit; color: inherit; background: none; border: 0; border-radius: 0; padding: 0 1ch; text-align: left; cursor: pointer; }
@@ -145,6 +146,11 @@ html:not(.js) .js-only { display: none; }
 .bios .b-help { text-align: center; }
 .bios .b-dlg { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); max-width: 92%; padding: .8rem 2ch; background: #aa0000; color: #ffff55; border: 3px double #fff; }
 .bios .b-dlg button { color: #fff; border: 1px solid #fff; padding: 0 1.5ch; }
+/* easter egg: CPU overheats with Curiosity Overdrive = Ludicrous */
+.bios.smoke { animation: shake .09s infinite; }
+.bios.smoke::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 70%, #ccc, #555 60%, transparent); animation: smoke 3.5s ease-in forwards; }
+@keyframes shake { 50% { transform: translate(2px, -2px); } }
+@keyframes smoke { from { opacity: 0; } to { opacity: .9; } }
 /* MS-DOS (dos.js): light grey on black, whatever the site theme */
 .dos { min-height: 100%; padding: .6rem 1ch; background: #000; color: #aaa; }
 .dos pre { margin: 0; font: inherit; white-space: pre; overflow-x: auto; }

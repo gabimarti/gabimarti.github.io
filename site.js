@@ -40,6 +40,7 @@ const GM = (() => {
       o.type = type; o.frequency.value = freq;
       g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(1e-4, t + dur);
       o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + dur + .02);
+      return o;
     }
     function brown() {                                     // brown noise: fan rumble
       if (noiseBuf) return noiseBuf;
@@ -72,7 +73,7 @@ const GM = (() => {
       g.gain.exponentialRampToValueAtTime(1e-4, t + fade); s.stop(t + fade + .1); hum.stop(t + fade + .1);
     }
     return {
-      unlock, fanStart, fanStop,
+      unlock, fanStart, fanStop, tone,
       get on() { return on; },
       toggle() { on = !on; store("sound", on ? "on" : "off"); on ? unlock() : fanStop(.2); return on; },
       post: () => tone(1000, .25, "square", .06),                                // the classic single POST beep
@@ -158,6 +159,10 @@ const GM = (() => {
     if (!await say("\n" + t.load, 0)) return;
     await count(bootOut, 0, 100, 2, v => String(v).padStart(3) + "%", 18); if (!alive()) return;
     bootOut.append(" ", OK(), "\n\n"); snd(sfx.ok);
+    if (api.bios?.cmosBad) {                            // BIOS easter egg: the CPU released its magic smoke
+      api.bios.cmosBad = false; snd(sfx.err);
+      if (!await say("CMOS checksum error - Defaults loaded\n\n", 1500)) return;
+    }
     const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.dataset.setup = ""; del.textContent = "DEL";
     bootOut.append("Press ", del, " to enter SETUP");
     for (let i = 0; i < 35 && !wantSetup && !fast(); i++) await sleep(100);
@@ -248,7 +253,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.15", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.16", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
