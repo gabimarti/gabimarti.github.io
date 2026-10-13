@@ -118,8 +118,11 @@
     let body;
     if (!page) {
       body = box("b-menu", menu().map(([k], j) => `<button type="button" data-i="${j}"${j === sel ? ' class="hi"' : ""}>${esc(k)}</button>`).join(""));
-      body += box("b-keys", `<button type="button" data-key="Escape">Esc</button> : Quit &nbsp; ↑ ↓ → ← : Select Item<br><button type="button" data-key="F10">F10</button> : Save &amp; Exit Setup &nbsp; <button type="button" data-key="F1">F1</button> : Help &nbsp; Secrets found: ${found.size}/4`);
+      body += box("b-keys", `<button type="button" data-key="Escape">Esc</button> : Quit &nbsp; ↑ ↓ → ← : Select Item<br><button type="button" data-key="F10">F10</button> : Save &amp; Exit Setup &nbsp; <button type="button" data-key="F1">F1</button> : Help`);
       body += box("b-help", esc(MENU[sel][1]));
+      const left = 4 - found.size;                      // nudge visitors to go hunting
+      body += box("b-hint", left ? `<b>!!</b> WARNING: ${left} UNDOCUMENTED FEATURE${left > 1 ? "S" : ""} DETECTED (found ${found.size}/4) <b>!!</b><br>Real 90s hackers knew where to look. Press F1 for a clue.`
+        : "ALL 4 SECRETS FOUND — you would have made a fine 90s technician.");
     } else {
       body = box("b-page", PAGES[page].map((x, j) => {
         const v = x.ro ? (typeof x.ro === "function" ? x.ro() : x.ro) : x.v[x.i];

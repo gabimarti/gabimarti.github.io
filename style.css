@@ -144,6 +144,8 @@ html:not(.js) .js-only { display: none; }
 .bios .hi, .bios .hi b { background: #aa0000; color: #fff; }
 .bios .b-keys button { color: #ffff55; padding: 0; text-decoration: underline dotted; }
 .bios .b-help { text-align: center; }
+.bios .b-hint { margin-top: auto; text-align: center; color: #ffff55; }
+.bios .b-hint b { font-weight: normal; animation: blink 1s steps(1) infinite; }
 .bios .b-dlg { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); max-width: 92%; padding: .8rem 2ch; background: #aa0000; color: #ffff55; border: 3px double #fff; }
 .bios .b-dlg button { color: #fff; border: 1px solid #fff; padding: 0 1.5ch; }
 /* easter egg: CPU overheats with Curiosity Overdrive = Ludicrous */
