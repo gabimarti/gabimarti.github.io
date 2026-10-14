@@ -11,7 +11,7 @@ A static site styled as a retro terminal, with no frameworks, no build step, no 
 - **Boot**: 90s-style BIOS POST (memory test, drive detection, system summary) with synthesized retro sounds (mute with 🔊) — press DEL (or tap it) for the BIOS Setup, which hides a few easter eggs —, then a GRUB boot menu (Quick view, Debian boot → shell, MS-DOS 3.10, memtest86+) that auto-boots the Quick view.
 - **Quick view**: everything on one page. It's also what you get without JavaScript, so search engines see the full content. `ls ~/repos` opens a panel with selected GitHub projects (also `cat repos.txt` in the shell and `TYPE REPOS.TXT` in MS-DOS).
 - **Interactive shell** (`gmsh`, loaded only when chosen): a fake Linux terminal. Try `help`, `whoami`, `ls -a`, `cat avatar.txt`, `neofetch`, `myip`, `dig`… There are two flags to find, and a root challenge (`su`) that unlocks an encrypted CV. `cat explore.txt` (and `EXPLORE.TXT` in MS-DOS) lists what there is to find across the whole machine: both systems, the BIOS Setup and memtest.
-- **MS-DOS 3.10** (GRUB entry): a small COMMAND.COM with batch files (`CV` runs `CV.BAT`, the CV one section at a time with `PAUSE` and beeps), pipes and filters (`TYPE README.TXT | FIND "DIR"`, `MORE < file`, `SORT`), `TREE`, `ATTRIB`, `SET`, `PATH`, `PROMPT`, `LABEL`, `MEM`, a read-only blue `EDIT`, a drive A: that sounds like one, a few easter eggs for those who type what every DOS user feared, and the `LOCKED.COM` + `DEBUG` reversing challenge.
+- **MS-DOS 3.10** (GRUB entry): a small COMMAND.COM with batch files (`CV` runs `CV.BAT`, the CV one section at a time with `PAUSE` and beeps), pipes and filters (`TYPE README.TXT | FIND "DIR"`, `MORE < file`, `SORT`), `TREE`, `ATTRIB`, `SET`, `PATH`, `PROMPT`, `LABEL`, `MEM`, a read-only blue `EDIT`, a drive A: that sounds like one, a few easter eggs for those who type what every DOS user feared, `TELNET` to a 1997 BBS (news, files, a door game and a chat with a scripted SYSOP), and the `LOCKED.COM` + `DEBUG` reversing challenge.
 - Strict Content-Security-Policy (only own scripts and styles, no inline code).
 - Three languages (EN/ES/CA: `?lang=en|es|ca`, the browser language, or the buttons; the BIOS Setup, MS-DOS, the Debian boot log and memtest stay in English, as on a real 90s PC), light/dark theme toggle, fixed-size window that compacts on short screens so the quick view never scrolls on desktop, mobile-friendly, WCAG AA/AAA contrast.
 
@@ -25,6 +25,7 @@ Direct links: [`?mode=classic`](https://gabimarti.github.io/?mode=classic) · [`
 | `style.css` | Styles |
 | `site.js` | Language, theme, boot menu and modes |
 | `shell.js` | Interactive shell, loaded on demand |
+| `bbs.js` | THE CURIOSITY BBS, reached with `TELNET` from MS-DOS, loaded on demand |
 | `bios.js` | Award-style CMOS Setup (press DEL during the POST), loaded on demand |
 | `debian.js` | 1998 Debian boot log (GRUB entry "Debian GNU/Linux") that ends in the shell, loaded on demand |
 | `dos.js` | MS-DOS 3.10 (GRUB entry "MS-DOS 3.1"): DOS commands over the same content, and a hidden reversing challenge, loaded on demand |

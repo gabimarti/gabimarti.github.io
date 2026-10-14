@@ -6,6 +6,7 @@
 // Pipes (|) and input redirection (<) feed MORE, FIND and SORT. Commands newer than 1985 run with a wink.
 // Easter eggs: DIR /WTF, FORMAT C:, DEL *.* (-> REGRETS.TXT), PING, HACK; drive A: makes floppy noise, asks
 // Abort, Retry, Fail? and finds a 1986 backup disk on the 3rd try (BIOS Setup Drive A = None -> no drive A:).
+// TELNET <host> opens THE CURIOSITY BBS (bbs.js, loaded on demand): a scripted 1997 bulletin board.
 // open() resolves "classic" on EXIT, or nothing on REBOOT / Ctrl+Alt+Del (site.js then restarts the POST).
 "use strict";
 (() => {
@@ -42,6 +43,7 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
 [ ] DIR doesn't list every file either. ATTRIB is less discreet.
 [ ] The commands every DOS user feared still work. Sort of.
 [ ] Drive A: is still there. Bring patience (and Retry).
+[ ] A 1997 BBS is still online, and its SYSOP still answers. Look in C:\\DOS.
 [ ] Debian GNU/Linux (boot menu): 2 flags and a root account.
 [ ] BIOS Setup: press DEL during the memory test.
     4 undocumented features. F1 gives clues.
@@ -101,7 +103,7 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
       "ATTRIB.EXE": [8234, OLD], "CHKDSK.COM": [9435, OLD], "DEBUG.COM": [15647, OLD], "EDIT.COM": [413, OLD],
       "EDLIN.COM": [7261, OLD], "FDISK.COM": [16737, OLD], "FIND.EXE": [6403, OLD], "FORMAT.COM": [11005, OLD],
       "LABEL.COM": [1826, OLD], "MEM.EXE": [32150, OLD], "MORE.COM": [282, OLD], "SORT.EXE": [1632, OLD],
-      "SYS.COM": [4607, OLD], "TREE.COM": [1645, OLD],
+      "SYS.COM": [4607, OLD], "TELNET.EXE": [64328, OLD], "TREE.COM": [1645, OLD],
     },
     SKILLS: Object.fromEntries(SKILLS.map((k, i) => [k + ".TXT", [null, null, () => html(`#c-skills dd:nth-of-type(${i + 1})`)]])),
     CONTACT: Object.fromEntries(CONTACTS.map((k, i) => [k + ".URL", [null, null, () => html(`#c-contact li:nth-child(${i + 1}) a`)]])),
@@ -123,7 +125,21 @@ Lesson learned: test your restores.`;
 - I typed DEL *.* on someone else's PC.
 - The weekend is gone. The files are fine: this disk is write-protected.
 - Next time: COPY *.* A: first.`;
-  const HIDDEN = new Set(["UTILS"]);                        // hidden directories (ATTRIB only lists files, so UTILS stays a secret)
+  const WTFD = " 2-30-86  12:00p";
+  const MOTIVATE = "@ECHO OFF\nECHO You can do it!\nECHO You are a rockstar developer!\nECHO The deadline is just a suggestion!\nPAUSE\nECHO Just kidding. Go get a coffee: COFFEE";
+  const WTF = {                                             // C:\WTF: what DIR /WTF shows (hidden, CD WTF works)
+    "REALITY.SYS": [0, "12-31-99  11:59p", () => ""],
+    "COFFEE.EXE": [65535, " 1-01-80   6:00a"],
+    "MOTIVATE.BAT": [null, WTFD, () => txt(MOTIVATE), MOTIVATE],
+    "DEADLINE.TMP": [999999, " 4-01-86   9:00a", () => txt("DEADLINE: yesterday.\nSTATUS:   90% done (the other 90% starts tomorrow).")],
+    "BUGS.LOG": [1048576, " 3-13-85   1:13a", () => txt("[01:13] Fixed 1 bug.\n[01:14] 3 new bugs appeared.\n[01:15] Marked as feature.")],
+    "EXCUSES.DOC": [640, " 8-08-88   8:08p", () => txt("1. It works on my machine.\n2. That's not a bug, it's undocumented behaviour.\n3. The compiler did it.\n4. Cosmic rays flipped a bit.")],
+    "WEEKEND.ZIP": [1, " 5-05-85   5:05p", () => txt("PK\u0003\u0004 - compressed to 1 byte. That's how long it felt.")],
+    "MEETING.EXE": [2000000, " 9-09-89   9:09a"],
+    "SLEEP.DAT": [404, " 6-06-86   3:00a", () => txt("zzz... 404: sleep not found.")],
+  };
+  const HIDDEN = new Set(["UTILS", "WTF"]);
+  FS.WTF = WTF;                        // hidden directories (ATTRIB only lists files, so UTILS stays a secret)
   const ATTR0 = { "IO.SYS": "RHS", "MSDOS.SYS": "RHS" };     // file attributes (default: A)
   const DAYS = "Sun Mon Tue Wed Thu Fri Sat".split(" ");
   const p2 = n => String(n).padStart(2, "0"), hx = (n, w = 2) => n.toString(16).toUpperCase().padStart(w, "0");
@@ -165,6 +181,7 @@ Lesson learned: test your restores.`;
   const isDir = n => n && !Array.isArray(n);
   const print = h => { const d = document.createElement("div"); d.innerHTML = h; out.append(d); el.closest("main").scrollTop = 1e9; return d; };
   const err = h => { sfx.err(); return print(h); };
+  const toBottom = () => { const m = el.closest("main"); m.scrollTop = m.scrollHeight; };   // prompt back in view
   const promptText = () => (env.PROMPT ?? "$N$G").replace(/\$(.)/g, (_, c) => ({
     P: pathStr(), G: ">", L: "<", B: "|", Q: "=", N: drive, $: "$", _: "\n", V: "MS-DOS Version 3.10",
     D: dateLine().slice(16), T: timeLine().slice(16), E: "", H: "" })[c.toUpperCase()] ?? "");
@@ -172,7 +189,7 @@ Lesson learned: test your restores.`;
   // a program waiting for input: label is the prompt, cb gets the line (DATE/TIME ignore it, DEBUG loops, LOCKED wants a password)
   const ask = (label, cb = () => {}, secret = false) => { pending = cb; setPrompt(label); input.type = secret ? "password" : "text"; };
   const askLine = label => new Promise(res => {          // same, awaitable (also inside a batch file, where the prompt is hidden)
-    form.hidden = false; input.focus({ preventScroll: true });
+    form.hidden = false; input.focus({ preventScroll: true }); toBottom();
     ask(label, v => { if (batchDepth) form.hidden = true; res(v); });
   });
   // wait for a key or a tap (PAUSE, MORE, EDIT); Ctrl+C / Esc stops a running batch file
@@ -228,7 +245,7 @@ Lesson learned: test your restores.`;
   }
   const volLine = () => drive === "A" ? " Volume in drive A is BACKUP 86" : vol ? ` Volume in drive C is ${esc(vol)}` : " Volume in drive C has no label";
   function dir(arg) {
-    if (/\/WTF\b/i.test(arg)) return wtf();
+    if (/\/WTF\b/i.test(arg)) arg = "\\WTF";                 // DIR /WTF = DIR \WTF
     arg = arg.replace(/\/\w+/g, "").trim();                   // /W, /P...: ignored
     const p = arg ? resolve(arg) : cwd, n = p && node(p);
     if (!isDir(n)) return err("File not found");
@@ -247,13 +264,7 @@ Lesson learned: test your restores.`;
         rows.push(`${btn} ${String(s).padStart(9)}  ${v[1] || today().padStart(8) + "  12:00p"}`);
       }
     }
-    print(`<pre>${volLine()}\n Directory of  ${esc(pathStr(p))}\n\n${rows.join("\n")}\n${String(count).padStart(9)} File(s)  ${(drive === "A" ? 1440000 : 20123648) - bytes} bytes free</pre>`);
-  }
-  function wtf() {                                          // DIR /WTF: the files nobody admits having
-    const F = [["REALITY", "SYS", 0, "12-31-99  11:59p"], ["COFFEE", "EXE", 65535, " 1-01-80   6:00a"], ["MOTIVATE", "BAT", 0, " 2-30-86  12:00p"],
-      ["DEADLINE", "TMP", 999999, " 4-01-86   9:00a"], ["BUGS", "LOG", 1048576, " 3-13-85   1:13a"], ["EXCUSES", "DOC", 640, " 8-08-88   8:08p"],
-      ["WEEKEND", "ZIP", 1, " 5-05-85   5:05p"], ["MEETING", "EXE", 2000000, " 9-09-89   9:09a"], ["SLEEP", "DAT", 404, " 6-06-86   3:00a"]];
-    print(`<pre>${volLine()}\n Directory of  C:\\WTF\n\n${F.map(([b, e, s, d]) => `${b.padEnd(8)} ${e.padEnd(3)} ${String(s).padStart(9)}  ${d}`).join("\n")}\n        ${F.length} File(s)  0 bytes free (and 0 patience)</pre>`);
+    print(`<pre>${volLine()}\n Directory of  ${esc(pathStr(p))}\n\n${rows.join("\n")}\n${String(count).padStart(9)} File(s)  ${p.join() === "WTF" && drive === "C" ? "0 bytes free (and 0 patience)" : ((drive === "A" ? 1440000 : 20123648) - bytes) + " bytes free"}</pre>`);
   }
 
   // ---------- DEBUG: D [addr], U [addr], R, G, Q over the loaded .COM (or empty memory) ----------
@@ -347,7 +358,7 @@ Lesson learned: test your restores.`;
         await sleep(30);                                    // let the screen breathe, like a real 4.77 MHz PC
       }
     } finally {
-      if (!--batchDepth) { abort = false; echoOn = true; form.hidden = false; setPrompt(); input.focus({ preventScroll: true }); }
+      if (!--batchDepth) { abort = false; echoOn = true; form.hidden = false; setPrompt(); input.focus({ preventScroll: true }); toBottom(); }
     }
   }
   function evalIf(s) {                                      // IF [NOT] EXIST file | ERRORLEVEL n | a==b  command -> command or null
@@ -526,12 +537,19 @@ Lesson learned: test your restores.`;
     DEL: del, ERASE: del,
     PING: ping,
     HACK: hack,
+    HELP: () => { print("(HELP arrived with MS-DOS 5.0 in 1991: this PC peeked at the future. Here is README.TXT.)"); return CMDS.TYPE("\\README.TXT"); },
+    TELNET: async a => {
+      const host = a.trim().split(/\s+/)[0];
+      if (!host) return err("Usage: TELNET host   (any host will do: they all lead to the same BBS)");
+      try { await GM.need("bbs.js"); } catch (e) { return err("Network error: no route to host"); }
+      return GM.bbs.run({ host, print, err, askLine, sleep, esc, sfx, cls: () => { out.innerHTML = ""; }, reduce: GM.reduce });
+    },
     FDISK: () => err("Nice try. The partitions are staying where they are."),
     EXIT: () => finish("classic"),
     REBOOT: () => finish(),
   };
   // programs on disk: only run if found in cwd / PATH (empty the PATH and they are gone, like on a real PC)
-  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL"]);
+  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET"]);
   // split on | outside quotes
   const pipes = t => { const parts = [""]; let q = false; for (const ch of t) { if (ch === '"') q = !q; if (ch === "|" && !q) parts.push(""); else parts[parts.length - 1] += ch; } return parts.map(s => s.trim()); };
   async function capture(fn) {                              // run a command with its output kept off screen, as plain text
@@ -560,6 +578,8 @@ Lesson learned: test your restores.`;
     if (CMDS[base] && (!EXTERNAL.has(base) || prog || findProgram(base))) return CMDS[base](a.trim(), stdin);
     const p = prog || findProgram(c);
     if (p && p.at(-1).endsWith(".BAT")) return runBatch(p, a.trim().split(/\s+/).filter(Boolean));
+    if (p && p.join("\\") === "WTF\\COFFEE.EXE") return coffee();
+    if (p && p.join("\\") === "WTF\\MEETING.EXE") return print("Starting MEETING.EXE...<br>This meeting could have been an email. Exiting.");
     if (p) return err("Program too big to fit in memory");
     err("Bad command or file name");
   }
@@ -569,7 +589,7 @@ Lesson learned: test your restores.`;
     const t = line.trim(); if (!t) return;
     hist.push(t); hpos = hist.length;
     busy = true; form.hidden = true;                         // no typing while a command runs (PING, FORMAT, HACK...)
-    try { await run(t); } finally { busy = false; if (!batchDepth) { form.hidden = false; input.focus({ preventScroll: true }); } }
+    try { await run(t); } finally { busy = false; if (!batchDepth) { form.hidden = false; input.focus({ preventScroll: true }); toBottom(); } }
   }
   // ---------- drive A: ----------
   const driveA = () => GM.bios?.driveA ?? "1.44M, 3.5 in.";   // BIOS Setup > STANDARD CMOS SETUP > Drive A
@@ -651,6 +671,12 @@ Lesson learned: test your restores.`;
       print(`Reply from ${esc(host)}: bytes=32 time=${times[(Math.random() * times.length) | 0]}ms TTL=1997`);
     }
     print(`<br>Ping statistics for ${esc(host)}:<br>    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)<br><span class="dim">(TTL=1997 can't exist: the maximum is 255. TCP/IP for DOS came years later; this one runs on imagination.)</span>`);
+  }
+  async function coffee() {
+    const m = print("Brewing");
+    for (let i = 0; i < 5; i++) { await sleep(GM.reduce ? 20 : 350); m.textContent += " ."; sfx.tick(); }
+    m.textContent += " \u2615";
+    print("Out of beans. Abort, Retry, Fail? (all three lead to the kitchen)");
   }
   async function hack() {                                   // green "movie hacking" screen
     const box = document.createElement("div"); box.className = "dos-hack";
