@@ -24,6 +24,7 @@ Things you can type:
   TYPE file   show a file            CLS                  clear the screen
   VER, VOL    version, volume        DATE, TIME           system clock
   CHKDSK, MEM disk and memory        ECHO text            say something
+  SCAN        look for viruses (McAfee, 1990)
   TREE [/F]   directory tree         ATTRIB [file]        file attributes
   MORE, FIND, SORT   filters: TYPE README.TXT | FIND "DIR"   or   MORE < README.TXT
   SET, PATH, PROMPT, LABEL           environment, search path, prompt, volume label
@@ -55,6 +56,7 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
 [ ] BIOS Setup: press DEL during the memory test.
     4 undocumented features. F1 gives clues.
 [ ] memtest86+ (boot menu): let it run. Old RAM fails sometimes.
+[ ] A 90s virus collector left his zoo on this disk. SCAN finds it.
 [ ] Once a year this PC throws a party. Its clock is easier to change
     than it looks.
 
@@ -113,7 +115,7 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
       "ATTRIB.EXE": [8234, OLD], "CHKDSK.COM": [9435, OLD], "DEBUG.COM": [15647, OLD], "EDIT.COM": [413, OLD],
       "EDLIN.COM": [7261, OLD], "FDISK.COM": [16737, OLD], "FIND.EXE": [6403, OLD], "FORMAT.COM": [11005, OLD],
       "LABEL.COM": [1826, OLD], "MEM.EXE": [32150, OLD], "MORE.COM": [282, OLD], "SORT.EXE": [1632, OLD],
-      "SYS.COM": [4607, OLD], "TELNET.EXE": [64328, OLD], "TREE.COM": [1645, OLD],
+      "SYS.COM": [4607, OLD], "TELNET.EXE": [64328, OLD], "TREE.COM": [1645, OLD], "SCAN.EXE": [94531, " 7-15-90   6:06p"],
     },
     SKILLS: Object.fromEntries(SKILLS.map((k, i) => [k + ".TXT", [null, null, () => html(`#c-skills dd:nth-of-type(${i + 1})`)]])),
     CONTACT: Object.fromEntries(CONTACTS.map((k, i) => [k + ".URL", [null, null, () => html(`#c-contact li:nth-child(${i + 1}) a`)]])),
@@ -151,7 +153,27 @@ Lesson learned: test your restores.`;
     "SLEEP.DAT": [404, " 6-06-86   3:00a", () => txt("zzz... 404: sleep not found.")],
   };
   const MUSIC_README = "C:\\MUSIC - my 1986 MIDI collection, played through the PC speaker.\n\nPLAY MIDI\\CANCAN.MID    one tune\nPLAY                    a random one\nDIR MIDI                the whole collection\n\nAny key stops the music.";
-  const HIDDEN = new Set(["UTILS", "WTF", "MUSIC"]);
+  // C:\VIRUSES (hidden; SCAN finds it): a 90s collector's zoo, defanged (virus.js only does the show).
+  // file: [size, date, SCAN name, year/origin, what it does, real trigger, test on GM.now()]
+  const VIRUSES = {
+    "CASCADE.COM": [1701, " 9-10-87   4:12p", "1701 [Cascade]", "1987, Germany", "the letters fall to the bottom of the screen", "October to December 1988", d => d.getFullYear() === 1988 && d.getMonth() >= 9],
+    "PINGPONG.COM": [512, " 3-03-88  10:30a", "Ping Pong [Italian]", "1988, Italy", "a ball bounces around the screen", "on the half hour", d => d.getMinutes() === 30],
+    "YANKEE.COM": [2885, " 6-01-89   5:00p", "Yankee Doodle [TP-44]", "1989, Bulgaria", "it plays Yankee Doodle", "at 5 pm", d => d.getHours() === 17],
+    "AMBULANC.COM": [796, " 7-14-90   9:11a", "Ambulance Car [RedX]", "1990", "an ambulance crosses the screen, siren on", "now and then", () => false],
+    "CASINO.COM": [2330, " 1-15-91   3:15p", "Casino [Disk Destroyer]", "1991, Malta", "it bets your FAT on a jackpot", "January 15, April 15 and August 15", d => d.getDate() === 15 && [0, 3, 7].includes(d.getMonth())],
+    "WALKER.COM": [4475, " 5-05-92   5:05p", "Walker", "1992", "a little man walks across the screen", "now and then", () => false],
+    "BARROTES.COM": [1310, " 1-05-93  12:00a", "Barrotes", "1993, Spain", "bars come down over the screen", "January 5", d => d.getMonth() === 0 && d.getDate() === 5],
+  };
+  const ZOO = `ZOO.TXT - my virus collection (1987-1993)
+Swapped on floppies at school and downloaded from BBSs.
+They are defanged: no disk is harmed, they only do their show.
+
+${Object.entries(VIRUSES).map(([f, v]) => `  ${f.padEnd(13)} ${v[2].padEnd(24)} ${v[3]}`).join("\n")}
+
+Run one by name (CD VIRUSES, then CASCADE). Some still wake up
+on their own on the right day, if this PC's clock agrees.`;
+  FS.VIRUSES = { "ZOO.TXT": [null, " 1-05-93  12:01a", () => txt(ZOO)], ...Object.fromEntries(Object.entries(VIRUSES).map(([f, v]) => [f, [v[0], v[1]]])) };
+  const HIDDEN = new Set(["UTILS", "WTF", "MUSIC", "VIRUSES"]);
   FS.WTF = WTF;                        // hidden directories (ATTRIB only lists files, so UTILS stays a secret)
   const ATTR0 = { "IO.SYS": "RHS", "MSDOS.SYS": "RHS", "42.TXT": "AH" };     // file attributes (default: A)
   const DAYS = "Sun Mon Tue Wed Thu Fri Sat".split(" ");
@@ -364,6 +386,37 @@ Lesson learned: test your restores.`;
     stop();
   }
 
+  // ---------- viruses (virus.js): run from C:\VIRUSES, or on their own on their real trigger day/time ----------
+  const dueVirus = () => { const d = GM.now(); return Object.keys(VIRUSES).find(f => VIRUSES[f][6](d)); };
+  async function virus(file) {
+    const v = VIRUSES[file];
+    if (GM.bios?.virusWarning) {                             // BIOS Setup > BIOS FEATURES SETUP > Virus Warning = Enabled
+      print("<br>!WARNING!<br>Disk boot sector is to be modified<br>Type \"Y\" to accept write or \"N\" to abort write");
+      if (!/^y/i.test(await askLine(""))) { if (!batchDepth) form.hidden = true; return print(`Write aborted. ${esc(v[2])} never got to do its show.`); }
+      if (!batchDepth) form.hidden = true;
+    }
+    try { await GM.need("virus.js"); if (file === "YANKEE.COM") await GM.need("tunes.js"); } catch (e) { return err("Program too big to fit in memory"); }
+    await GM.virus.run(file, { print, sleep, sfx, anyKey, lines: () => plain(out.innerHTML).split("\n") });
+    print(`<span class="dim">${esc(`${v[2]} (${v[3]}): ${v[4]}. Defanged here: only the show. Real trigger: ${v[5]}.`)}</span>`);
+  }
+  // SCAN.EXE (McAfee, 1990): walks drive C:, hidden directories included, and names the zoo
+  async function scan() {
+    print("SCAN 7.0V66 Copyright 1989-90 by McAfee Associates.  (408) 988-3832<br><br>Scanning memory for critical viruses.");
+    await sleep(700); print("Scanning C:");
+    let files = 0, found = 0;
+    const walk = async (n, p) => {
+      for (const [k, v] of Object.entries(n)) {
+        if (isDir(v)) { await walk(v, [...p, k]); continue; }
+        files++;
+        if (p.join("\\") === "VIRUSES" && VIRUSES[k]) { found++; print(esc(`  Found the ${VIRUSES[k][2]} virus in C:\\VIRUSES\\${k}`)); sfx.err(); await sleep(250); }
+      }
+      await sleep(80);
+    };
+    await walk(FS, []);
+    print(`<pre>\nSummary report on C:\n  File(s)\n       Analyzed: ${String(files).padStart(6)}\n       Scanned:  ${String(files).padStart(6)}\n  Possibly Infected: ${String(found).padStart(4)}\n  Master Boot Records\n       Analyzed:      1\n  Possibly Infected:    0</pre>`);
+    if (found) print("To remove viruses, use CLEAN-UP. (Not included: the collector would never forgive you.)");
+  }
+
   // ---------- batch files ----------
   async function runBatch(path, args) {
     const lines = node(path)[3].split("\n"), labels = {};
@@ -523,7 +576,7 @@ Lesson learned: test your restores.`;
         if (!line.trim()) return;
         const m = line.trim().match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2}|\d{4})$/), t = GM.now();
         const y = m && (m[3].length === 2 ? (+m[3] < 80 ? 2000 : 1900) + +m[3] : +m[3]);
-        if (m && y >= 1980 && y <= 2099) { t.setFullYear(y, m[1] - 1, m[2]); if (t.getMonth() === m[1] - 1 && t.getDate() === +m[2]) { GM.setNow(t); return GM.party() && party(); } }
+        if (m && y >= 1980 && y <= 2099) { t.setFullYear(y, m[1] - 1, m[2]); if (t.getMonth() === m[1] - 1 && t.getDate() === +m[2]) { GM.setNow(t); if (GM.party()) return party(); const v = dueVirus(); return v && virus(v); } }
         print("Invalid date");
       }
     },
@@ -576,6 +629,7 @@ Lesson learned: test your restores.`;
     },
     DEBUG: debug,
     LOCKED: locked,
+    SCAN: scan,
     FORMAT: format,
     DEL: del, ERASE: del,
     PING: ping,
@@ -595,7 +649,7 @@ Lesson learned: test your restores.`;
     REBOOT: () => finish(),
   };
   // programs on disk: only run if found in cwd / PATH (empty the PATH and they are gone, like on a real PC)
-  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET", "PLAY", "SNAKE", "TETRIS", "WIN"]);
+  const EXTERNAL = new Set(["SCAN", "CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET", "PLAY", "SNAKE", "TETRIS", "WIN"]);
   // split on | outside quotes
   const pipes = t => { const parts = [""]; let q = false; for (const ch of t) { if (ch === '"') q = !q; if (ch === "|" && !q) parts.push(""); else parts[parts.length - 1] += ch; } return parts.map(s => s.trim()); };
   async function capture(fn) {                              // run a command with its output kept off screen, as plain text
@@ -625,6 +679,7 @@ Lesson learned: test your restores.`;
     const p = prog || findProgram(c);
     if (p && p.at(-1).endsWith(".BAT")) return runBatch(p, a.trim().split(/\s+/).filter(Boolean));
     if (p && p.join("\\") === "WTF\\COFFEE.EXE") return coffee();
+    if (p && p[0] === "VIRUSES" && VIRUSES[p.at(-1)]) return virus(p.at(-1));
     if (p && p.join("\\") === "WTF\\MEETING.EXE") return print("Starting MEETING.EXE...<br>This meeting could have been an email. Exiting.");
     if (p) return err("Program too big to fit in memory");
     err("Bad command or file name");
@@ -806,6 +861,7 @@ Lesson learned: test your restores.`;
       print(timeLine()); if (tooLate()) print("It is too late to be using DOS."); print("Enter new time: "); await sleep(800); sfx.clack("\n");
       print("<br>Microsoft(R) MS-DOS(R)  Version 3.10<br>             (C)Copyright Microsoft Corp 1981-1985<br><br>Type TYPE README.TXT to get started, or CV to let a batch file do the typing.<br><br>");
       if (GM.party()) await party();
+      else if (dueVirus()) await virus(dueVirus());               // a resident virus whose day (or hour) has come
       setPrompt(); form.hidden = false; input.focus({ preventScroll: true });
       form.addEventListener("submit", e => { e.preventDefault(); const v = input.value; input.value = ""; sfx.key(); exec(v); });
       input.addEventListener("keydown", e => {
