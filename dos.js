@@ -43,6 +43,7 @@ Not everything on this disk shows up in DIR. A good start: how does this PC boot
     "SUMMARY.TXT": [null, null, () => html("#c-summary")],
     "INTEREST.TXT": [null, null, () => html("#c-interests")],
     "ARTICLES.TXT": [null, null, () => html("#c-articles")],
+    "REPOS.TXT": [null, null, () => html("#c-repos")],
     "AVATAR.TXT": [null, null, () => html("#avatar .avatar")],
     DOS: {
       "CHKDSK.COM": [9435, OLD], "DEBUG.COM": [15647, OLD], "EDLIN.COM": [7261, OLD],

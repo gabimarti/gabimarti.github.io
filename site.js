@@ -253,7 +253,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.20", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.21", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
@@ -283,7 +283,7 @@ const GM = (() => {
     $(".theme").addEventListener("click", toggleTheme); themeIcon();
     $(".snd").addEventListener("click", () => { sfx.toggle(); soundIcon(); }); soundIcon();
     addEventListener("pointerdown", sfx.unlock); addEventListener("keydown", sfx.unlock);
-    addEventListener("hashchange", sfx.blip);                 // classic view <-> avatar
+    addEventListener("hashchange", sfx.blip);                 // classic view <-> avatar / repos
 
     document.addEventListener("click", e => {
       const g = e.target.closest(".grub button");
@@ -309,7 +309,7 @@ const GM = (() => {
     });
 
     const mode = new URLSearchParams(location.search).get("mode");
-    if (location.hash === "#avatar" || mode === "classic") setMode("classic");
+    if (location.hash === "#avatar" || location.hash === "#repos" || mode === "classic") setMode("classic");
     else if (mode === "shell") setMode("shell");
     else powerOn();
   });
