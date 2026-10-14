@@ -204,6 +204,18 @@ html:not(.js) .js-only { display: none; }
 .w31-icon:focus-visible { outline: 1px dotted #000; }
 .w31-ic { font-size: 1.8rem; line-height: 1; }
 .w31-btn { font: inherit; padding: .15rem .9rem; background: #c0c0c0; border: 2px outset #fff; cursor: pointer; }
+.w31-flag { width: 9rem; height: auto; margin-bottom: .6rem; }
+.w31-calcwin { width: min(19rem, 92%); }
+.w31-calcwin .w31-body { background: #c0c0c0; }
+.w31-calcwin:focus { outline: none; }
+.w31-cline { display: flex; gap: .4rem; align-items: center; margin-bottom: .4rem; }
+.w31-cmem { width: 1rem; font-weight: bold; }
+.w31-cdisp { flex: 1; background: #fff; border: 2px inset #fff; padding: .2rem .4rem; text-align: right; font: 1.1rem monospace; overflow: hidden; text-overflow: ellipsis; }
+.w31-cbase, .w31-ckeys { display: grid; gap: .25rem; margin-bottom: .4rem; }
+.w31-cbase { grid-template-columns: repeat(4, 1fr); } .w31-ckeys { grid-template-columns: repeat(6, 1fr); }
+.w31-calc .w31-btn { padding: .3rem 0; } .w31-calc .w31-btn[aria-pressed=true] { border-style: inset; font-weight: bold; }
+.w31-calc .w31-btn:disabled { color: #808080; cursor: default; }
+.w31-ckeys [data-ck="="] { grid-column: 1 / -1; }
 .w31-dlg { width: min(22rem, 90%); left: 30% !important; top: 30% !important; }
 @media (max-width: 640px) {
   .dos .w31 { height: auto; min-height: 26rem; }

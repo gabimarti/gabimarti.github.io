@@ -13,15 +13,91 @@
     ["📄", "About", "Notepad - ABOUT.TXT", io => io.html("#c-about") + io.html("#c-interests")],
     ["🎨", "Paintbrush", "Paintbrush - AVATAR.BMP", io => io.html("#avatar .avatar")],
     ["📇", "Contacts", "Cardfile - CONTACT.CRD", io => io.html("#c-contact")],
+    ["🧮", "Calculator", "Calculator", "calc"],
     ["⚙", "Control Panel", "Control Panel", "control"],
     ["🚪", "Exit Windows", null, "exit"],
   ];
   let z = 10;
+  // our own waving four-colour flag (drawn here, not Microsoft's bitmap), with the trailing pixels of the 1992 splash
+  const FLAG = `<svg class="w31-flag" viewBox="0 0 100 80" aria-hidden="true">
+    <path fill="#e8161b" d="M30 12C40 6 50 6 60 12V40C50 34 40 34 30 40Z"/><path fill="#10a33d" d="M63 13C73 19 83 19 93 13V41C83 47 73 47 63 41Z"/>
+    <path fill="#1f5bd6" d="M30 43C40 37 50 37 60 43V71C50 65 40 65 30 71Z"/><path fill="#f5c400" d="M63 44C73 50 83 50 93 44V72C83 78 73 78 63 72Z"/>
+    <path fill="#e8161b" d="M21 16h5v5h-5zM13 20h4v4h-4zM6 15h3v3h-3zM14 30h4v4h-4z"/><path fill="#1f5bd6" d="M21 48h5v5h-5zM13 52h4v4h-4zM6 47h3v3h-3zM14 62h4v4h-4z"/></svg>`;
+  const KEYS = [["bk", "←"], ["ce", "CE"], ["clr", "C"], ["and", "And"], ["or", "Or"], ["xor", "Xor"],
+    ["mc", "MC"], "7", "8", "9", ["/", "÷"], ["not", "Not"], ["mr", "MR"], "4", "5", "6", ["*", "×"], ["sqrt", "√"],
+    ["ms", "MS"], "1", "2", "3", ["-", "−"], ["%", "%"], ["m+", "M+"], "0", ["neg", "±"], ".", ["+", "+"], ["inv", "1/x"],
+    "A", "B", "C", "D", "E", "F", ["=", "="]].map(k => typeof k === "string" ? [k, k] : k);
+
+  // Calculator engine (no DOM): Dec works with decimals; Hex/Oct/Bin with 32-bit integers, negatives shown in two's complement,
+  // like the 1992 Scientific mode. press(key) with the KEYS ids; base(16|10|8|2) converts what's on the display.
+  function calc() {
+    let disp = "0", acc = null, op = null, fresh = true, base = 10, mem = 0, err = false;
+    const val = () => base === 10 ? parseFloat(disp) : parseInt(disp, base) | 0;
+    const show = v => {
+      if (!isFinite(v)) { err = true; return "Error"; }
+      return base === 10 ? String(+v.toPrecision(12)) : ((Math.trunc(v) | 0) >>> 0).toString(base).toUpperCase();
+    };
+    const apply = (a, o, b) => {
+      const i = base !== 10;
+      return { "+": a + b, "-": a - b, "*": a * b, "/": i ? (b ? Math.trunc(a / b) : NaN) : a / b, and: a & b, or: a | b, xor: a ^ b }[o];
+    };
+    const set = v => { disp = show(v); fresh = true; };
+    const press = k => {
+      if (err && k !== "clr" && k !== "ce") return;
+      if (/^[0-9A-F]$/.test(k)) {
+        if (parseInt(k, 16) >= base) return;
+        disp = fresh || disp === "0" ? k : disp.length < (base === 2 ? 32 : 16) ? disp + k : disp; fresh = false;
+      } else if (k === ".") { if (base !== 10) return; disp = fresh ? "0." : disp.includes(".") ? disp : disp + "."; fresh = false; }
+      else if (["+", "-", "*", "/", "and", "or", "xor"].includes(k)) {
+        if (op && !fresh) { acc = apply(acc, op, val()); set(acc); } else acc = val();
+        op = k; fresh = true;
+      } else if (k === "=") { if (op) { set(apply(acc, op, val())); acc = op = null; } }
+      else if (k === "neg") disp = base === 10 ? (disp.startsWith("-") ? disp.slice(1) : disp === "0" ? disp : "-" + disp) : show(-val());
+      else if (k === "sqrt") set(Math.sqrt(val()));
+      else if (k === "inv") set(1 / val());
+      else if (k === "not") set(~val());
+      else if (k === "%") { if (acc !== null) set(acc * val() / 100); }
+      else if (k === "clr") { disp = "0"; acc = op = null; fresh = true; err = false; }
+      else if (k === "ce") { disp = "0"; fresh = true; err = false; }
+      else if (k === "bk") { if (!fresh) disp = disp.slice(0, -1).replace(/^-?$/, "0"); }
+      else if (k === "mc") mem = 0;
+      else if (k === "mr") set(mem);
+      else if (k === "ms") { mem = val(); fresh = true; }
+      else if (k === "m+") { mem += val(); fresh = true; }
+    };
+    return { press, base: b => { const v = val(); base = b; if (!err) set(v); }, get display() { return disp; }, get mem() { return mem !== 0; }, get radix() { return base; } };
+  }
+
+  function calcWindow(w, io) {                            // wires a Calculator window to calc()
+    const c = calc(), d = w.querySelector(".w31-cdisp"), m = w.querySelector(".w31-cmem");
+    const draw = () => {
+      d.textContent = c.display; m.textContent = c.mem ? "M" : "";
+      w.querySelectorAll("[data-cb]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.cb === c.radix));
+      w.querySelectorAll("[data-ck]").forEach(b => {
+        const k = b.dataset.ck;
+        b.disabled = /^[0-9A-F]$/.test(k) ? parseInt(k, 16) >= c.radix : k === "." ? c.radix !== 10 : false;
+      });
+    };
+    w.addEventListener("click", e => {
+      const b = e.target.closest("[data-ck],[data-cb]"); if (!b) return;
+      if (b.dataset.cb) c.base(+b.dataset.cb); else c.press(b.dataset.ck);
+      io.sfx.key(); draw();
+    });
+    w.addEventListener("keydown", e => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      const k = { Enter: "=", "=": "=", Escape: "clr", Backspace: "bk", Delete: "ce", ",": ".", "&": "and", "|": "or", "^": "xor", "~": "not" }[e.key]
+        || (/^[0-9a-fA-F.+\-*/%]$/.test(e.key) ? e.key.toUpperCase() : null);
+      if (!k) return;
+      e.preventDefault(); c.press(k); io.sfx.key(); draw();
+    });
+    draw(); w.focus({ preventScroll: true });
+  }
 
   GM.win31 = {
+    calc,                                                  // engine, exposed for the tests
     async run(container, io) {
       const root = document.createElement("div"); root.className = "w31";
-      root.innerHTML = `<div class="w31-splash"><div class="w31-logo">Microsoft<br><b>Windows</b><sup>™</sup> <span>3.1</span></div><p>Copyright © 1985-1992 Microsoft Corp.<br>gabimarti edition</p></div>`;
+      root.innerHTML = `<div class="w31-splash"><div>${FLAG}<div class="w31-logo">Microsoft<br><b>Windows</b><sup>™</sup> <span>3.1</span></div><p>Copyright © 1985-1992 Microsoft Corp.<br>gabimarti edition</p></div></div>`;
       container.append(root);
       io.sfx.post(); await io.sleep(GM.reduce ? 100 : 1800);
       root.innerHTML = "";
@@ -47,6 +123,12 @@
           const w = win(title, `<p>Desktop</p><p><button type="button" class="w31-btn" data-cp="theme">Toggle light / dark</button></p><p>International</p><p>${["en", "es", "ca"].map(l => `<button type="button" class="w31-btn" data-cp="${l}">${l.toUpperCase()}</button>`).join(" ")}</p>`);
           w.addEventListener("click", e => { const b = e.target.closest("[data-cp]"); if (!b) return; if (b.dataset.cp === "theme") GM.toggleTheme(); else GM.setLang(b.dataset.cp, true); io.sfx.key(); });
           return;
+        }
+        if (content === "calc") {
+          const w = win(title, `<div class="w31-calc"><div class="w31-cline"><span class="w31-cmem"></span><output class="w31-cdisp">0</output></div>`
+            + `<div class="w31-cbase">${[[16, "Hex"], [10, "Dec"], [8, "Oct"], [2, "Bin"]].map(([b, l]) => `<button type="button" class="w31-btn" data-cb="${b}">${l}</button>`).join("")}</div>`
+            + `<div class="w31-ckeys">${KEYS.map(([k, l]) => `<button type="button" class="w31-btn" data-ck="${k}">${l}</button>`).join("")}</div></div>`, "w31-calcwin");
+          w.tabIndex = -1; io.sfx.blip(); return calcWindow(w, io);
         }
         io.sfx.blip(); win(title, content(io));
       };
