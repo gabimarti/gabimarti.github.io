@@ -139,6 +139,7 @@ html:not(.js) .js-only { display: none; }
 #grub-help p { margin-top: .8rem; }
 .halt { display: grid; place-items: center; min-height: 100%; text-align: center; color: #e3b341; white-space: normal; }
 .pwr-tag { margin: 5rem auto 0; max-width: 60ch; color: var(--fg); line-height: 1.6; }   /* power-on screen: what this site is */
+.pwr-ver { margin-top: 2.5rem; font-size: .8em; letter-spacing: .05em; }
 .pwr { width: 3rem; height: 3rem; color: var(--accent); }   /* SVG: Android fonts lack the power glyph */
 #boot { height: 100%; display: flow-root; } #boot[hidden] { display: none; }   /* flow-root: .grub-ttl margin must not collapse out and add a scrollbar; [hidden] must still win */
 #boot-out:has(:is(.halt, .bios, .mt, .dos)) { height: 100%; }
@@ -300,3 +301,8 @@ html:not(.js) .js-only { display: none; }
   .bios .b-page b { padding-left: 2ch; }
   .prompt { font-size: 12px; align-self: center; }
 }
+/* 10-15 party: Windows fireworks, MS-DOS PARTY.COM confetti, Linux partyd cake (VGA palette) */
+.w31-fw { position: absolute; inset: 0; pointer-events: none; z-index: 9000; image-rendering: pixelated; }
+.dos-party, .cake { display: inline-block; margin: .3rem 0; padding: .3rem .8ch; background: #000; color: #aaa; line-height: 1.15; white-space: pre; }
+.dos-party b { color: #fff; }
+.pc1 { color: #ff5555; } .pc2 { color: #55ff55; } .pc3 { color: #5555ff; } .pc4 { color: #ffff55; } .pc5 { color: #ff55ff; } .pc6 { color: #55ffff; }

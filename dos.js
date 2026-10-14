@@ -55,6 +55,8 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
 [ ] BIOS Setup: press DEL during the memory test.
     4 undocumented features. F1 gives clues.
 [ ] memtest86+ (boot menu): let it run. Old RAM fails sometimes.
+[ ] Once a year this PC throws a party. Its clock is easier to change
+    than it looks.
 
 REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
   const NOTES = `NOTES.TXT - 1986
@@ -342,6 +344,26 @@ Lesson learned: test your restores.`;
     }, true);
   }
 
+  // ---------- 10-15 (GM.party): PARTY.COM — text-mode confetti over the PC speaker tune; at boot or when DATE lands on it ----------
+  async function party() {
+    try { await GM.need("tunes.js"); } catch (e) { /* confetti without music */ }
+    const W = 56, H = 11, BITS = [..."☺☻♥♦♣♠•○♪♫☼*+"], d = GM.now();
+    const MSG = { 4: "  *** PARTY TIME ***  ", 6: ` Today is ${p2(d.getMonth() + 1)}-${p2(d.getDate())}. This PC celebrates. ` };
+    const grid = Array.from({ length: H }, () => Array(W).fill(null));
+    const pre = document.createElement("pre"); pre.className = "dos-party"; print("PARTY.COM v1.0 - resident<br>").append(pre);
+    const [stop, secs] = GM.tunes ? GM.tunes.play(GM.tunes.party) : [() => {}, 5];
+    const end = performance.now() + Math.max(secs, 5) * 1000;
+    do {
+      grid.pop(); grid.unshift(Array.from({ length: W }, () => Math.random() < .12 ? [BITS[Math.random() * BITS.length | 0], 1 + (Math.random() * 6 | 0)] : null));
+      pre.innerHTML = grid.map((row, y) => {
+        const m = MSG[y], at = m ? (W - m.length) >> 1 : W;
+        return row.map((c, x) => x >= at && x < at + m.length ? `<b>${esc(m[x - at])}</b>` : c ? `<span class="pc${c[1]}">${c[0]}</span>` : " ").join("");
+      }).join("\n");
+      await sleep(130);
+    } while (performance.now() < end);
+    stop();
+  }
+
   // ---------- batch files ----------
   async function runBatch(path, args) {
     const lines = node(path)[3].split("\n"), labels = {};
@@ -501,7 +523,7 @@ Lesson learned: test your restores.`;
         if (!line.trim()) return;
         const m = line.trim().match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2}|\d{4})$/), t = GM.now();
         const y = m && (m[3].length === 2 ? (+m[3] < 80 ? 2000 : 1900) + +m[3] : +m[3]);
-        if (m && y >= 1980 && y <= 2099) { t.setFullYear(y, m[1] - 1, m[2]); if (t.getMonth() === m[1] - 1 && t.getDate() === +m[2]) return GM.setNow(t); }
+        if (m && y >= 1980 && y <= 2099) { t.setFullYear(y, m[1] - 1, m[2]); if (t.getMonth() === m[1] - 1 && t.getDate() === +m[2]) { GM.setNow(t); return GM.party() && party(); } }
         print("Invalid date");
       }
     },
@@ -783,6 +805,7 @@ Lesson learned: test your restores.`;
       print(dateLine()); print("Enter new date (mm-dd-yy): "); await sleep(800); sfx.clack("\n");
       print(timeLine()); if (tooLate()) print("It is too late to be using DOS."); print("Enter new time: "); await sleep(800); sfx.clack("\n");
       print("<br>Microsoft(R) MS-DOS(R)  Version 3.10<br>             (C)Copyright Microsoft Corp 1981-1985<br><br>Type TYPE README.TXT to get started, or CV to let a batch file do the typing.<br><br>");
+      if (GM.party()) await party();
       setPrompt(); form.hidden = false; input.focus({ preventScroll: true });
       form.addEventListener("submit", e => { e.preventDefault(); const v = input.value; input.value = ""; sfx.key(); exec(v); });
       input.addEventListener("keydown", e => {

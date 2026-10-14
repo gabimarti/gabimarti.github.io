@@ -37,5 +37,7 @@
   }
   // 8.3 names of the .MID files in MS-DOS, in the same order as TUNES
   const NAMES = ["KOROBEIN", "TREPAK", "KALINKA", "CANCAN", "REEDFLUT", "RONDO", "LONDONBR", "JINGLEB", "WENCESLS", "BUMBLEBE", "WILLTELL", "ODETOJOY", "MOUNTKNG", "MAPLELF", "VALKYRIE", "TOCCATA", "HOURS"];
-  GM.tunes = { list: TUNES.map((t, i) => ({ title: t[0], game: t[1], file: NAMES[i] + ".MID", tune: t })), play };
+  // the 10-15 party tune (dos.js, shell.js), kept out of the list: the Hill sisters' 1893 melody, public domain
+  const PARTY = ["Good Morning to All (Hill, 1893)", "", .1, "G4:3 G4 A4:4 G4:4 C5:4 B4:8 G4:3 G4 A4:4 G4:4 D5:4 C5:8 G4:3 G4 G5:4 E5:4 C5:4 B4:4 A4:8 F5:3 F5 E5:4 C5:4 D5:4 C5:8"];
+  GM.tunes = { list: TUNES.map((t, i) => ({ title: t[0], game: t[1], file: NAMES[i] + ".MID", tune: t })), play, party: PARTY };
 })();

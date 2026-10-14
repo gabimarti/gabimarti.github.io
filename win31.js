@@ -146,6 +146,31 @@
     });
   }
 
+  // 10-15 (GM.party): fireworks over the desktop, chunky VGA pixels, ~9 s of bursts with a pop each
+  function fireworks(root, sfx) {
+    const c = document.createElement("canvas"); c.className = "w31-fw"; root.append(c);
+    const g = c.getContext("2d"), W = c.width = root.clientWidth, H = c.height = root.clientHeight;
+    const COLORS = ["#ff5555", "#55ff55", "#5555ff", "#ffff55", "#ff55ff", "#55ffff", "#ffffff"], parts = [];
+    let t0 = 0, last = 0;
+    const burst = () => {
+      const x = W * (.15 + .7 * Math.random()), y = H * (.12 + .4 * Math.random()), col = COLORS[Math.random() * COLORS.length | 0];
+      for (let i = 0; i < 70; i++) { const a = Math.random() * 6.283, v = .8 + Math.random() * 2.6; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 50 + Math.random() * 40, col }); }
+      sfx.tone(90 + Math.random() * 60, .15, "sawtooth", .03);
+    };
+    const step = now => {
+      t0 ||= now;
+      if (now - t0 < 9000 && now - last > 420) { burst(); last = now; }
+      g.clearRect(0, 0, W, H);
+      for (let i = parts.length; i--;) {
+        const p = parts[i]; p.x += p.vx; p.y += p.vy; p.vy += .035; p.vx *= .985;
+        if (--p.life < 0) { parts.splice(i, 1); continue; }
+        g.fillStyle = p.col; g.fillRect(p.x | 0, p.y | 0, 3, 3);
+      }
+      if (c.isConnected && (now - t0 < 9000 || parts.length)) requestAnimationFrame(step); else c.remove();
+    };
+    requestAnimationFrame(step);
+  }
+
   GM.win31 = {
     calc,                                                  // engine, exposed for the tests
     async run(container, io) {
@@ -172,6 +197,12 @@
       const pm = win("Program Manager", `<div class="w31-group"><div class="w31-gtitle">Gabriel Martí</div><div class="w31-icons">${APPS.map(([ic, label], i) =>
         `<button type="button" class="w31-icon" data-w31="${i}"><span class="w31-ic" aria-hidden="true">${ic}</span>${esc(label)}</button>`).join("")}</div></div>`, "w31-pm");
       pm.querySelector(".w31-ctl").remove();                // closing Program Manager = Exit Windows: use the icon
+      if (GM.party()) {
+        fireworks(root, io.sfx);
+        const d = GM.now();
+        win("Party time!", `<p>Today is ${d.getMonth() + 1}/${d.getDate()} and this PC is celebrating.</p><p>Fireworks are on the house.</p><p class="w31-btns"><button type="button" class="w31-btn" data-party>OK</button></p>`, "w31-dlg")
+          .addEventListener("click", e => { if (e.target.closest("[data-party]")) close(e.currentTarget); });
+      }
 
       const open = async i => {
         const [, , title, content] = APPS[i];

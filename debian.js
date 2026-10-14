@@ -49,7 +49,11 @@
       fast = false;
       document.addEventListener("keydown", skip, true); document.addEventListener("click", skip, true);
       try {
-        for (const [t, ms] of LOG) { add(t); await wait(ms); }
+        for (const [t, ms] of LOG) {
+          add(t);
+          if (t.startsWith("Starting curiosity") && GM.party()) add("Starting party daemon: partyd.\n");   // 10-15
+          await wait(ms);
+        }
         add("gabimarti.github.io login: "); await wait(700); await typeIn(out, "gabimarti"); add("\n");
         add("Password: "); await wait(400); await typeIn(out, "********", false); add("\n"); await wait(600);
         const d = GM.now();
