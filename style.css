@@ -148,6 +148,7 @@ html:not(.js) .js-only { display: none; }
 .bios .b-hint b { font-weight: normal; animation: blink 1s steps(1) infinite; }
 .bios .b-dlg { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); max-width: 92%; padding: .8rem 2ch; background: #aa0000; color: #ffff55; border: 3px double #fff; }
 .bios .b-dlg button { color: #fff; border: 1px solid #fff; padding: 0 1.5ch; }
+.bios .b-pw { font: inherit; color: #fff; background: none; border: 0; border-bottom: 1px solid #ffff55; width: 9ch; padding: 0; border-radius: 0; outline: none; }
 /* easter egg: CPU overheats with Curiosity Overdrive = Ludicrous */
 .bios.smoke { animation: shake .09s infinite; }
 .bios.smoke::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 70%, #ccc, #555 60%, transparent); animation: smoke 3.5s ease-in forwards; }

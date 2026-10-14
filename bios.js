@@ -186,7 +186,10 @@
       sfx.blip(); return render();
     }
     if (k.startsWith("LOAD ")) return ask(`Load ${k.includes("BIOS") ? "BIOS" : "SETUP"} Defaults`, () => { items().forEach(x => { x.i = 0; }); dlg = null; render(); });
-    if (k.endsWith("PASSWORD")) { dlg = { html: "Enter Password: ", pw: "" }; return render(); }
+    if (k.endsWith("PASSWORD")) {                       // a real input, so phones get their on-screen keyboard
+      dlg = { html: `Enter Password: <input type="password" class="b-pw" maxlength="8" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Password"><br><br><button type="button" data-key="Enter">Enter</button> <button type="button" data-key="Escape">Esc</button>`, pw: true };
+      render(); return el.querySelector(".b-pw").focus();
+    }
     if (k === "IDE HDD AUTO DETECTION")
       return say("Primary Master   : GM-HDD 1986MB<br>CYLS 4092  HEAD 16  PRECOMP 65535  LANDZ 4091  SECTOR 63  MODE LBA<br>Primary Slave    : None<br>Secondary Master : ATAPI CD-ROM 52X<br>Secondary Slave  : ZIP 100");
     if (k === "SAVE & EXIT SETUP") return ask("SAVE to CMOS and EXIT", () => exit("save"), "Y");
@@ -205,11 +208,11 @@
   function key(k) {
     if (dlg) {
       if (dlg.lock) return;
-      if (dlg.pw !== undefined) {                       // password prompt: shows stars, kept in memory only to spot a backdoor
-        if (k === "Enter") return BACKDOORS.includes(dlg.pw.toUpperCase()) ? backdoor() :
-          say(dlg.pw ? "PASSWORD ACCEPTED. (Not really — nothing leaves this page.)" : "PASSWORD DISABLED !!!");
+      if (dlg.pw) {                                     // password prompt: the input does the typing; only read to spot a backdoor
+        const pw = el.querySelector(".b-pw").value;
+        if (k === "Enter") return BACKDOORS.includes(pw.toUpperCase()) ? backdoor() :
+          say(pw ? "PASSWORD ACCEPTED. (Not really — nothing leaves this page.)" : "PASSWORD DISABLED !!!");
         if (k === "Escape") { dlg = null; return render(); }
-        if (k.length === 1 && dlg.pw.length < 8) { dlg.pw += k; dlg.html = "Enter Password: " + "*".repeat(dlg.pw.length); sfx.key(); render(); }
         return;
       }
       if (!dlg.yn) { dlg.onClose?.(); dlg = null; return render(); }
@@ -241,13 +244,17 @@
   function onKey(e) {
     if (e.ctrlKey && e.key === "F1") { e.preventDefault(); e.stopPropagation(); return key("^F1"); }
     if (e.ctrlKey || e.metaKey || e.altKey || e.key === "Tab") return;
+    if (dlg?.pw && e.key !== "Enter" && e.key !== "Escape") {   // let the password input get the keystroke
+      e.stopPropagation(); if (e.key.length === 1) sfx.key(); return;
+    }
     e.preventDefault(); e.stopPropagation(); key(e.key);
   }
   function onClick(e) {
     if (!dlg && e.target.closest(".b-ttl") && ++knocks === 5) return key("^F1");
     const b = e.target.closest("button");
     if (b?.dataset.key) return key(b.dataset.key);
-    if (dlg) return key(dlg.pw !== undefined ? "Enter" : "Escape");   // tap: confirm password / close message / answer N
+    if (dlg?.pw) return el.querySelector(".b-pw").focus();            // tap on the prompt: back to typing
+    if (dlg) return key("Escape");                                     // tap: close message / answer N
     if (!b) return;
     const j = +b.dataset.i;
     if (j !== sel) { sel = j; sfx.tick(); return render(); }
