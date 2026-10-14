@@ -7,6 +7,8 @@
 // Easter eggs: DIR /WTF, FORMAT C:, DEL *.* (-> REGRETS.TXT), PING, HACK; drive A: makes floppy noise, asks
 // Abort, Retry, Fail? and finds a 1986 backup disk on the 3rd try (BIOS Setup Drive A = None -> no drive A:).
 // TELNET <host> opens THE CURIOSITY BBS (bbs.js, loaded on demand): a scripted 1997 bulletin board.
+// Hidden C:\MUSIC (clue: CONFIG.SYS) has MIDI\*.MID and PLAY.COM, which plays them on the PC speaker (tunes.js, shared
+// with the BIOS). Hidden C:\42.TXT shows up with ATTRIB.
 // open() resolves "classic" on EXIT, or nothing on REBOOT / Ctrl+Alt+Del (site.js then restarts the POST).
 "use strict";
 (() => {
@@ -44,6 +46,7 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
 [ ] The commands every DOS user feared still work. Sort of.
 [ ] Drive A: is still there. Bring patience (and Retry).
 [ ] A 1997 BBS is still online, and its SYSOP still answers. Look in C:\\DOS.
+[ ] This PC used to play music. Its drivers still load at boot.
 [ ] Debian GNU/Linux (boot menu): 2 flags and a root account.
 [ ] BIOS Setup: press DEL during the memory test.
     4 undocumented features. F1 gives clues.
@@ -89,7 +92,8 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     "IO.SYS": [22357, OLD], "MSDOS.SYS": [30128, OLD],
     "COMMAND.COM": [23612, OLD],
     "AUTOEXEC.BAT": [null, OLD, () => txt(AUTOEXEC), AUTOEXEC],
-    "CONFIG.SYS": [null, OLD, () => txt("FILES=20\nBUFFERS=20\nCOUNTRY=034")],
+    "CONFIG.SYS": [null, OLD, () => txt("FILES=20\nBUFFERS=20\nCOUNTRY=034\nDEVICE=C:\\MUSIC\\MPU401.SYS")],
+    "42.TXT": [null, " 4-02-85   4:02a", () => txt("The answer is 42. The question is: why did you type this?")],
     "CV.BAT": [null, null, () => txt(CVBAT), CVBAT],
     "README.TXT": [null, null, () => txt(README)],
     "EXPLORE.TXT": [null, null, () => txt(EXPLORE)],
@@ -138,9 +142,10 @@ Lesson learned: test your restores.`;
     "MEETING.EXE": [2000000, " 9-09-89   9:09a"],
     "SLEEP.DAT": [404, " 6-06-86   3:00a", () => txt("zzz... 404: sleep not found.")],
   };
-  const HIDDEN = new Set(["UTILS", "WTF"]);
+  const MUSIC_README = "C:\\MUSIC - my 1986 MIDI collection, played through the PC speaker.\n\nPLAY MIDI\\CANCAN.MID    one tune\nPLAY                    a random one\nDIR MIDI                the whole collection\n\nAny key stops the music.";
+  const HIDDEN = new Set(["UTILS", "WTF", "MUSIC"]);
   FS.WTF = WTF;                        // hidden directories (ATTRIB only lists files, so UTILS stays a secret)
-  const ATTR0 = { "IO.SYS": "RHS", "MSDOS.SYS": "RHS" };     // file attributes (default: A)
+  const ATTR0 = { "IO.SYS": "RHS", "MSDOS.SYS": "RHS", "42.TXT": "AH" };     // file attributes (default: A)
   const DAYS = "Sun Mon Tue Wed Thu Fri Sat".split(" ");
   const p2 = n => String(n).padStart(2, "0"), hx = (n, w = 2) => n.toString(16).toUpperCase().padStart(w, "0");
   const today = () => { const d = new Date(); return `${d.getMonth() + 1}-${p2(d.getDate())}-${String(d.getFullYear()).slice(2)}`; };
@@ -537,6 +542,7 @@ Lesson learned: test your restores.`;
     DEL: del, ERASE: del,
     PING: ping,
     HACK: hack,
+    PLAY: play,
     HELP: () => { print("(HELP arrived with MS-DOS 5.0 in 1991: this PC peeked at the future. Here is README.TXT.)"); return CMDS.TYPE("\\README.TXT"); },
     TELNET: async a => {
       const host = a.trim().split(/\s+/)[0];
@@ -549,7 +555,7 @@ Lesson learned: test your restores.`;
     REBOOT: () => finish(),
   };
   // programs on disk: only run if found in cwd / PATH (empty the PATH and they are gone, like on a real PC)
-  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET"]);
+  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET", "PLAY"]);
   // split on | outside quotes
   const pipes = t => { const parts = [""]; let q = false; for (const ch of t) { if (ch === '"') q = !q; if (ch === "|" && !q) parts.push(""); else parts[parts.length - 1] += ch; } return parts.map(s => s.trim()); };
   async function capture(fn) {                              // run a command with its output kept off screen, as plain text
@@ -672,6 +678,23 @@ Lesson learned: test your restores.`;
     }
     print(`<br>Ping statistics for ${esc(host)}:<br>    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)<br><span class="dim">(TTL=1997 can't exist: the maximum is 255. TCP/IP for DOS came years later; this one runs on imagination.)</span>`);
   }
+  async function play(a) {                                 // PLAY.COM (C:\MUSIC): a .MID file on the PC speaker
+    const L = GM.tunes?.list;
+    if (!L) return err("PLAY: no sound driver loaded");
+    const arg = a.trim().toUpperCase();
+    let t;
+    if (!arg || arg.endsWith("*.MID")) t = L[(Math.random() * L.length) | 0];
+    else {
+      const p = resolve(arg) || resolve("\\MUSIC\\MIDI\\" + arg.split("\\").pop()) || resolve("\\MUSIC\\MIDI\\" + arg + ".MID");
+      t = p && L.find(x => x.file === p.at(-1));
+      if (!t) return err("File not found - " + esc(arg) + "<br>Usage: PLAY [file.MID]   (no file: a random one)");
+    }
+    const [stop, secs] = GM.tunes.play(t.tune);
+    print(`&#9834; ${esc(t.file)}: ${esc(t.title)} (as heard in ${esc(t.game)})` + (sfx.on ? "" : " (sound is muted: \u{1F50A} in the title bar)"));
+    const m = print("Press any key to stop . . .");
+    await Promise.race([anyKey(), sleep(secs * 1000 + 300)]);
+    cancelWait?.(); stop(); m.remove();
+  }
   async function coffee() {
     const m = print("Brewing");
     for (let i = 0; i < 5; i++) { await sleep(GM.reduce ? 20 : 350); m.textContent += " ."; sfx.tick(); }
@@ -718,6 +741,11 @@ Lesson learned: test your restores.`;
       out = el.querySelector(".dos-out"); form = el.querySelector("form"); input = el.querySelector("input"); promptEl = el.querySelector("label");
       cwd = []; hist = []; hpos = 0; pending = null; batchDepth = 0; abort = false; echoOn = true; vol = "GABIMARTI"; busy = false;
       drive = "C"; cwds = { C: cwd, A: [] }; floppyIn = false; floppyTries = 0;
+      if (!FS.MUSIC) try {                              // C:\MUSIC\MIDI is built from the shared tunes
+        await GM.need("tunes.js");
+        FS.MUSIC = { "PLAY.COM": [3187, Y86], "MPU401.SYS": [2048, Y86], "README.TXT": [null, Y86, () => txt(MUSIC_README)],
+          MIDI: Object.fromEntries(GM.tunes.list.map(t => [t.file, [null, Y86, () => txt(`MThd\u2592\u2592\u2592\u2592 ${t.title}\nas heard in ${t.game}\n(binary MIDI data: PLAY it instead)`)]])) };
+      } catch (e) { /* no music today */ }
       env = { COMSPEC: "C:\\COMMAND.COM", PATH: "C:\\DOS;C:\\UTILS", PROMPT: "$P$G" }; attrs = { ...ATTR0 };
       print("  Booting 'MS-DOS 3.1'<br><br>rootnoverify (hd0,1)<br>chainloader +1<br><br>"); await sleep(900);
       print("Starting MS-DOS...<br><br>"); await sleep(1400);

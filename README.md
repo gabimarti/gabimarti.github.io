@@ -26,6 +26,7 @@ Direct links: [`?mode=classic`](https://gabimarti.github.io/?mode=classic) · [`
 | `site.js` | Language, theme, boot menu and modes |
 | `shell.js` | Interactive shell, loaded on demand |
 | `bbs.js` | THE CURIOSITY BBS, reached with `TELNET` from MS-DOS, loaded on demand |
+| `tunes.js` | 17 public-domain PC speaker tunes, shared by the BIOS Setup and MS-DOS, loaded on demand |
 | `bios.js` | Award-style CMOS Setup (press DEL during the POST), loaded on demand |
 | `debian.js` | 1998 Debian boot log (GRUB entry "Debian GNU/Linux") that ends in the shell, loaded on demand |
 | `dos.js` | MS-DOS 3.10 (GRUB entry "MS-DOS 3.1"): DOS commands over the same content, and a hidden reversing challenge, loaded on demand |
