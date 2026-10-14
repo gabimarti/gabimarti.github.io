@@ -1,6 +1,6 @@
 // Windows 3.1 for gabimarti.github.io: type WIN at the MS-DOS prompt (dos.js). Loaded on demand.
-// Program Manager with a "Gabriel Martí" group; each icon opens the CV content (the quick view's #c-* sections) in a window, plus Calculator and Media Player (tunes.js).
-// Windows move by their title bar (desktop), come to the front on click, maximize and close; on phones they stack full width.
+// Program Manager with a "Gabriel Martí" group; each icon opens the CV content (the quick view's #c-* sections) in a window, plus Calculator, Media Player (tunes.js) and Clock.
+// Windows move by their title bar (desktop), come to the front on click, minimize to desktop icons, maximize and close; on phones they stack full width.
 // GM.win31.run(container, { html, sfx, sleep }) -> Promise resolved by "Exit Windows".
 "use strict";
 (() => {
@@ -15,6 +15,7 @@
     ["📇", "Contacts", "Cardfile - CONTACT.CRD", io => io.html("#c-contact")],
     ["🧮", "Calculator", "Calculator", "calc"],
     ["🎵", "Media Player", "Media Player", "mplayer"],
+    ["🕐", "Clock", "Clock", "clock"],
     ["⚙", "Control Panel", "Control Panel", "control"],
     ["🚪", "Exit Windows", null, "exit"],
   ];
@@ -125,6 +126,26 @@
     draw();
   }
 
+  // Clock: analog (hands every second) or digital, the visitor's local time. Stops ticking when its window closes.
+  const CLOCK = `<svg class="w31-kface" viewBox="0 0 100 100" aria-hidden="true">${Array.from({ length: 60 }, (_, i) => i % 5
+    ? `<circle cx="50" cy="7" r=".9" transform="rotate(${i * 6} 50 50)"/>` : `<rect x="48" y="5" width="4" height="4" transform="rotate(${i * 6} 50 50)"/>`).join("")}
+    <path class="w31-kh" d="M50 50 47 46 50 24 53 46z"/><path class="w31-km" d="M50 50 48 46 50 12 52 46z"/><line class="w31-ks" x1="50" y1="56" x2="50" y2="12"/></svg>`;
+  function clockWindow(w) {
+    const $ = s => w.querySelector(s);
+    const tick = () => {
+      const d = new Date(), s = d.getSeconds(), m = d.getMinutes() + s / 60, h = d.getHours() % 12 + m / 60;
+      [[".w31-kh", h * 30], [".w31-km", m * 6], [".w31-ks", s * 6]].forEach(([k, a]) => $(k).setAttribute("transform", `rotate(${a} 50 50)`));
+      $(".w31-kdig").textContent = d.toLocaleTimeString("en-US");     // a US-English 1992 build, like the rest of the chrome
+      $(".w31-kdate").textContent = d.toLocaleDateString("en-US");
+    };
+    const t = setInterval(tick, 1000); tick();
+    w.addEventListener("w31close", () => clearInterval(t));
+    w.addEventListener("click", e => {
+      const b = e.target.closest("[data-kmode]"); if (!b) return;
+      b.textContent = w.classList.toggle("w31-digital") ? "Analog" : "Digital";
+    });
+  }
+
   GM.win31 = {
     calc,                                                  // engine, exposed for the tests
     async run(container, io) {
@@ -138,11 +159,12 @@
       };
       io.sfx.post(); await busy(4500);                      // full length even with reduced motion, like the boot
       root.innerHTML = ""; await busy(1200);                // empty desktop before Program Manager shows up
+      const tray = document.createElement("div"); tray.className = "w31-tray"; root.append(tray);   // minimized windows
       let done; const finished = new Promise(r => { done = r; });
 
       const win = (title, body, cls = "") => {              // a Windows 3.1 window
         const w = document.createElement("section"); w.className = "w31-win " + cls; w.setAttribute("aria-label", title);
-        w.innerHTML = `<div class="w31-title"><button type="button" class="w31-ctl" aria-label="Close" title="Close">▬</button><span>${esc(title)}</span><button type="button" class="w31-max" aria-label="Maximize" title="Maximize">▲</button></div><div class="w31-body">${body}</div>`;
+        w.innerHTML = `<div class="w31-title"><button type="button" class="w31-ctl" aria-label="Close" title="Close">▬</button><span>${esc(title)}</span><button type="button" class="w31-min" aria-label="Minimize" title="Minimize">▼</button><button type="button" class="w31-max" aria-label="Maximize" title="Maximize">▲</button></div><div class="w31-body">${body}</div>`;
         const n = root.querySelectorAll(".w31-win").length;
         w.style.left = `${2 + n * 3}%`; w.style.top = `${4 + n * 4}%`; w.style.zIndex = ++z;   // CSSOM: allowed by the CSP
         root.append(w); return w;
@@ -154,8 +176,8 @@
       const open = async i => {
         const [, , title, content] = APPS[i];
         if (content === "exit") return confirmExit();
-        const existing = [...root.querySelectorAll(".w31-win")].find(w => w.getAttribute("aria-label") === title);
-        if (existing) { existing.style.zIndex = ++z; return; }
+        const existing = find(title);
+        if (existing) return restore(existing);
         await busy(700);
         if (content === "control") {
           const w = win(title, `<p>Desktop</p><p><button type="button" class="w31-btn" data-cp="theme">Toggle light / dark</button></p><p>International</p><p>${["en", "es", "ca"].map(l => `<button type="button" class="w31-btn" data-cp="${l}">${l.toUpperCase()}</button>`).join(" ")}</p>`);
@@ -176,7 +198,21 @@
             + `<ol class="w31-mlist">${GM.tunes.list.map((t, i) => `<li><button type="button" data-mt="${i}">${esc(t.title)} <span>— ${esc(t.game)}</span></button></li>`).join("")}</ol>`, "w31-mpwin");
           io.sfx.blip(); return playerWindow(w, io);
         }
+        if (content === "clock") {
+          const w = win(title, `${CLOCK}<div class="w31-kdigital"><div class="w31-kdig"></div><div class="w31-kdate"></div></div><p class="w31-btns"><button type="button" class="w31-btn" data-kmode>Digital</button></p>`, "w31-clockwin");
+          io.sfx.blip(); return clockWindow(w);
+        }
         io.sfx.blip(); win(title, content(io));
+      };
+      const find = title => [...root.querySelectorAll(".w31-win")].find(w => w.getAttribute("aria-label") === title);
+      const minimize = w => {                               // the window becomes an icon at the bottom of the desktop
+        const t = w.getAttribute("aria-label");
+        w.classList.add("w31-iconic");
+        tray.insertAdjacentHTML("beforeend", `<button type="button" class="w31-task" data-task="${esc(t)}"><span class="w31-ic" aria-hidden="true">${APPS.find(a => a[2] === t)?.[0] || "🗔"}</span>${esc(t)}</button>`);
+      };
+      const restore = w => {
+        const t = w.getAttribute("aria-label");
+        w.classList.remove("w31-iconic"); [...tray.children].find(b => b.dataset.task === t)?.remove(); w.style.zIndex = ++z;
       };
       const close = w => { w.dispatchEvent(new Event("w31close")); w.remove(); };   // w31close: windows with timers/sound clean up
       const closeAll = () => root.querySelectorAll(".w31-win").forEach(close);
@@ -188,9 +224,11 @@
       root.addEventListener("click", e => {
         if (root.classList.contains("w31-wait")) return;   // busy: clicks are ignored, as in 1992
         const icon = e.target.closest(".w31-icon"); if (icon) return open(+icon.dataset.w31);
+        const task = e.target.closest(".w31-task"); if (task) { io.sfx.key(); return restore(find(task.dataset.task)); }
         const w = e.target.closest(".w31-win"); if (!w) return;
         w.style.zIndex = ++z;
         if (e.target.closest(".w31-ctl")) close(w);
+        else if (e.target.closest(".w31-min")) minimize(w);
         else if (e.target.closest(".w31-max")) w.classList.toggle("w31-maxed");
       });
       // drag by the title bar (pointer events; skipped on narrow screens, where windows stack)

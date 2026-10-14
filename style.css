@@ -229,9 +229,21 @@ html:not(.js) .js-only { display: none; }
 .w31-hg { display: none; }
 @media (hover: none) { .w31-hg { display: block; position: absolute; left: calc(50% - 11px); top: 70%; z-index: 9999; } }
 .w31-dlg { width: min(22rem, 90%); left: 30% !important; top: 30% !important; }
+.w31-win.w31-iconic { display: none; }
+.w31-tray { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap-reverse; gap: .4rem; padding: .3rem; pointer-events: none; }
+.w31-task { pointer-events: auto; width: 6.5rem; display: flex; flex-direction: column; align-items: center; gap: .2rem; font: inherit; font-size: 12px; background: none; border: 0; color: #fff; cursor: pointer; padding: .2rem; }
+.w31-task:focus-visible { outline: 1px dotted #fff; }
+.w31-clockwin { width: min(15rem, 80%); }
+.w31-clockwin .w31-body { background: #c0c0c0; text-align: center; }
+.w31-kface { width: 100%; max-width: 12rem; background: #fff; border: 2px solid #808080; border-radius: 50%; fill: #008080; }
+.w31-kh, .w31-km { fill: #000080; } .w31-ks { stroke: #000; stroke-width: .8; }
+.w31-kdigital { display: none; background: #000; color: #0f0; font: bold 1.6rem monospace; padding: .8rem .3rem; border: 2px inset #fff; }
+.w31-kdate { font-size: .9rem; }
+.w31-digital .w31-kdigital { display: block; } .w31-digital .w31-kface { display: none; }
 @media (max-width: 640px) {
   .dos .w31 { height: auto; min-height: 26rem; }
   .w31-win { position: relative; left: 0 !important; top: 0 !important; width: auto; max-height: none; margin: .4rem; }
+  .w31-tray { position: static; }
 }
 /* MS-DOS HACK easter egg: green "movie hacking" screen */
 .dos .dos-hack { min-height: calc(100% - 1rem); padding: .4rem 1ch; background: #000; color: #33ff33; text-shadow: 0 0 4px #33ff33; overflow: hidden; white-space: pre; }
