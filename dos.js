@@ -214,9 +214,9 @@ on their own on the right day, if this PC's clock agrees.`;
   const pathStr = (p = cwd) => drive + ":\\" + p.join("\\");
   const node = (p, root = drive === "A" ? FSA : FS) => p.reduce((n, k) => n?.[k], root);
   const isDir = n => n && !Array.isArray(n);
-  const print = h => { const d = document.createElement("div"); d.innerHTML = h; out.append(d); el.closest("main").scrollTop = 1e9; return d; };
+  const print = h => { const d = document.createElement("div"); d.innerHTML = h; out.append(d); el.scrollTop = 1e9; return d; };
   const err = h => { sfx.err(); return print(h); };
-  const toBottom = () => { const m = el.closest("main"); m.scrollTop = m.scrollHeight; };   // prompt back in view
+  const toBottom = () => { el.scrollTop = el.scrollHeight; };   // prompt back in view (the screen scrolls, never the window)
   const promptText = () => (env.PROMPT ?? "$N$G").replace(/\$(.)/g, (_, c) => ({
     P: pathStr(), G: ">", L: "<", B: "|", Q: "=", N: drive, $: "$", _: "\n", V: "MS-DOS Version 3.10",
     D: dateLine().slice(16), T: timeLine().slice(16), E: "", H: "" })[c.toUpperCase()] ?? "");

@@ -169,7 +169,8 @@ html:not(.js) .js-only { display: none; }
 @keyframes shake { 50% { transform: translate(2px, -2px); } }
 @keyframes smoke { from { opacity: 0; } to { opacity: .9; } }
 /* MS-DOS (dos.js): light grey on black, whatever the site theme */
-.dos { min-height: 100%; padding: .6rem 1ch; background: #000; color: #aaa; }
+.dos { height: 100%; overflow-y: auto; scrollbar-width: none; padding: .6rem 1ch; background: #000; color: #aaa; }   /* a fixed-size monitor: text scrolls inside, no bar (like DOS) */
+.dos::-webkit-scrollbar { display: none; }
 .dos pre { margin: 0; font: inherit; white-space: pre; overflow-x: auto; }
 .dos :is(a, .fs) { color: #55ffff; }
 .dos .fs.file { color: #fff; }
