@@ -23,7 +23,19 @@ Things you can type:
 Start with:  TYPE ABOUT.TXT   then   DIR SKILLS   and   DIR CONTACT
 Tip: you can also tap the names in a DIR listing.
 
-Not everything on this disk shows up in DIR. A good start: how does this PC boot?`;
+Not everything on this disk shows up in DIR. A good start: how does this PC boot?
+
+More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
+  const EXPLORE = `EXPLORE.TXT - THINGS TO FIND ON THIS PC
+=======================================
+[ ] This disk: a directory that DIR won't show. How does this PC boot?
+[ ] LOCKED.COM: my CV and a flag. DEBUG knows what it hides.
+[ ] Debian GNU/Linux (boot menu): 2 flags and a root account.
+[ ] BIOS Setup: press DEL during the memory test.
+    4 undocumented features. F1 gives clues.
+[ ] memtest86+ (boot menu): let it run. Old RAM fails sometimes.
+
+REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
   const NOTES = `NOTES.TXT - 1986
 - My CV now lives inside LOCKED.COM: only the right password shows it.
 - I forgot the password. Again.
@@ -39,6 +51,7 @@ Not everything on this disk shows up in DIR. A good start: how does this PC boot
     "AUTOEXEC.BAT": [null, OLD, () => txt("PROMPT $P$G\nPATH C:\\DOS;C:\\UTILS\nDATE\nTIME")],
     "CONFIG.SYS": [null, OLD, () => txt("FILES=20\nBUFFERS=20\nCOUNTRY=034")],
     "README.TXT": [null, null, () => txt(README)],
+    "EXPLORE.TXT": [null, null, () => txt(EXPLORE)],
     "ABOUT.TXT": [null, null, () => html("#c-about")],
     "SUMMARY.TXT": [null, null, () => html("#c-summary")],
     "INTEREST.TXT": [null, null, () => html("#c-interests")],

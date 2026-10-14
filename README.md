@@ -10,7 +10,7 @@ A static site styled as a retro terminal, with no frameworks, no build step, no 
 
 - **Boot**: 90s-style BIOS POST (memory test, drive detection, system summary) with synthesized retro sounds (mute with 🔊) — press DEL (or tap it) for the BIOS Setup, which hides a few easter eggs —, then a GRUB boot menu (Quick view, Debian boot → shell, MS-DOS 3.10, memtest86+) that auto-boots the Quick view.
 - **Quick view**: everything on one page. It's also what you get without JavaScript, so search engines see the full content. `ls ~/repos` opens a panel with selected GitHub projects (also `cat repos.txt` in the shell and `TYPE REPOS.TXT` in MS-DOS).
-- **Interactive shell** (`gmsh`, loaded only when chosen): a fake Linux terminal. Try `help`, `whoami`, `ls -a`, `cat avatar.txt`, `neofetch`, `myip`, `dig`… There are two flags to find, and a root challenge (`su`) that unlocks an encrypted CV.
+- **Interactive shell** (`gmsh`, loaded only when chosen): a fake Linux terminal. Try `help`, `whoami`, `ls -a`, `cat avatar.txt`, `neofetch`, `myip`, `dig`… There are two flags to find, and a root challenge (`su`) that unlocks an encrypted CV. `cat explore.txt` (and `EXPLORE.TXT` in MS-DOS) lists what there is to find across the whole machine: both systems, the BIOS Setup and memtest.
 - Strict Content-Security-Policy (only own scripts and styles, no inline code).
 - Bilingual (EN/ES), light/dark theme toggle, fixed-size window, mobile-friendly, WCAG AA/AAA contrast.
 

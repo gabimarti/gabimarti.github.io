@@ -29,7 +29,7 @@
   const D = {
     "/": ["bin/", "etc/", "home/", "root/", "tmp/", "var/"],
     "/bin": [], "/tmp": [], "/home": ["gabimarti/"], "/var": ["backups/"],
-    [HOME]: ["about.txt", "summary.txt", "interests.txt", "articles.txt", "repos.txt", "avatar.txt", "hint.txt", "skills/", "contact/", ".bash_history", ".notes/", ".secret"],
+    [HOME]: ["about.txt", "summary.txt", "interests.txt", "articles.txt", "repos.txt", "avatar.txt", "hint.txt", "explore.txt", "skills/", "contact/", ".bash_history", ".notes/", ".secret"],
     [HOME + "/skills"]: [...SKILLS.map(k => k + ".txt"), "hint.txt"],
     [HOME + "/contact"]: CONTACTS.map(k => k + ".url"),
     [HOME + "/.notes"]: ["todo.txt"],
@@ -47,8 +47,11 @@
     [HOME + "/repos.txt"]: () => html("#c-repos"),
     [HOME + "/avatar.txt"]: () => html("#avatar .avatar"),
     [HOME + "/hint.txt"]: () => B(
-      "Welcome, visitor. A few ideas to get started:\n  1. 'whoami' and 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' and 'cat repos.txt'\n  3. 'ls contact' or 'open github'\n  4. 'cat avatar.txt' for a portrait\n  5. 'neofetch', 'myip', 'fingerprint'\nSome files are hidden. Real hackers use 'ls -a'.",
-      "Bienvenido/a. Algunas ideas para empezar:\n  1. 'whoami' y 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' y 'cat repos.txt'\n  3. 'ls contact' u 'open github'\n  4. 'cat avatar.txt' para ver un retrato\n  5. 'neofetch', 'myip', 'fingerprint'\nHay ficheros ocultos. Los hackers de verdad usan 'ls -a'."),
+      "Welcome, visitor. A few ideas to get started:\n  1. 'whoami' and 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' and 'cat repos.txt'\n  3. 'ls contact' or 'open github'\n  4. 'cat avatar.txt' for a portrait\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': this machine is bigger than this shell\nSome files are hidden. Real hackers use 'ls -a'.",
+      "Bienvenido/a. Algunas ideas para empezar:\n  1. 'whoami' y 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' y 'cat repos.txt'\n  3. 'ls contact' u 'open github'\n  4. 'cat avatar.txt' para ver un retrato\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': esta máquina es más grande que esta shell\nHay ficheros ocultos. Los hackers de verdad usan 'ls -a'."),
+    [HOME + "/explore.txt"]: () => B(
+      "THIS MACHINE IS BIGGER THAN THIS SHELL\n\n  [ ] 2 flags in this shell. Some files hide from a plain 'ls'.\n  [ ] root. The admin keeps forgetting the password... and keeps writing notes about it.\n  [ ] MS-DOS 3.1 (boot menu): a 1986 program guards my CV, in a directory DIR won't show.\n  [ ] BIOS Setup: press DEL while the memory is being counted.\n      It has 4 undocumented features. F1 gives clues.\n  [ ] memtest86+ (boot menu): leave it running. Old RAM is not always perfect.\n\nHow to get there: 'reboot', and watch the screen closely.",
+      "ESTA MÁQUINA ES MÁS GRANDE QUE ESTA SHELL\n\n  [ ] 2 flags en esta shell. Algunos ficheros se esconden de un 'ls' normal.\n  [ ] root. El admin siempre olvida la contraseña... y siempre deja notas sobre ello.\n  [ ] MS-DOS 3.1 (menú de arranque): un programa de 1986 guarda mi CV, en un directorio que DIR no muestra.\n  [ ] BIOS Setup: pulsa SUPR (DEL) mientras se cuenta la memoria.\n      Tiene 4 funciones no documentadas. F1 da pistas.\n  [ ] memtest86+ (menú de arranque): déjalo funcionar. La RAM vieja no siempre es perfecta.\n\nCómo llegar: 'reboot', y mira la pantalla con atención."),
     [HOME + "/skills/hint.txt"]: () => B(
       "Each file here is a skill area: try 'cat dev.txt' or 'cat web-intel.txt'.\nCurious about the machine? 'neofetch', 'mem', 'df', 'ps', 'ls /'.",
       "Cada fichero es un área: prueba 'cat dev.txt' o 'cat web-intel.txt'.\n¿Curiosidad por la máquina? 'neofetch', 'mem', 'df', 'ps', 'ls /'."),
@@ -60,7 +63,7 @@
       "TODO\n  [x] write 'El Arte de los Hashes' on Medium (cat ~/articles.txt)\n  [ ] stop forgetting the root password!!\n  [ ] delete the old backup in /var/backups — it's only ENCODED, not encrypted...\n      (my favourite chef's recipe: a classic Caesar shift of 13, then base 64, then base 16)\n  [ ] check /etc/shadow permissions (anyone can verify the hash there)",
       "TODO\n  [x] escribir 'El Arte de los Hashes' en Medium (cat ~/articles.txt)\n  [ ] ¡¡dejar de olvidar la contraseña de root!!\n  [ ] borrar el backup viejo de /var/backups — solo está CODIFICADO, no cifrado...\n      (la receta de mi chef favorito: un César clásico de 13, luego base 64, luego base 16)\n  [ ] revisar permisos de /etc/shadow (cualquiera puede verificar el hash)"),
     "/etc/hostname": () => HOST,
-    "/etc/motd": () => B("GMOS 1.14.59 — authorized users only. Curious ones too.", "GMOS 1.14.59 — solo usuarios autorizados. Y curiosos."),
+    "/etc/motd": () => B("GMOS 1.15.59 — authorized users only. Curious ones too.", "GMOS 1.15.59 — solo usuarios autorizados. Y curiosos."),
     "/etc/shadow": async () => { const v = await vault(); return `root:${v.sha256}:20370:0:99999:7:::\ngabimarti:!:20370:0:99999:7:::\n<span class="dim"># hash: SHA-256 (hex)</span>`; },
     "/var/backups/root_pw.bak": async () => { const v = await vault(); return `<span class="dim"># root password backup — 2019</span>\n${esc(v.backup)}`; },
     "/root/cv.txt": () => esc(cv.slice(cv.indexOf("\n") + 1)),            // decrypted vault: flag line, then the CV
@@ -261,11 +264,11 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
       const logo = [" ██████  ███    ███", "██       ████  ████", "██   ███ ██ ████ ██", "██    ██ ██  ██  ██", " ██████  ██      ██"];
       const info = [
         `<strong>${user}</strong>@<strong>${HOST}</strong>`, "--------------------",
-        `<span class="dim">OS:</span> GMOS 1.14.59 (reverse-engineered)`,
+        `<span class="dim">OS:</span> GMOS 1.15.59 (reverse-engineered)`,
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
         `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática")}`,
-        `<span class="dim">Shell:</span> gmsh 0.21`,
+        `<span class="dim">Shell:</span> gmsh 0.22`,
         `<span class="dim">${B("Languages", "Lenguajes")}:</span> Python, C, Delphi, ASM`,
         `<span class="dim">${B("Tools", "Herramientas")}:</span> Ghidra, Burp Suite, Wazuh`,
         `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz")}`,
@@ -294,7 +297,7 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
   ${B("Pending ideas", "Ideas pendientes")}:         42
   ${B("Power-on hours", "Horas encendido")}:        306600 (~35 ${B("years", "años")})
   ${B("Temperature", "Temperatura")}:           36.6 °C`),
-    du: () => pre(`4.0K\tabout.txt\n4.0K\tsummary.txt\n4.0K\tinterests.txt\n4.0K\tarticles.txt\n4.0K\trepos.txt\n12K\tavatar.txt\n4.0K\thint.txt\n32K\tskills/\n20K\tcontact/\n<strong>88K\ttotal</strong>`),
+    du: () => pre(`4.0K\tabout.txt\n4.0K\tsummary.txt\n4.0K\tinterests.txt\n4.0K\tarticles.txt\n4.0K\trepos.txt\n12K\tavatar.txt\n4.0K\thint.txt\n4.0K\texplore.txt\n32K\tskills/\n20K\tcontact/\n<strong>92K\ttotal</strong>`),
     ds: () => {
       const bytes = [...new TextEncoder().encode("gabimarti :: reverser :: developer :: always learning\0\x13\x37\xde\xad\xbe\xef")]; let t = "";
       for (let i = 0; i < bytes.length; i += 16) {
@@ -422,8 +425,8 @@ ${lab.join("\n")}
       if (!started) {
         started = true; setPrompt();
         type(print(""), es()
-          ? "gmsh 0.21 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
-          : "gmsh 0.21 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
+          ? "gmsh 0.22 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
+          : "gmsh 0.22 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
       }
       input.focus({ preventScroll: true });
     },
