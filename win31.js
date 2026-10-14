@@ -18,6 +18,7 @@
     ["🚪", "Exit Windows", null, "exit"],
   ];
   let z = 10;
+  const HOURGLASS = `<span class="w31-hg" aria-hidden="true"><svg viewBox="0 0 16 22" width="22" height="30" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" stroke="#000" d="M2 1h12v2h-1v3c0 2-3 3-3 5s3 3 3 5v3h1v2H2v-2h1v-3c0-2 3-3 3-5S3 8 3 6V3H2z"/><path d="M5 6h6c0 1-2 2-3 3C7 8 5 7 5 6zM8 15c1 1 3 2 3 4H5c0-2 2-3 3-4z"/></svg></span>`;   // phones (no mouse cursor); desktops get it as the cursor (style.css)
   // our own waving four-colour flag (drawn here, not Microsoft's bitmap), with the trailing pixels of the 1992 splash
   const FLAG = `<svg class="w31-flag" viewBox="0 0 100 80" aria-hidden="true">
     <path fill="#e8161b" d="M30 12C40 6 50 6 60 12V40C50 34 40 34 30 40Z"/><path fill="#10a33d" d="M63 13C73 19 83 19 93 13V41C83 47 73 47 63 41Z"/>
@@ -99,8 +100,13 @@
       const root = document.createElement("div"); root.className = "w31";
       root.innerHTML = `<div class="w31-splash"><div>${FLAG}<div class="w31-logo">Microsoft<br><b>Windows</b><sup>™</sup> <span>3.1</span></div><p>Copyright © 1985-1992 Microsoft Corp.<br>gabimarti edition</p></div></div>`;
       container.append(root);
-      io.sfx.post(); await io.sleep(GM.reduce ? 100 : 1800);
-      root.innerHTML = "";
+      const busy = async ms => {                            // a slow 90s PC: hourglass while "loading"
+        root.classList.add("w31-wait"); root.insertAdjacentHTML("beforeend", HOURGLASS);
+        await io.sleep(ms);
+        root.classList.remove("w31-wait"); root.querySelector(".w31-hg")?.remove();
+      };
+      io.sfx.post(); await busy(4500);                      // full length even with reduced motion, like the boot
+      root.innerHTML = ""; await busy(1200);                // empty desktop before Program Manager shows up
       let done; const finished = new Promise(r => { done = r; });
 
       const win = (title, body, cls = "") => {              // a Windows 3.1 window
@@ -114,11 +120,12 @@
         `<button type="button" class="w31-icon" data-w31="${i}"><span class="w31-ic" aria-hidden="true">${ic}</span>${esc(label)}</button>`).join("")}</div></div>`, "w31-pm");
       pm.querySelector(".w31-ctl").remove();                // closing Program Manager = Exit Windows: use the icon
 
-      const open = i => {
+      const open = async i => {
         const [, , title, content] = APPS[i];
         if (content === "exit") return confirmExit();
         const existing = [...root.querySelectorAll(".w31-win")].find(w => w.getAttribute("aria-label") === title);
         if (existing) { existing.style.zIndex = ++z; return; }
+        await busy(700);
         if (content === "control") {
           const w = win(title, `<p>Desktop</p><p><button type="button" class="w31-btn" data-cp="theme">Toggle light / dark</button></p><p>International</p><p>${["en", "es", "ca"].map(l => `<button type="button" class="w31-btn" data-cp="${l}">${l.toUpperCase()}</button>`).join(" ")}</p>`);
           w.addEventListener("click", e => { const b = e.target.closest("[data-cp]"); if (!b) return; if (b.dataset.cp === "theme") GM.toggleTheme(); else GM.setLang(b.dataset.cp, true); io.sfx.key(); });
@@ -138,6 +145,7 @@
       };
 
       root.addEventListener("click", e => {
+        if (root.classList.contains("w31-wait")) return;   // busy: clicks are ignored, as in 1992
         const icon = e.target.closest(".w31-icon"); if (icon) return open(+icon.dataset.w31);
         const w = e.target.closest(".w31-win"); if (!w) return;
         w.style.zIndex = ++z;
