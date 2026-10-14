@@ -140,7 +140,7 @@ html:not(.js) .js-only { display: none; }
 .halt { display: grid; place-items: center; min-height: 100%; text-align: center; color: #e3b341; white-space: normal; }
 .pwr-tag { margin: 5rem auto 0; max-width: 60ch; color: var(--fg); line-height: 1.6; }   /* power-on screen: what this site is */
 .pwr { width: 3rem; height: 3rem; color: var(--accent); }   /* SVG: Android fonts lack the power glyph */
-#boot { height: 100%; display: flow-root; }   /* flow-root: .grub-ttl margin must not collapse out and add a scrollbar */
+#boot { height: 100%; display: flow-root; } #boot[hidden] { display: none; }   /* flow-root: .grub-ttl margin must not collapse out and add a scrollbar; [hidden] must still win */
 #boot-out:has(:is(.halt, .bios, .mt, .dos)) { height: 100%; }
 .del { font: inherit; color: var(--accent); background: none; border: 1px solid var(--accent); border-radius: 3px; padding: 0 .4ch; cursor: pointer; animation: del-blink 1s steps(1) infinite; }
 @keyframes del-blink { 50% { color: var(--panel); background: var(--accent); } }
