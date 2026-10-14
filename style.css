@@ -173,9 +173,15 @@ html:not(.js) .js-only { display: none; }
 .dos :is(a, .fs) { color: #55ffff; }
 .dos .fs.file { color: #fff; }
 .dos .dos-file { color: #fff; }
-.dos .dos-form { display: flex; }
+.dos .dos-form { display: flex; } .dos .dos-form[hidden] { display: none; }
 .dos .dos-prompt { white-space: pre; }
 .dos #dos-in { flex: 1; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; caret-color: #aaa; }
+/* MS-DOS Editor (EDIT, read-only): blue screen, grey menu and status bars */
+.dos .dos-edit { display: flex; flex-direction: column; min-height: calc(100% - 1rem); background: #0000aa; color: #fff; }
+.dos .dos-edit .ed-menu, .dos .dos-edit .ed-status { background: #aaa; color: #000; white-space: pre; }
+.dos .dos-edit .ed-title { text-align: center; border-bottom: 1px solid #aaa; }
+.dos .dos-edit .ed-body { flex: 1; margin: 0; padding: .3rem 1ch; overflow: auto; white-space: pre-wrap; outline: none; }
+.dos .dos-edit .ed-status button { font: inherit; color: #000; background: #fff; border: 0; padding: 0 .5ch; cursor: pointer; }
 /* memtest86+ (memtest.js) */
 .mt { display: flex; flex-direction: column; justify-content: space-between; min-height: 100%; padding: .6rem 1ch; background: #0000aa; color: #fff; }
 .mt .mt-top { display: grid; grid-template-columns: 1fr 1fr; gap: 0 2ch; padding-bottom: .5rem; border-bottom: 1px solid #fff; }

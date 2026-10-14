@@ -2,6 +2,8 @@
 // A tiny COMMAND.COM over the same content as the quick view (ids c-*), with 8.3 file names.
 // Hidden challenge: C:\UTILS (hidden dir, see AUTOEXEC.BAT) has LOCKED.COM, which shows the CV with the right password;
 // the password is XORed inside the program, so DEBUG (D = dump, U = unassemble) gives it away. Data: vault.json "dos".
+// Batch files run (CV.BAT, AUTOEXEC.BAT): @, ECHO ON/OFF/., REM, PAUSE, GOTO/:label, IF, SET/%VAR%, %0-%9, CALL, ECHO ^G = beep.
+// Pipes (|) and input redirection (<) feed MORE, FIND and SORT. Commands newer than 1985 run with a wink.
 // open() resolves "classic" on EXIT, or nothing on REBOOT / Ctrl+Alt+Del (site.js then restarts the POST).
 "use strict";
 (() => {
@@ -16,10 +18,15 @@ Things you can type:
   DIR [dir]   list files             CD dir, CD .., CD \\   change directory
   TYPE file   show a file            CLS                  clear the screen
   VER, VOL    version, volume        DATE, TIME           system clock
-  CHKDSK      disk and memory        ECHO text            say something
+  CHKDSK, MEM disk and memory        ECHO text            say something
+  TREE [/F]   directory tree         ATTRIB [file]        file attributes
+  MORE, FIND, SORT   filters: TYPE README.TXT | FIND "DIR"   or   MORE < README.TXT
+  SET, PATH, PROMPT, LABEL           environment, search path, prompt, volume label
+  EDIT file   look at a file         CV                   run CV.BAT
   EXIT        back to the quick view
   REBOOT      restart the PC (or Ctrl+Alt+Del)
 
+Too much typing? CV runs CV.BAT: my CV, one section at a time.
 Start with:  TYPE ABOUT.TXT   then   DIR SKILLS   and   DIR CONTACT
 Tip: you can also tap the names in a DIR listing.
 
@@ -30,6 +37,7 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
 =======================================
 [ ] This disk: a directory that DIR won't show. How does this PC boot?
 [ ] LOCKED.COM: my CV and a flag. DEBUG knows what it hides.
+[ ] DIR doesn't list every file either. ATTRIB is less discreet.
 [ ] Debian GNU/Linux (boot menu): 2 flags and a root account.
 [ ] BIOS Setup: press DEL during the memory test.
     4 undocumented features. F1 gives clues.
@@ -42,14 +50,41 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
 - But the program knows it: it has to compare what I type with something...
   and it only XORs it, with a key that changes on every byte.
 - DEBUG LOCKED.COM, then U (unassemble) and D (dump). .COM programs start at 0100.`;
+  const AUTOEXEC = "PROMPT $P$G\nPATH C:\\DOS;C:\\UTILS\nDATE\nTIME";
   const SKILLS = ["OFFENSE", "REVERSE", "WEBINTEL", "DEFENSE", "GRC", "DEV", "LANGUAGE"];
+  const SKILL_NAMES = ["offensive/", "reversing/", "web-intel/", "defense/", "grc/", "dev/", "languages/"];
   const CONTACTS = ["X", "LINKEDIN", "GITHUB", "MEDIUM", "EMAIL"];
+  const section = (n, title, body) => `CLS\nECHO [${n}/7] ${title}\nECHO ${"-".repeat(title.length + 6)}\n${body}\nECHO.\nPAUSE`;
+  const CVBAT = [
+    "@ECHO OFF",
+    "REM CV.BAT - Gabriel Marti's CV, for IT people who'd rather automate than type",
+    "CLS",
+    "ECHO ======================================================",
+    "ECHO  CV.BAT - Gabriel Marti (@gabimarti), batch edition",
+    "ECHO  For IT people who'd rather automate than type:",
+    "ECHO  sit back and press a key between sections.",
+    "ECHO ======================================================",
+    "ECHO ^G",
+    "PAUSE",
+    section(1, "WHOAMI", "ECHO Gabriel Marti (@gabimarti)\nTYPE SUMMARY.TXT"),
+    section(2, "SKILLS", SKILLS.map((k, i) => `ECHO ${SKILL_NAMES[i]}\nTYPE SKILLS\\${k}.TXT`).join("\n")),
+    section(3, "ABOUT", "TYPE ABOUT.TXT"),
+    section(4, "INTERESTS", "TYPE INTEREST.TXT"),
+    section(5, "GITHUB REPOS", "TYPE REPOS.TXT"),
+    section(6, "ARTICLES", "TYPE ARTICLES.TXT"),
+    section(7, "CONTACT", CONTACTS.map(k => `ECHO ${k}\nTYPE CONTACT\\${k}.URL`).join("\n")).replace(/\nPAUSE$/, ""),
+    "ECHO ^G^G",
+    "ECHO Done: 7 sections, 0 commands typed by you. That's the spirit.",
+    "ECHO More secrets on this PC: TYPE EXPLORE.TXT",
+  ].join("\n");
   const OLD = " 3-07-85   1:43p", Y86 = " 6-12-86  11:59p";
-  // tree: directories are objects; files are [size or null (= computed), date or null (= today), content() -> html or none (binary)]
+  // tree: directories are objects; files are [size or null (= computed), date or null (= today), content() -> html or none (binary), raw text (.BAT)]
   const FS = {
+    "IO.SYS": [22357, OLD], "MSDOS.SYS": [30128, OLD],
     "COMMAND.COM": [23612, OLD],
-    "AUTOEXEC.BAT": [null, OLD, () => txt("PROMPT $P$G\nPATH C:\\DOS;C:\\UTILS\nDATE\nTIME")],
+    "AUTOEXEC.BAT": [null, OLD, () => txt(AUTOEXEC), AUTOEXEC],
     "CONFIG.SYS": [null, OLD, () => txt("FILES=20\nBUFFERS=20\nCOUNTRY=034")],
+    "CV.BAT": [null, null, () => txt(CVBAT), CVBAT],
     "README.TXT": [null, null, () => txt(README)],
     "EXPLORE.TXT": [null, null, () => txt(EXPLORE)],
     "ABOUT.TXT": [null, null, () => html("#c-about")],
@@ -59,19 +94,24 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     "REPOS.TXT": [null, null, () => html("#c-repos")],
     "AVATAR.TXT": [null, null, () => html("#avatar .avatar")],
     DOS: {
-      "CHKDSK.COM": [9435, OLD], "DEBUG.COM": [15647, OLD], "EDLIN.COM": [7261, OLD],
-      "FDISK.COM": [16737, OLD], "FORMAT.COM": [11005, OLD], "SYS.COM": [4607, OLD],
+      "ATTRIB.EXE": [8234, OLD], "CHKDSK.COM": [9435, OLD], "DEBUG.COM": [15647, OLD], "EDIT.COM": [413, OLD],
+      "EDLIN.COM": [7261, OLD], "FDISK.COM": [16737, OLD], "FIND.EXE": [6403, OLD], "FORMAT.COM": [11005, OLD],
+      "LABEL.COM": [1826, OLD], "MEM.EXE": [32150, OLD], "MORE.COM": [282, OLD], "SORT.EXE": [1632, OLD],
+      "SYS.COM": [4607, OLD], "TREE.COM": [1645, OLD],
     },
     SKILLS: Object.fromEntries(SKILLS.map((k, i) => [k + ".TXT", [null, null, () => html(`#c-skills dd:nth-of-type(${i + 1})`)]])),
     CONTACT: Object.fromEntries(CONTACTS.map((k, i) => [k + ".URL", [null, null, () => html(`#c-contact li:nth-child(${i + 1}) a`)]])),
     UTILS: { "NOTES.TXT": [null, Y86, () => txt(NOTES)], "LOCKED.COM": [192, Y86] },
   };
-  const HIDDEN = new Set(["UTILS"]), PATH = [["DOS"], ["UTILS"]];
+  const HIDDEN = new Set(["UTILS"]);                        // hidden directories (ATTRIB only lists files, so UTILS stays a secret)
+  const ATTR0 = { "IO.SYS": "RHS", "MSDOS.SYS": "RHS" };     // file attributes (default: A)
   const DAYS = "Sun Mon Tue Wed Thu Fri Sat".split(" ");
   const p2 = n => String(n).padStart(2, "0"), hx = (n, w = 2) => n.toString(16).toUpperCase().padStart(w, "0");
   const today = () => { const d = new Date(); return `${d.getMonth() + 1}-${p2(d.getDate())}-${String(d.getFullYear()).slice(2)}`; };
   const dateLine = () => { const d = new Date(); return `Current date is ${DAYS[d.getDay()]} ${p2(d.getMonth() + 1)}-${p2(d.getDate())}-${d.getFullYear()}`; };
   const timeLine = () => { const d = new Date(); return `Current time is ${d.getHours()}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.${p2(Math.floor(d.getMilliseconds() / 10))}`; };
+  const tooLate = () => { const h = new Date().getHours(); return h >= 3 && h < 6; };   // 03:00-05:59
+  const beep = () => sfx.tone(1000, .12, "square", .05);
 
   // ---------- LOCKED.COM: a real-looking image built from vault.json (key and XORed bytes) ----------
   let vaultP = null;
@@ -98,14 +138,37 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
   }
 
   let el, out, form, input, promptEl, done, cwd = [], hist = [], hpos = 0, pending = null;
+  let env, attrs, vol, echoOn, batchDepth = 0, abort = false, cancelWait = null;
   const pathStr = (p = cwd) => "C:\\" + p.join("\\");
   const node = p => p.reduce((n, k) => n?.[k], FS);
   const isDir = n => n && !Array.isArray(n);
   const print = h => { const d = document.createElement("div"); d.innerHTML = h; out.append(d); el.closest("main").scrollTop = 1e9; return d; };
   const err = h => { sfx.err(); return print(h); };
-  const setPrompt = t => { promptEl.textContent = t ?? pathStr() + ">"; };
+  const promptText = () => (env.PROMPT ?? "$N$G").replace(/\$(.)/g, (_, c) => ({
+    P: pathStr(), G: ">", L: "<", B: "|", Q: "=", N: "C", $: "$", _: "\n", V: "MS-DOS Version 3.10",
+    D: dateLine().slice(16), T: timeLine().slice(16), E: "", H: "" })[c.toUpperCase()] ?? "");
+  const setPrompt = t => { promptEl.textContent = t ?? (echoOn ? promptText() : ""); };
   // a program waiting for input: label is the prompt, cb gets the line (DATE/TIME ignore it, DEBUG loops, LOCKED wants a password)
   const ask = (label, cb = () => {}, secret = false) => { pending = cb; setPrompt(label); input.type = secret ? "password" : "text"; };
+  const askLine = label => new Promise(res => {          // same, awaitable (also inside a batch file, where the prompt is hidden)
+    form.hidden = false; input.focus({ preventScroll: true });
+    ask(label, v => { if (batchDepth) form.hidden = true; res(v); });
+  });
+  // wait for a key or a tap (PAUSE, MORE, EDIT); Ctrl+C / Esc stops a running batch file
+  const anyKey = (onlyClose = false) => new Promise(res => {
+    const k = e => {
+      if (e.ctrlKey && e.altKey) return;                    // Ctrl+Alt+Del: onKey reboots
+      if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(e.key)) return;
+      if (onlyClose && !["Escape", "Enter"].includes(e.key)) return;
+      e.preventDefault(); e.stopPropagation();
+      if ((e.ctrlKey && /^c$/i.test(e.key)) || e.key === "Escape") { if (batchDepth) { abort = true; print("^C"); } }
+      stop();
+    };
+    const c = e => { if (onlyClose && !e.target.closest("[data-close]")) return; e.stopPropagation(); stop(); };
+    const stop = () => { document.removeEventListener("keydown", k, true); el.removeEventListener("click", c, true); cancelWait = null; res(); };
+    cancelWait = stop;
+    setTimeout(() => { document.addEventListener("keydown", k, true); el.addEventListener("click", c, true); });
+  });
   function resolve(arg) {                                   // DOS path (case-insensitive, \ or /) -> array, or null
     const a = arg.toUpperCase().replace(/\//g, "\\").replace(/^C:/, "");
     const p = a.startsWith("\\") ? [] : [...cwd];
@@ -116,24 +179,36 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     }
     return node(p) ? p : null;
   }
-  function findProgram(name) {                              // name, name.COM or name.BAT in cwd, then in PATH -> [path array, file]
-    const n = name.toUpperCase().replace(/\//g, "\\"), exts = /\.(COM|BAT)$/.test(n) ? [""] : [".COM", ".BAT"];
+  const searchPath = () => (env.PATH || "").split(";").filter(Boolean).map(d => resolve(d.replace(/^C:/i, "") || "\\")).filter(p => p && isDir(node(p)));
+  function findProgram(name) {                              // name, name.COM/.EXE/.BAT in cwd, then in PATH -> [path array, file]
+    const n = name.toUpperCase().replace(/\//g, "\\"), exts = /\.(COM|EXE|BAT)$/.test(n) ? [""] : [".COM", ".EXE", ".BAT"];
     for (const e of exts) {
       if (n.includes("\\")) { const p = resolve(n + e); if (p && !isDir(node(p))) return p; continue; }
-      for (const dir of [cwd, ...PATH]) if (node([...dir, n + e]) && !isDir(node([...dir, n + e]))) return [...dir, n + e];
+      for (const dir of [cwd, ...searchPath()]) if (node([...dir, n + e]) && !isDir(node([...dir, n + e]))) return [...dir, n + e];
     }
     return null;
   }
+  const attrOf = p => attrs[p.join("\\")] ?? "A";
+  const hidden = p => p.length === 1 && HIDDEN.has(p[0]) || attrOf(p).includes("H");
+  // plain text of a file in the active language (FIND, SORT, MORE, EDIT)
+  function plain(h) {
+    const d = document.createElement("div");
+    d.innerHTML = h.replace(/<br\s*\/?>/gi, "\n").replace(/<\/(li|p|dd|dt|div|pre|h\d)>/gi, "$&\n");
+    d.querySelectorAll("[lang]").forEach(x => { if (x.lang !== document.documentElement.lang) x.remove(); });
+    return d.textContent.replace(/\n{3,}/g, "\n\n").replace(/\n+$/, "");
+  }
+  const fileText = f => f[3] ?? (f[2] ? plain(f[2]()) : "\u2592".repeat(16));
   function size(f) {
     if (f[0]) return f[0];
     const t = document.createElement("div"); t.innerHTML = f[2](); return t.textContent.length;
   }
+  const volLine = () => vol ? ` Volume in drive C is ${esc(vol)}` : " Volume in drive C has no label";
   function dir(arg) {
     const p = arg ? resolve(arg) : cwd, n = p && node(p);
     if (!isDir(n)) return err("File not found");
     const up = p.length ? [[".", null], [".."]] : [], rows = [];
     let count = 0, bytes = 0;
-    for (const [name, v] of [...up, ...Object.entries(n).filter(([k]) => p.length || !HIDDEN.has(k))]) {
+    for (const [name, v] of [...up, ...Object.entries(n).filter(([k]) => !hidden([...p, k]))]) {
       const [b, e = ""] = name.startsWith(".") ? [name] : name.split(".");
       const label = esc(`${b.padEnd(8)} ${e.padEnd(3)}`), path = esc([...p, name].join("\\"));
       count++;
@@ -146,7 +221,7 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
         rows.push(`${btn} ${String(s).padStart(9)}  ${v[1] || today().padStart(8) + "  12:00p"}`);
       }
     }
-    print(`<pre> Volume in drive C is GABIMARTI\n Directory of  ${esc(pathStr(p))}\n\n${rows.join("\n")}\n${String(count).padStart(9)} File(s)  ${20123648 - bytes} bytes free</pre>`);
+    print(`<pre>${volLine()}\n Directory of  ${esc(pathStr(p))}\n\n${rows.join("\n")}\n${String(count).padStart(9)} File(s)  ${20123648 - bytes} bytes free</pre>`);
   }
 
   // ---------- DEBUG: D [addr], U [addr], R, G, Q over the loaded .COM (or empty memory) ----------
@@ -213,12 +288,142 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     }, true);
   }
 
+  // ---------- batch files ----------
+  async function runBatch(path, args) {
+    const lines = node(path)[3].split("\n"), labels = {};
+    lines.forEach((l, i) => { const m = l.trim().match(/^:(\S+)/); if (m) labels[m[1].toUpperCase()] = i; });
+    const params = [path.at(-1).replace(/\.BAT$/, ""), ...args];
+    batchDepth++; form.hidden = true;
+    try {
+      for (let i = 0; i < lines.length && !abort; i++) {
+        let l = lines[i].trim();
+        if (!l || l.startsWith(":")) continue;
+        const quiet = l.startsWith("@"); if (quiet) l = l.slice(1);
+        l = l.replace(/%(\d)/g, (_, n) => params[n] ?? "").replace(/%([^%\s]+)%/g, (_, k) => env[k.toUpperCase()] ?? "");
+        if (echoOn && !quiet) print(esc(promptText() + l));
+        while (l !== null && /^IF\s/i.test(l)) l = evalIf(l.slice(3));
+        if (l === null) continue;
+        const g = l.match(/^GOTO\s+:?(\S+)/i);
+        if (g) {
+          const j = labels[g[1].toUpperCase()];
+          if (j === undefined) { err("Label not found"); break; }
+          i = j; continue;
+        }
+        const word = l.split(/\s+/)[0], bat = !CMDS[word.toUpperCase()] && findProgram(word);
+        if (bat && bat.at(-1).endsWith(".BAT")) { await runBatch(bat, l.split(/\s+/).slice(1)); break; }   // no CALL: chain
+        await run(l);
+        await sleep(30);                                    // let the screen breathe, like a real 4.77 MHz PC
+      }
+    } finally {
+      if (!--batchDepth) { abort = false; echoOn = true; form.hidden = false; setPrompt(); input.focus({ preventScroll: true }); }
+    }
+  }
+  function evalIf(s) {                                      // IF [NOT] EXIST file | ERRORLEVEL n | a==b  command -> command or null
+    let m = s.match(/^(NOT\s+)?(.*)$/i), ok;
+    const not = !!m[1]; let rest = m[2];
+    if ((m = rest.match(/^EXIST\s+(\S+)\s+(.+)$/i))) { ok = !!resolve(m[1]); rest = m[2]; }
+    else if ((m = rest.match(/^ERRORLEVEL\s+(\d+)\s+(.+)$/i))) { ok = 0 >= +m[1]; rest = m[2]; }
+    else if ((m = rest.match(/^"?([^"=\s]*)"?\s*==\s*"?([^"\s]*)"?\s+(.+)$/))) { ok = m[1] === m[2]; rest = m[3]; }
+    else { err("Syntax error"); return null; }
+    return ok !== not ? rest : null;
+  }
+
+  // ---------- filters: text comes from a pipe, from < file, or from file arguments ----------
+  async function more(a, stdin) {
+    if (stdin === undefined) return err("Required parameter missing - try MORE &lt; README.TXT");
+    const lines = stdin.split("\n");
+    for (let i = 0; i < lines.length && !abort; i += 20) {
+      print(`<pre>${esc(lines.slice(i, i + 20).join("\n"))}</pre>`);
+      if (i + 20 < lines.length) { const m = print("-- More --"); await anyKey(); m.remove(); }
+    }
+  }
+  function find(a, stdin) {
+    const flags = (a.match(/\/[VCNI]/gi) || []).map(f => f[1].toUpperCase()), q = a.match(/"([^"]*)"/);
+    if (!q) return err("FIND: Parameter format not correct");
+    const files = a.slice(q.index + q[0].length).split(/\s+/).filter(f => f && !f.startsWith("/"));
+    const has = l => flags.includes("I") ? l.toLowerCase().includes(q[1].toLowerCase()) : l.includes(q[1]);
+    const one = (name, text) => {
+      const hits = text.split("\n").map((l, i) => [i + 1, l]).filter(([, l]) => has(l) !== flags.includes("V"));
+      const head = name ? `\n---------- ${name}${flags.includes("C") ? ": " + hits.length : ""}\n` : "";
+      const body = flags.includes("C") ? (name ? "" : String(hits.length)) : hits.map(([n, l]) => (flags.includes("N") ? `[${n}]` : "") + l).join("\n");
+      print(`<pre>${esc(head + body)}</pre>`);
+    };
+    if (!files.length) return stdin === undefined ? err("FIND: Parameter format not correct") : one("", stdin);
+    for (const f of files) { const p = resolve(f), n = p && node(p); n && !isDir(n) ? one(p.at(-1), fileText(n)) : err(`File not found - ${esc(f.toUpperCase())}`); }
+  }
+  function sort(a, stdin) {
+    const file = a.split(/\s+/).find(x => x && !x.startsWith("/")), col = +(a.match(/\/\+(\d+)/)?.[1] || 1) - 1;
+    let text = stdin;
+    if (file) { const p = resolve(file), n = p && node(p); if (!n || isDir(n)) return err("File not found"); text = fileText(n); }
+    if (text === undefined) return err("Required parameter missing - try SORT &lt; README.TXT");
+    const lines = text.split("\n").sort((x, y) => x.slice(col).localeCompare(y.slice(col), "en", { sensitivity: "base" }));
+    if (/\/R/i.test(a)) lines.reverse();
+    print(`<pre>${esc(lines.join("\n"))}</pre>`);
+  }
+  function tree(a) {                                        // the MS-DOS 3.x layout, not the graphic one of DOS 4+
+    const files = /\/F/i.test(a), outL = ["", "DIRECTORY PATH LISTING", ""];
+    const walk = p => {
+      const n = node(p), subs = Object.keys(n).filter(k => isDir(n[k]) && !hidden([...p, k]));
+      if (p.length) {
+        outL.push(`Path: \\${p.join("\\")}`, "", `Sub-directories:  ${subs.length ? subs.join("\n                  ") : "None"}`, "");
+        if (files) {
+          const fs = Object.keys(n).filter(k => !isDir(n[k]) && !hidden([...p, k])).map(k => { const [b, e = ""] = k.split("."); return `${b.padEnd(8)} .${e}`; });
+          outL.push(`Files:            ${fs.length ? fs.join("\n                  ") : "None"}`, "");
+        }
+      }
+      subs.forEach(k => walk([...p, k]));
+    };
+    walk([]);
+    print(`<pre>${esc(outL.join("\n"))}</pre>`);
+  }
+  function attrib(a) {
+    const sets = (a.match(/[+-][RAHS]/gi) || []).map(s => s.toUpperCase()), spec = a.split(/\s+/).find(x => x && !/^[+-][RAHS]$/i.test(x)) || "*.*";
+    const at = spec.toUpperCase().replace(/\//g, "\\").replace(/^C:/, ""), cut = at.lastIndexOf("\\");
+    const dirP = cut < 0 ? cwd : resolve(at.slice(0, cut) || "\\"), mask = at.slice(cut + 1);
+    if (!dirP || !isDir(node(dirP))) return err("Path not found");
+    const re = new RegExp("^" + mask.replace(/[.+^${}()|[\]]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".") + "$");
+    const hits = Object.keys(node(dirP)).filter(k => !isDir(node(dirP)[k]) && re.test(k)).map(k => [...dirP, k]);
+    if (!hits.length) return err(`File not found - ${esc(spec.toUpperCase())}`);
+    if (sets.length) {
+      hits.forEach(p => { let s = attrOf(p); sets.forEach(([op, f]) => { s = op === "+" ? (s.includes(f) ? s : s + f) : s.replace(f, ""); }); attrs[p.join("\\")] = s; });
+      return;
+    }
+    print(`<pre>${esc(hits.map(p => { const s = attrOf(p); return `${s.includes("A") ? "A" : " "}    ${["S", "H", "R"].map(f => s.includes(f) ? f : " ").join("")}     ${pathStr(p)}`; }).join("\n"))}</pre>`);
+  }
+  async function edit(a) {                                  // the blue MS-DOS Editor, read-only
+    const p = a && resolve(a), n = p && node(p);
+    if (n && isDir(n)) return err("File not found");
+    const name = n ? pathStr(p) : (a ? a.toUpperCase() : "Untitled");
+    const box = document.createElement("div"); box.className = "dos-edit";
+    box.innerHTML = `<div class="ed-menu"> File  Edit  Search  Options  Help</div><div class="ed-title">${esc(name)}</div>`
+      + `<pre class="ed-body" tabindex="0">${esc(n ? fileText(n) : "")}</pre>`
+      + `<div class="ed-status"><button type="button" data-close>Esc=Exit</button>  MS-DOS Editor · read-only · EDIT arrived in 1991: this PC peeked at the future</div>`;
+    out.hidden = form.hidden = true; el.append(box); box.querySelector(".ed-body").focus({ preventScroll: true });
+    await anyKey(true);
+    box.remove(); out.hidden = false; if (!batchDepth) { form.hidden = false; input.focus({ preventScroll: true }); }
+  }
+
   const CMDS = {
     DIR: dir,
     CLS: () => { out.innerHTML = ""; },
     VER: () => print("<br>MS-DOS Version 3.10<br><br>"),
-    VOL: () => print(" Volume in drive C is GABIMARTI"),
-    ECHO: a => print(a ? esc(a) : "ECHO is on"),
+    VOL: () => print(volLine()),
+    LABEL: async a => {
+      if (!a) { print(volLine()); a = await askLine("Volume label (11 characters, ENTER for none)? "); if (!a.trim()) return; }
+      const v = a.trim().toUpperCase();
+      if (v.length > 11 || /[*?/\\|.,;:+=<>[\]"]/.test(v)) return err("Invalid characters in volume label");
+      vol = v;
+    },
+    ECHO: a => {
+      if (/^(on|off)$/i.test(a)) { echoOn = /on/i.test(a); return setPrompt(); }
+      if (!a) return print(`ECHO is ${echoOn ? "on" : "off"}`);
+      const beeps = (a.match(/\^G/gi) || []).length;
+      for (let i = 0; i < beeps; i++) setTimeout(beep, i * 220);
+      const t = a.replace(/\^G/gi, "").trim();
+      if (t) print(esc(t));
+    },
+    REM: () => {},
+    PAUSE: async () => { const m = print("Press any key to continue . . ."); await anyKey(); if (!abort) m.remove(); },
     CD: a => {
       if (!a) return print(esc(pathStr()));
       const p = resolve(a);
@@ -229,14 +434,19 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
       if (!a) return err("Required parameter missing");
       const p = resolve(a), n = p && node(p);
       if (!n || isDir(n)) return err("File not found");
+      if (n[3]) return print(`<pre class="dos-file">${esc(n[3])}</pre>`);
       if (n[2]) return print(`<div class="dos-file">${n[2]()}</div>`);
       let mem = null;
       if (p.join("\\") === "UTILS\\LOCKED.COM") try { [mem] = await lockedImage(); } catch (e) { /* binary noise below */ }
       print(`<pre>${esc(mem ? [...mem].map(b => b >= 0x20 && b < 0x7f ? String.fromCharCode(b) : b ? "▒" : " ").join("") : "MZ▒▒▒▒▒▒")}</pre>`);
     },
-    DATE: () => { print(dateLine()); ask("Enter new date (mm-dd-yy): "); },
-    TIME: () => { print(timeLine()); ask("Enter new time: "); },
-    CHKDSK: () => print(`<pre>Volume GABIMARTI   created Mar 7, 1985 1:43p
+    DATE: async () => { print(dateLine()); await askLine("Enter new date (mm-dd-yy): "); },
+    TIME: async () => {
+      print(timeLine());
+      if (tooLate()) print("It is too late to be using DOS.");
+      await askLine("Enter new time: ");
+    },
+    CHKDSK: () => print(`<pre>Volume ${esc(vol || "")}   created Mar 7, 1985 1:43p
 
   21309440 bytes total disk space
      55296 bytes in 3 hidden files
@@ -246,6 +456,38 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
 
     655360 bytes total memory
     602144 bytes free</pre>`),
+    MEM: () => print(`<pre>    655360 bytes total conventional memory
+    655360 bytes available to MS-DOS
+    602144 largest executable program size
+
+(MEM arrived with MS-DOS 4.0 in 1988: this PC peeked at the future.
+ 640K ought to be enough for anybody.)</pre>`),
+    TREE: tree,
+    ATTRIB: attrib,
+    MORE: more,
+    FIND: find,
+    SORT: sort,
+    EDIT: edit,
+    SET: a => {
+      if (!a) return print(`<pre>${esc(Object.entries(env).map(([k, v]) => `${k}=${v}`).join("\n"))}</pre>`);
+      const m = a.match(/^([^=]+)=(.*)$/);
+      if (!m) return err("Syntax error");
+      const k = m[1].trim().toUpperCase();
+      if (m[2]) env[k] = m[2]; else delete env[k];
+      if (k === "PROMPT") setPrompt();
+    },
+    PATH: a => {
+      if (!a) return print(env.PATH ? "PATH=" + esc(env.PATH) : "No Path");
+      if (a.trim() === ";") delete env.PATH; else env.PATH = a.trim().toUpperCase();
+    },
+    PROMPT: a => { if (a) env.PROMPT = a; else delete env.PROMPT; setPrompt(); },
+    IF: a => { const rest = evalIf(a); if (rest && !/^GOTO\s/i.test(rest)) return run(rest); },
+    GOTO: () => {},                                         // only means something inside a batch file
+    CALL: a => {
+      const [name, ...args] = a.trim().split(/\s+/), p = name && findProgram(name);
+      if (!p || !p.at(-1).endsWith(".BAT")) return err("Bad command or file name");
+      return runBatch(p, args);
+    },
     DEBUG: debug,
     LOCKED: locked,
     FORMAT: () => err("Nice try. This disk holds 35 years of work."),
@@ -253,27 +495,50 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     EXIT: () => finish("classic"),
     REBOOT: () => finish(),
   };
-  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK"]);   // programs on disk: only run if found in cwd / PATH
-  async function exec(line) {
+  // programs on disk: only run if found in cwd / PATH (empty the PATH and they are gone, like on a real PC)
+  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL"]);
+  // split on | outside quotes
+  const pipes = t => { const parts = [""]; let q = false; for (const ch of t) { if (ch === '"') q = !q; if (ch === "|" && !q) parts.push(""); else parts[parts.length - 1] += ch; } return parts.map(s => s.trim()); };
+  async function capture(fn) {                              // run a command with its output kept off screen, as plain text
+    const screen = out; out = document.createElement("div");
+    try { await fn(); return plain(out.innerHTML); } finally { out = screen; }
+  }
+  async function run(t, stdin) {
+    t = t.trim(); if (!t) return;
+    if (/^[a-z]:$/i.test(t)) return /^c:$/i.test(t) ? null : err("Invalid drive specification");
+    const ps = pipes(t);
+    if (ps.length > 1) {
+      let data = stdin;
+      for (const [i, part] of ps.entries()) { if (i < ps.length - 1) data = await capture(() => run(part, data)); else return run(part, data); }
+    }
+    if (/>/.test(t.replace(/"[^"]*"/g, ""))) return err("Write protect error writing drive C");
+    const lt = t.match(/^(.*?)\s*<\s*(\S+)\s*$/);
+    if (lt) { const p = resolve(lt[2]), n = p && node(p); if (!n || isDir(n)) return err("File not found"); return run(lt[1], fileText(n)); }
+    const [, c, a] = t.match(/^([^\s/.]+(?:\.[a-z0-9]{1,3})?)(.*)$/i) || [, t, ""];   // CD.. and CD\ work too
+    if (/^cd\\/i.test(c)) return CMDS.CD(t.slice(2));
+    if (/^echo$/i.test(c) && a.startsWith(".")) return print("&nbsp;");      // ECHO. prints an empty line
+    const prog = c.includes("\\") ? findProgram(c) : null, base = (prog ? prog.at(-1) : c.toUpperCase()).replace(/\.(COM|EXE|BAT)$/, "");
+    if (CMDS[base] && (!EXTERNAL.has(base) || prog || findProgram(base))) return CMDS[base](a.trim(), stdin);
+    const p = prog || findProgram(c);
+    if (p && p.at(-1).endsWith(".BAT")) return runBatch(p, a.trim().split(/\s+/).filter(Boolean));
+    if (p) return err("Program too big to fit in memory");
+    err("Bad command or file name");
+  }
+  async function exec(line) {                               // a line typed (or tapped) at the prompt
     print(esc(promptEl.textContent + (input.type === "password" ? "" : line)));
     if (pending) { const cb = pending; pending = null; input.type = "text"; setPrompt(); return cb(line); }
     const t = line.trim(); if (!t) return;
     hist.push(t); hpos = hist.length;
-    if (/^[a-z]:$/i.test(t)) return /^c:$/i.test(t) ? null : err("Invalid drive specification");
-    const [, c, a] = t.match(/^([^\s/.]+(?:\.[a-z0-9]{1,3})?)(.*)$/i) || [, t, ""];   // CD.. and CD\ work too
-    if (/^cd\\/i.test(c)) return CMDS.CD(t.slice(2));
-    const prog = c.includes("\\") ? findProgram(c) : null, base = (prog ? prog.at(-1) : c.toUpperCase()).replace(/\.(COM|EXE|BAT)$/, "");
-    if (CMDS[base] && (!EXTERNAL.has(base) || prog || findProgram(base))) return CMDS[base](a.trim());
-    if (findProgram(c)) return err("Program too big to fit in memory");
-    err("Bad command or file name");
+    await run(t);
   }
   function finish(next) {
+    cancelWait?.(); abort = true;
     document.removeEventListener("keydown", onKey, true);
     done(next);
   }
   function onKey(e) {                                       // Ctrl+Alt+Del reboots; typing anywhere goes to the prompt
     if (e.ctrlKey && e.altKey && (e.key === "Delete" || e.key === "Backspace")) { e.preventDefault(); return finish(); }
-    if (e.target !== input && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) input.focus({ preventScroll: true });
+    if (e.target !== input && !form.hidden && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) input.focus({ preventScroll: true });
   }
 
   GM.dos = {
@@ -282,12 +547,13 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
       el.innerHTML = `<div class="dos-out"></div><form class="dos-form" autocomplete="off" hidden><label class="dos-prompt" for="dos-in"></label><input id="dos-in" spellcheck="false" autocapitalize="off" autocomplete="off"></form>`;
       container.append(el);
       out = el.querySelector(".dos-out"); form = el.querySelector("form"); input = el.querySelector("input"); promptEl = el.querySelector("label");
-      cwd = []; hist = []; hpos = 0; pending = null;
+      cwd = []; hist = []; hpos = 0; pending = null; batchDepth = 0; abort = false; echoOn = true; vol = "GABIMARTI";
+      env = { COMSPEC: "C:\\COMMAND.COM", PATH: "C:\\DOS;C:\\UTILS", PROMPT: "$P$G" }; attrs = { ...ATTR0 };
       print("  Booting 'MS-DOS 3.1'<br><br>rootnoverify (hd0,1)<br>chainloader +1<br><br>"); await sleep(900);
       print("Starting MS-DOS...<br><br>"); await sleep(1400);
       print(dateLine()); print("Enter new date (mm-dd-yy): "); await sleep(800); sfx.clack("\n");
-      print(timeLine()); print("Enter new time: "); await sleep(800); sfx.clack("\n");
-      print("<br>Microsoft(R) MS-DOS(R)  Version 3.10<br>             (C)Copyright Microsoft Corp 1981-1985<br><br>Type TYPE README.TXT to get started.<br><br>");
+      print(timeLine()); if (tooLate()) print("It is too late to be using DOS."); print("Enter new time: "); await sleep(800); sfx.clack("\n");
+      print("<br>Microsoft(R) MS-DOS(R)  Version 3.10<br>             (C)Copyright Microsoft Corp 1981-1985<br><br>Type TYPE README.TXT to get started, or CV to let a batch file do the typing.<br><br>");
       setPrompt(); form.hidden = false; input.focus({ preventScroll: true });
       form.addEventListener("submit", e => { e.preventDefault(); const v = input.value; input.value = ""; sfx.key(); exec(v); });
       input.addEventListener("keydown", e => {
@@ -297,8 +563,8 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
       });
       el.addEventListener("click", e => {
         const b = e.target.closest("[data-dos]");
-        if (b && !pending) exec(b.dataset.dos);
-        if (!e.target.closest("a") && !getSelection().toString()) input.focus({ preventScroll: true });
+        if (b && !pending && !batchDepth) exec(b.dataset.dos);
+        if (!e.target.closest("a") && !getSelection().toString() && !form.hidden) input.focus({ preventScroll: true });
       });
       document.addEventListener("keydown", onKey, true);
       return new Promise(res => { done = res; });
