@@ -4,7 +4,6 @@
   const { $, B, esc, sleep, type } = GM;
   const root = document.documentElement, main = $("main");
   const out = $("#sh-out"), form = $("#sh-form"), input = $("#sh-in"), promptEl = $("#sh-prompt");
-  const es = () => root.lang === "es";
   // reuse the classic view's content (ids c-*), without ids and indentation whitespace
   const html = sel => { const el = $(sel); return el ? el.outerHTML.replace(/ id="[^"]*"/, "").replace(/>\s+</g, "><") : ""; };
   const HOST = "gabimarti.github.io", HOME = "/home/gabimarti";
@@ -48,26 +47,26 @@
     [HOME + "/avatar.txt"]: () => html("#avatar .avatar"),
     [HOME + "/hint.txt"]: () => B(
       "Welcome, visitor. A few ideas to get started:\n  1. 'whoami' and 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' and 'cat repos.txt'\n  3. 'ls contact' or 'open github'\n  4. 'cat avatar.txt' for a portrait\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': this machine is bigger than this shell\nSome files are hidden. Real hackers use 'ls -a'.",
-      "Bienvenido/a. Algunas ideas para empezar:\n  1. 'whoami' y 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' y 'cat repos.txt'\n  3. 'ls contact' u 'open github'\n  4. 'cat avatar.txt' para ver un retrato\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': esta máquina es más grande que esta shell\nHay ficheros ocultos. Los hackers de verdad usan 'ls -a'."),
+      "Bienvenido/a. Algunas ideas para empezar:\n  1. 'whoami' y 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' y 'cat repos.txt'\n  3. 'ls contact' u 'open github'\n  4. 'cat avatar.txt' para ver un retrato\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': esta máquina es más grande que esta shell\nHay ficheros ocultos. Los hackers de verdad usan 'ls -a'.", "Benvingut/da. Algunes idees per començar:\n  1. 'whoami' i 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' i 'cat repos.txt'\n  3. 'ls contact' o 'open github'\n  4. 'cat avatar.txt' per veure un retrat\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': aquesta màquina és més gran que aquesta shell\nHi ha fitxers amagats. Els hackers de veritat fan servir 'ls -a'."),
     [HOME + "/explore.txt"]: () => B(
       "THIS MACHINE IS BIGGER THAN THIS SHELL\n\n  [ ] 2 flags in this shell. Some files hide from a plain 'ls'.\n  [ ] root. The admin keeps forgetting the password... and keeps writing notes about it.\n  [ ] MS-DOS 3.1 (boot menu): a 1986 program guards my CV, in a directory DIR won't show.\n  [ ] BIOS Setup: press DEL while the memory is being counted.\n      It has 4 undocumented features. F1 gives clues.\n  [ ] memtest86+ (boot menu): leave it running. Old RAM is not always perfect.\n\nHow to get there: 'reboot', and watch the screen closely.",
-      "ESTA MÁQUINA ES MÁS GRANDE QUE ESTA SHELL\n\n  [ ] 2 flags en esta shell. Algunos ficheros se esconden de un 'ls' normal.\n  [ ] root. El admin siempre olvida la contraseña... y siempre deja notas sobre ello.\n  [ ] MS-DOS 3.1 (menú de arranque): un programa de 1986 guarda mi CV, en un directorio que DIR no muestra.\n  [ ] BIOS Setup: pulsa SUPR (DEL) mientras se cuenta la memoria.\n      Tiene 4 funciones no documentadas. F1 da pistas.\n  [ ] memtest86+ (menú de arranque): déjalo funcionar. La RAM vieja no siempre es perfecta.\n\nCómo llegar: 'reboot', y mira la pantalla con atención."),
+      "ESTA MÁQUINA ES MÁS GRANDE QUE ESTA SHELL\n\n  [ ] 2 flags en esta shell. Algunos ficheros se esconden de un 'ls' normal.\n  [ ] root. El admin siempre olvida la contraseña... y siempre deja notas sobre ello.\n  [ ] MS-DOS 3.1 (menú de arranque): un programa de 1986 guarda mi CV, en un directorio que DIR no muestra.\n  [ ] BIOS Setup: pulsa SUPR (DEL) mientras se cuenta la memoria.\n      Tiene 4 funciones no documentadas. F1 da pistas.\n  [ ] memtest86+ (menú de arranque): déjalo funcionar. La RAM vieja no siempre es perfecta.\n\nCómo llegar: 'reboot', y mira la pantalla con atención.", "AQUESTA MÀQUINA ÉS MÉS GRAN QUE AQUESTA SHELL\n\n  [ ] 2 flags en aquesta shell. Alguns fitxers s'amaguen d'un 'ls' normal.\n  [ ] root. L'admin sempre oblida la contrasenya... i sempre en deixa notes.\n  [ ] MS-DOS 3.1 (menú d'arrencada): un programa del 1986 guarda el meu CV, en un directori que DIR no mostra.\n  [ ] BIOS Setup: prem SUPR (DEL) mentre es compta la memòria.\n      Té 4 funcions no documentades. F1 dona pistes.\n  [ ] memtest86+ (menú d'arrencada): deixa'l funcionar. La RAM vella no sempre és perfecta.\n\nCom arribar-hi: 'reboot', i mira la pantalla amb atenció."),
     [HOME + "/skills/hint.txt"]: () => B(
       "Each file here is a skill area: try 'cat dev.txt' or 'cat web-intel.txt'.\nCurious about the machine? 'neofetch', 'mem', 'df', 'ps', 'ls /'.",
-      "Cada fichero es un área: prueba 'cat dev.txt' o 'cat web-intel.txt'.\n¿Curiosidad por la máquina? 'neofetch', 'mem', 'df', 'ps', 'ls /'."),
+      "Cada fichero es un área: prueba 'cat dev.txt' o 'cat web-intel.txt'.\n¿Curiosidad por la máquina? 'neofetch', 'mem', 'df', 'ps', 'ls /'.", "Cada fitxer és una àrea: prova 'cat dev.txt' o 'cat web-intel.txt'.\nCuriositat per la màquina? 'neofetch', 'mem', 'df', 'ps', 'ls /'."),
     [HOME + "/.bash_history"]: () => esc("whoami\nls -a\ncat .secret\ncat .notes/todo.txt\nsudo su\nexit\nmyip\nopen github"),
     [HOME + "/.secret"]: () => B(
       "🏁 flag{curi0s1ty_1s_th3_b3st_3xpl01t}\nNice. Next level: become root and read my CV. Start with ~/.notes",
-      "🏁 flag{curi0s1ty_1s_th3_b3st_3xpl01t}\nBien. Siguiente nivel: hazte root y lee mi CV. Empieza por ~/.notes"),
+      "🏁 flag{curi0s1ty_1s_th3_b3st_3xpl01t}\nBien. Siguiente nivel: hazte root y lee mi CV. Empieza por ~/.notes", "🏁 flag{curi0s1ty_1s_th3_b3st_3xpl01t}\nBé. Següent nivell: fes-te root i llegeix el meu CV. Comença per ~/.notes"),
     [HOME + "/.notes/todo.txt"]: () => B(
       "TODO\n  [x] write 'El Arte de los Hashes' on Medium (cat ~/articles.txt)\n  [ ] stop forgetting the root password!!\n  [ ] delete the old backup in /var/backups — it's only ENCODED, not encrypted...\n      (my favourite chef's recipe: a classic Caesar shift of 13, then base 64, then base 16)\n  [ ] check /etc/shadow permissions (anyone can verify the hash there)",
-      "TODO\n  [x] escribir 'El Arte de los Hashes' en Medium (cat ~/articles.txt)\n  [ ] ¡¡dejar de olvidar la contraseña de root!!\n  [ ] borrar el backup viejo de /var/backups — solo está CODIFICADO, no cifrado...\n      (la receta de mi chef favorito: un César clásico de 13, luego base 64, luego base 16)\n  [ ] revisar permisos de /etc/shadow (cualquiera puede verificar el hash)"),
+      "TODO\n  [x] escribir 'El Arte de los Hashes' en Medium (cat ~/articles.txt)\n  [ ] ¡¡dejar de olvidar la contraseña de root!!\n  [ ] borrar el backup viejo de /var/backups — solo está CODIFICADO, no cifrado...\n      (la receta de mi chef favorito: un César clásico de 13, luego base 64, luego base 16)\n  [ ] revisar permisos de /etc/shadow (cualquiera puede verificar el hash)", "TODO\n  [x] escriure 'El Arte de los Hashes' a Medium (cat ~/articles.txt)\n  [ ] deixar d'oblidar la contrasenya de root!!\n  [ ] esborrar el backup vell de /var/backups — només està CODIFICAT, no xifrat...\n      (la recepta del meu xef preferit: un Cèsar clàssic de 13, després base 64, després base 16)\n  [ ] revisar els permisos de /etc/shadow (qualsevol hi pot verificar el hash)"),
     "/etc/hostname": () => HOST,
-    "/etc/motd": () => B("GMOS 1.16.59 — authorized users only. Curious ones too.", "GMOS 1.16.59 — solo usuarios autorizados. Y curiosos."),
+    "/etc/motd": () => B("GMOS 1.17.59 — authorized users only. Curious ones too.", "GMOS 1.17.59 — solo usuarios autorizados. Y curiosos.", "GMOS 1.17.59 — només usuaris autoritzats. I curiosos."),
     "/etc/shadow": async () => { const v = await vault(); return `root:${v.sha256}:20370:0:99999:7:::\ngabimarti:!:20370:0:99999:7:::\n<span class="dim"># hash: SHA-256 (hex)</span>`; },
     "/var/backups/root_pw.bak": async () => { const v = await vault(); return `<span class="dim"># root password backup — 2019</span>\n${esc(v.backup)}`; },
     "/root/cv.txt": () => esc(cv.slice(cv.indexOf("\n") + 1)),            // decrypted vault: flag line, then the CV
-    "/root/flag.txt": () => esc(cv.slice(0, cv.indexOf("\n"))) + "\n" + B("Congratulations, you are root. Say hi: 'open email'.", "Enhorabuena, eres root. Salúdame: 'open email'."),
+    "/root/flag.txt": () => esc(cv.slice(0, cv.indexOf("\n"))) + "\n" + B("Congratulations, you are root. Say hi: 'open email'.", "Enhorabuena, eres root. Salúdame: 'open email'.", "Enhorabona, ets root. Saluda'm: 'open email'."),
   };
   SKILLS.forEach((k, i) => F[`${HOME}/skills/${k}.txt`] = () => html(`#c-skills dd:nth-of-type(${i + 1})`));
   CONTACTS.forEach((k, i) => F[`${HOME}/contact/${k}.url`] = () => html(`#c-contact li:nth-child(${i + 1}) a`));
@@ -94,34 +93,34 @@
   // ---------- su / root: password checked against SHA-256, CV decrypted with AES-GCM ----------
   const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
   const sha256 = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, "0")).join("");
-  function askPassword(cb) { pending = cb; input.type = "password"; input.value = ""; setPrompt(es() ? "Contraseña:" : "Password:"); }
+  function askPassword(cb) { pending = cb; input.type = "password"; input.value = ""; setPrompt({ es: "Contraseña:", ca: "Contrasenya:" }[root.lang] || "Password:"); }
   function endPassword() { pending = null; input.type = "text"; setPrompt(); }
   function su() {
-    if (user === "root") return print(B("You are already root.", "Ya eres root."));
+    if (user === "root") return print(B("You are already root.", "Ya eres root.", "Ja ets root."));
     if (!window.crypto || !crypto.subtle) return err("su: WebCrypto not available (needs https)");
     askPassword(async pw => {
       let v;
-      try { v = await vault(); } catch (e) { return err(B("su: cannot reach the vault (offline?)", "su: no se puede acceder al vault (¿sin conexión?)")); }
+      try { v = await vault(); } catch (e) { return err(B("su: cannot reach the vault (offline?)", "su: no se puede acceder al vault (¿sin conexión?)", "su: no es pot accedir al vault (sense connexió?)")); }
       await sleep(700);                                     // like a real su: slow on failure
       if (await sha256(pw) !== v.sha256) return err("su: Authentication failure");
       const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
       const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64(v.salt), iterations: v.iter, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
       cv = new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(v.iv) }, key, b64(v.ct)));
       user = "root"; cwd = "/root"; setPrompt();
-      print(`<strong>${B("Welcome, root.", "Bienvenido, root.")}</strong> ${B("Try", "Prueba")} ${run("ls")} · ${run("cat cv.txt")} · ${run("cat flag.txt")} · ${run("exit")}`);
+      print(`<strong>${B("Welcome, root.", "Bienvenido, root.", "Benvingut, root.")}</strong> ${B("Try", "Prueba", "Prova")} ${run("ls")} · ${run("cat cv.txt")} · ${run("cat flag.txt")} · ${run("exit")}`);
     });
   }
 
   // ---------- network: real requests only when the visitor runs the command ----------
   const host = s => /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(s || "") ? s.toLowerCase() : null;
   async function myip() {
-    print(`<span class="dim">${B("# asking api.ipify.org (a public IP echo service) — nothing is stored here", "# consultando api.ipify.org (servicio público que devuelve tu IP) — aquí no se guarda nada")}</span>`);
-    try { const r = await fetch("https://api.ipify.org?format=json", { cache: "no-store", signal: AbortSignal.timeout(5000) }); print(`${B("Your public IP", "Tu IP pública")}: <strong>${esc((await r.json()).ip)}</strong>`); }
-    catch (e) { err(B("myip: request failed (offline or blocked by an extension)", "myip: la petición falló (sin conexión o bloqueada por una extensión)")); }
+    print(`<span class="dim">${B("# asking api.ipify.org (a public IP echo service) — nothing is stored here", "# consultando api.ipify.org (servicio público que devuelve tu IP) — aquí no se guarda nada", "# consultant api.ipify.org (servei públic que retorna la teva IP) — aquí no es desa res")}</span>`);
+    try { const r = await fetch("https://api.ipify.org?format=json", { cache: "no-store", signal: AbortSignal.timeout(5000) }); print(`${B("Your public IP", "Tu IP pública", "La teva IP pública")}: <strong>${esc((await r.json()).ip)}</strong>`); }
+    catch (e) { err(B("myip: request failed (offline or blocked by an extension)", "myip: la petición falló (sin conexión o bloqueada por una extensión)", "myip: la petició ha fallat (sense connexió o bloquejada per una extensió)")); }
   }
   async function ping(args) {
     const h = host(args.find(a => !a.startsWith("-")));
-    if (!h) return err(B("usage: ping <host>   e.g. ping github.com", "uso: ping <host>   p.ej. ping github.com"));
+    if (!h) return err(B("usage: ping <host>   e.g. ping github.com", "uso: ping <host>   p.ej. ping github.com", "ús: ping <host>   p. ex. ping github.com"));
     print(`PING ${esc(h)}`);
     const times = [];
     for (let i = 1; i <= 4; i++) {
@@ -130,7 +129,7 @@
         await fetch(`https://${h}/favicon.ico?gmsh=${Math.random()}`, { mode: "no-cors", cache: "no-store", signal: AbortSignal.timeout(3000) });
         const ms = performance.now() - t; times.push(ms);
         pre(`reply from ${esc(h)}: seq=${i} time=${ms.toFixed(1)} ms`);
-      } catch (e) { pre(`seq=${i} ${B("request timeout", "tiempo de espera agotado")}`); }
+      } catch (e) { pre(`seq=${i} ${B("request timeout", "tiempo de espera agotado", "temps d'espera esgotat")}`); }
       await sleep(400);
     }
     const n = times.length;
@@ -139,13 +138,13 @@
   async function dig(args) {
     const TYPES = /^(A|AAAA|MX|TXT|NS|CNAME)$/i;
     const h = host(args.find(a => !a.startsWith("-") && !TYPES.test(a))), t = (args.find(a => TYPES.test(a)) || "A").toUpperCase();
-    if (!h) return err(B("usage: dig <domain> [A|AAAA|MX|TXT|NS|CNAME]", "uso: dig <dominio> [A|AAAA|MX|TXT|NS|CNAME]"));
-    print(`<span class="dim">${B("# DNS over HTTPS via cloudflare-dns.com", "# DNS sobre HTTPS vía cloudflare-dns.com")}</span>`);
+    if (!h) return err(B("usage: dig <domain> [A|AAAA|MX|TXT|NS|CNAME]", "uso: dig <dominio> [A|AAAA|MX|TXT|NS|CNAME]", "ús: dig <domini> [A|AAAA|MX|TXT|NS|CNAME]"));
+    print(`<span class="dim">${B("# DNS over HTTPS via cloudflare-dns.com", "# DNS sobre HTTPS vía cloudflare-dns.com", "# DNS sobre HTTPS via cloudflare-dns.com")}</span>`);
     try {
       const r = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(h)}&type=${t}`, { headers: { accept: "application/dns-json" }, signal: AbortSignal.timeout(5000) });
       const ans = (await r.json()).Answer || [];
-      pre(`;; QUESTION: ${esc(h)}. IN ${t}\n;; ANSWER (${ans.length}):\n` + (ans.map(a => `${esc(a.name).padEnd(28)} ${String(a.TTL).padStart(6)}  IN  ${esc(a.data)}`).join("\n") || `   (${B("no records", "sin registros")})`));
-    } catch (e) { err(B("dig: query failed", "dig: la consulta falló")); }
+      pre(`;; QUESTION: ${esc(h)}. IN ${t}\n;; ANSWER (${ans.length}):\n` + (ans.map(a => `${esc(a.name).padEnd(28)} ${String(a.TTL).padStart(6)}  IN  ${esc(a.data)}`).join("\n") || `   (${B("no records", "sin registros", "sense registres")})`));
+    } catch (e) { err(B("dig: query failed", "dig: la consulta falló", "dig: la consulta ha fallat")); }
   }
   function ifconfig() {
     const c = navigator.connection || {};
@@ -154,25 +153,25 @@
 eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
         inet 10.13.37.42  netmask 255.255.255.0  broadcast 10.13.37.255
         ether de:ad:be:ef:13:37  txqueuelen 1000
-<span class="dim"># ${B("your browser reports", "tu navegador indica")}: ${navigator.onLine ? "online" : "offline"}${c.effectiveType ? `, ${esc(c.effectiveType)}, ~${c.downlink} Mb/s, rtt ~${c.rtt} ms` : ""}
-# ${B("public IP: run 'myip'", "IP pública: ejecuta 'myip'")}</span>`);
+<span class="dim"># ${B("your browser reports", "tu navegador indica", "el teu navegador indica")}: ${navigator.onLine ? "online" : "offline"}${c.effectiveType ? `, ${esc(c.effectiveType)}, ~${c.downlink} Mb/s, rtt ~${c.rtt} ms` : ""}
+# ${B("public IP: run 'myip'", "IP pública: ejecuta 'myip'", "IP pública: executa 'myip'")}</span>`);
   }
   function fingerprint() {
     const n = navigator, s = screen;
-    pre(`<span class="dim">${B("# what any website can read about you — no cookies needed", "# lo que cualquier web puede leer de ti — sin necesidad de cookies")}</span>
+    pre(`<span class="dim">${B("# what any website can read about you — no cookies needed", "# lo que cualquier web puede leer de ti — sin necesidad de cookies", "# el que qualsevol web pot llegir de tu — sense necessitat de galetes")}</span>
 User-Agent   : ${esc(n.userAgent)}
-${B("Languages   ", "Idiomas     ")} : ${esc((n.languages || [n.language]).join(", "))}
-${B("Time zone   ", "Zona horaria")} : ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}
-${B("Screen      ", "Pantalla    ")} : ${s.width}x${s.height} @${devicePixelRatio}x, ${s.colorDepth}-bit
-${B("CPU cores   ", "Núcleos CPU ")} : ${n.hardwareConcurrency ?? "?"}${n.deviceMemory ? `   RAM ≈ ${n.deviceMemory} GB` : ""}
-${B("Touch       ", "Táctil      ")} : ${n.maxTouchPoints > 0 ? "yes" : "no"}   Do-Not-Track: ${esc(n.doNotTrack ?? "?")}`);
+${B("Languages   ", "Idiomas     ", "Idiomes     ")} : ${esc((n.languages || [n.language]).join(", "))}
+${B("Time zone   ", "Zona horaria", "Zona horària")} : ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}
+${B("Screen      ", "Pantalla    ", "Pantalla    ")} : ${s.width}x${s.height} @${devicePixelRatio}x, ${s.colorDepth}-bit
+${B("CPU cores   ", "Núcleos CPU ", "Nuclis CPU  ")} : ${n.hardwareConcurrency ?? "?"}${n.deviceMemory ? `   RAM ≈ ${n.deviceMemory} GB` : ""}
+${B("Touch       ", "Táctil      ", "Tàctil      ")} : ${n.maxTouchPoints > 0 ? "yes" : "no"}   Do-Not-Track: ${esc(n.doNotTrack ?? "?")}`);
   }
   async function traceroute(args) {
     const h = host(args[0]) || HOST;
     pre(`traceroute to ${esc(h)}, 30 hops max`);
     const hops = ["gateway.local (192.168.1.1)", "isp-edge.bcn (10.0.0.1)", "coffee-machine.lan (10.13.37.1)", "ix.barcelona (185.1.48.1)", "ghidra-backbone.net (198.51.100.7)", h];
     for (let i = 0; i < hops.length; i++) { await sleep(GM.reduce ? 0 : 250); pre(`${String(i + 1).padStart(2)}  ${esc(hops[i]).padEnd(40)} ${(4 + i * 6 + Math.random() * 4).toFixed(3)} ms`); }
-    print(`<span class="dim">${B("# simulated — browsers can't send raw packets", "# simulado — los navegadores no pueden enviar paquetes en bruto")}</span>`);
+    print(`<span class="dim">${B("# simulated — browsers can't send raw packets", "# simulado — los navegadores no pueden enviar paquetes en bruto", "# simulat — els navegadors no poden enviar paquets en brut")}</span>`);
   }
   async function nmap(args) {
     const h = host(args.find(a => !a.startsWith("-"))) || "localhost";
@@ -184,7 +183,7 @@ ${B("Touch       ", "Táctil      ")} : ${n.maxTouchPoints > 0 ? "yes" : "no"}  
 ${ports.map(([n, sv, s]) => `${(n + "/tcp").padEnd(10)}${s.padEnd(9)}${sv}`).join("\n")}
 
 Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFixed(2)} seconds
-<span class="dim">${B("# simulated — no real scan is performed", "# simulado — no se escanea nada de verdad")}</span>`);
+<span class="dim">${B("# simulated — no real scan is performed", "# simulado — no se escanea nada de verdad", "# simulat — no s'escaneja res de veritat")}</span>`);
   }
 
   // random pools for ps / nmap / netstat
@@ -195,44 +194,44 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
   const NETSTAT_SITES = ["gchq.github.io", "ghidra-sre.org", "virustotal.com", "shodan.io", "exploit-db.com", "hackthebox.com", "tryhackme.com", "x64dbg.com"];
 
   const SHOUT = [
-    ["NO NEED TO SHOUT. This is Linux, not MS-DOS: commands are lowercase.", "NO HACE FALTA GRITAR. Esto es Linux, no MS-DOS: los comandos van en minúsculas."],
-    ["Caps Lock detected. The kernel has feelings, you know.", "Bloq Mayús detectado. El kernel también tiene sentimientos, ¿sabes?"],
-    ["Command not found. Case-sensitive since 1991, deal with it.", "Comando no encontrado. Distingo mayúsculas desde 1991, asúmelo."],
-    ["Who taught you to type? Your fax machine?", "¿Quién te enseñó a escribir? ¿Tu fax?"],
-    ["Ugh. Lowercase, please. I'm old and my ears hurt.", "Uf. En minúsculas, por favor. Soy mayor y me duelen los oídos."],
+    ["NO NEED TO SHOUT. This is Linux, not MS-DOS: commands are lowercase.", "NO HACE FALTA GRITAR. Esto es Linux, no MS-DOS: los comandos van en minúsculas.", "NO CAL CRIDAR. Això és Linux, no MS-DOS: les ordres van en minúscules."],
+    ["Caps Lock detected. The kernel has feelings, you know.", "Bloq Mayús detectado. El kernel también tiene sentimientos, ¿sabes?", "Bloq Maj detectat. El kernel també té sentiments, saps?"],
+    ["Command not found. Case-sensitive since 1991, deal with it.", "Comando no encontrado. Distingo mayúsculas desde 1991, asúmelo.", "Ordre no trobada. Distingeixo majúscules des del 1991, assumeix-ho."],
+    ["Who taught you to type? Your fax machine?", "¿Quién te enseñó a escribir? ¿Tu fax?", "Qui et va ensenyar a escriure? El teu fax?"],
+    ["Ugh. Lowercase, please. I'm old and my ears hurt.", "Uf. En minúsculas, por favor. Soy mayor y me duelen los oídos.", "Uf. En minúscules, si us plau. Soc gran i em fan mal les orelles."],
   ];
 
   // ---------- commands ----------
   const HELP = [
-    ["help", "this help", "esta ayuda"],
-    ["whoami · id", "who am I", "quién soy"],
-    ["ls [-a] [dir] · cd · pwd", "list files, change directory", "listar ficheros, cambiar de directorio"],
-    ["cat <file>", "show a file (try 'cat avatar.txt')", "mostrar un fichero (prueba 'cat avatar.txt')"],
-    ["open <x|linkedin|github|medium|email>", "open a contact", "abrir un contacto"],
-    ["neofetch · fingerprint", "system info · what your browser reveals", "info del sistema · lo que revela tu navegador"],
-    ["myip · ping · dig · ifconfig", "network tools (real queries)", "herramientas de red (consultas reales)"],
-    ["traceroute · nmap · netstat", "network tools (simulated)", "herramientas de red (simuladas)"],
-    ["mem · df · dh · du · ds", "memory, disks, disk health, usage, stack dump", "memoria, discos, salud del disco, uso, volcado de pila"],
-    ["ps · uptime · uname · date", "processes and system", "procesos y sistema"],
-    ["su · sudo su", "become root (password required)", "hacerse root (requiere contraseña)"],
-    ["history · clear · echo", "shell utilities", "utilidades de la shell"],
-    ["lang <en|es> · theme [light|dark]", "language and colours", "idioma y colores"],
-    ["quick · exit", "quick view (everything at once)", "vista rápida (todo de golpe)"],
-    ["reboot · shutdown", "restart the system (the shell starts from scratch)", "reiniciar el sistema (la shell empieza de cero)"],
+    ["help", "this help", "esta ayuda", "aquesta ajuda"],
+    ["whoami · id", "who am I", "quién soy", "qui soc"],
+    ["ls [-a] [dir] · cd · pwd", "list files, change directory", "listar ficheros, cambiar de directorio", "llistar fitxers, canviar de directori"],
+    ["cat <file>", "show a file (try 'cat avatar.txt')", "mostrar un fichero (prueba 'cat avatar.txt')", "mostrar un fitxer (prova 'cat avatar.txt')"],
+    ["open <x|linkedin|github|medium|email>", "open a contact", "abrir un contacto", "obrir un contacte"],
+    ["neofetch · fingerprint", "system info · what your browser reveals", "info del sistema · lo que revela tu navegador", "info del sistema · el que revela el teu navegador"],
+    ["myip · ping · dig · ifconfig", "network tools (real queries)", "herramientas de red (consultas reales)", "eines de xarxa (consultes reals)"],
+    ["traceroute · nmap · netstat", "network tools (simulated)", "herramientas de red (simuladas)", "eines de xarxa (simulades)"],
+    ["mem · df · dh · du · ds", "memory, disks, disk health, usage, stack dump", "memoria, discos, salud del disco, uso, volcado de pila", "memòria, discos, salut del disc, ús, volcat de pila"],
+    ["ps · uptime · uname · date", "processes and system", "procesos y sistema", "processos i sistema"],
+    ["su · sudo su", "become root (password required)", "hacerse root (requiere contraseña)", "fer-se root (cal contrasenya)"],
+    ["history · clear · echo", "shell utilities", "utilidades de la shell", "utilitats de la shell"],
+    ["lang <en|es|ca> · theme [light|dark]", "language and colours", "idioma y colores", "idioma i colors"],
+    ["quick · exit", "quick view (everything at once)", "vista rápida (todo de golpe)", "vista ràpida (tot de cop)"],
+    ["reboot · shutdown", "restart the system (the shell starts from scratch)", "reiniciar el sistema (la shell empieza de cero)", "reiniciar el sistema (la shell comença de zero)"],
   ];
   const CMDS = {
-    help: () => print(`<div class="help">${HELP.map(([c, en, es_]) => {
+    help: () => print(`<div class="help">${HELP.map(([c, en, es_, ca]) => {
       const name = c.split(/[ ·]/)[0];
-      return `<span>${run(name)}${esc(c.slice(name.length))}</span><span class="dim">${B(en, es_)}</span>`;
+      return `<span>${run(name)}${esc(c.slice(name.length))}</span><span class="dim">${B(en, es_, ca)}</span>`;
     }).join("")}</div>`),
     whoami: () => user === "root" ? print("root") : print(`<strong>Gabriel Martí</strong> <span class="dim">(@gabimarti)</span>\n${html("#c-role")}`),
     id: () => pre(user === "root" ? "uid=0(root) gid=0(root) groups=0(root)" : "uid=1337(gabimarti) gid=31337(reversers) groups=31337(reversers),80(web),73(hamradio)"),
     pwd: () => print(esc(cwd)),
     ls: args => {
       const all = args.some(a => /^-\w*a/.test(a)), arg = args.find(a => !a.startsWith("-")), p = resolve(arg);
-      if (denied(p)) return err(`ls: ${B("cannot open directory", "no se puede abrir el directorio")} '${esc(arg || p)}': ${B("Permission denied", "Permiso denegado")}`);
+      if (denied(p)) return err(`ls: ${B("cannot open directory", "no se puede abrir el directorio", "no es pot obrir el directori")} '${esc(arg || p)}': ${B("Permission denied", "Permiso denegado", "Permís denegat")}`);
       if (isFile(p)) return print(esc(p.split("/").pop()));
-      if (!isDir(p)) return err(`ls: ${B("cannot access", "no se puede acceder a")} '${esc(arg)}': ${B("No such file or directory", "No existe el fichero o directorio")}`);
+      if (!isDir(p)) return err(`ls: ${B("cannot access", "no se puede acceder a", "no es pot accedir a")} '${esc(arg)}': ${B("No such file or directory", "No existe el fichero o directorio", "No existeix el fitxer o directori")}`);
       if (p === HOME + "/contact") return print(html("#c-contact"));
       if (p === HOME + "/skills") return print(html("#c-skills") + `\n<span class="dim">+ </span>${item("hint.txt", p)}`);
       const names = p === "/bin" ? Object.keys(CMDS).sort() : D[p].filter(n => all || !n.startsWith("."));
@@ -240,38 +239,38 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
     },
     cd: args => {
       const p = resolve(args[0] || (user === "root" ? "/root" : HOME));
-      if (denied(p)) return err(`cd: ${esc(args[0])}: ${B("Permission denied", "Permiso denegado")}`);
+      if (denied(p)) return err(`cd: ${esc(args[0])}: ${B("Permission denied", "Permiso denegado", "Permís denegat")}`);
       if (isDir(p)) { cwd = p; setPrompt(); return; }
-      err(`cd: ${esc(args[0])}: ${isFile(p) ? B("Not a directory", "No es un directorio") : B("No such file or directory", "No existe el fichero o directorio")}`);
+      err(`cd: ${esc(args[0])}: ${isFile(p) ? B("Not a directory", "No es un directorio", "No és un directori") : B("No such file or directory", "No existe el fichero o directorio", "No existeix el fitxer o directori")}`);
     },
     cat: async args => {
-      if (!args.length) return err(B("usage: cat <file>   (try 'ls')", "uso: cat <fichero>   (prueba 'ls')"));
+      if (!args.length) return err(B("usage: cat <file>   (try 'ls')", "uso: cat <fichero>   (prueba 'ls')", "ús: cat <fitxer>   (prova 'ls')"));
       for (const a of args) {
         const p = resolve(a);
-        if (denied(p)) err(`cat: ${esc(a)}: ${B("Permission denied", "Permiso denegado")}`);
-        else if (isFile(p)) { try { const h = await F[p](); PRE_FILES.has(p) ? pre(h) : print(h); } catch (e) { err(`cat: ${esc(a)}: ${B("I/O error (offline?)", "error de E/S (¿sin conexión?)")}`); } }
-        else if (isDir(p)) err(`cat: ${esc(a)}: ${B("Is a directory", "Es un directorio")}`);
-        else err(`cat: ${esc(a)}: ${B("No such file or directory", "No existe el fichero o directorio")}`);
+        if (denied(p)) err(`cat: ${esc(a)}: ${B("Permission denied", "Permiso denegado", "Permís denegat")}`);
+        else if (isFile(p)) { try { const h = await F[p](); PRE_FILES.has(p) ? pre(h) : print(h); } catch (e) { err(`cat: ${esc(a)}: ${B("I/O error (offline?)", "error de E/S (¿sin conexión?)", "error d'E/S (sense connexió?)")}`); } }
+        else if (isDir(p)) err(`cat: ${esc(a)}: ${B("Is a directory", "Es un directorio", "És un directori")}`);
+        else err(`cat: ${esc(a)}: ${B("No such file or directory", "No existe el fichero o directorio", "No existeix el fitxer o directori")}`);
       }
     },
     open: args => {
       const k = ({ twitter: "x", mail: "email" })[(args[0] || "").toLowerCase()] || (args[0] || "").toLowerCase(), i = CONTACTS.indexOf(k);
-      if (i < 0) return err(B("usage: open <x|linkedin|github|medium|email>", "uso: open <x|linkedin|github|medium|email>"));
-      print(B("Opening ", "Abriendo ") + html(`#c-contact li:nth-child(${i + 1}) a`) + " …");
+      if (i < 0) return err(B("usage: open <x|linkedin|github|medium|email>", "uso: open <x|linkedin|github|medium|email>", "ús: open <x|linkedin|github|medium|email>"));
+      print(B("Opening ", "Abriendo ", "Obrint ") + html(`#c-contact li:nth-child(${i + 1}) a`) + " …");
       window.open($(`#c-contact li:nth-child(${i + 1}) a`).href, "_blank", "noopener");
     },
     neofetch: () => {
       const logo = [" ██████  ███    ███", "██       ████  ████", "██   ███ ██ ████ ██", "██    ██ ██  ██  ██", " ██████  ██      ██"];
       const info = [
         `<strong>${user}</strong>@<strong>${HOST}</strong>`, "--------------------",
-        `<span class="dim">OS:</span> GMOS 1.16.59 (reverse-engineered)`,
+        `<span class="dim">OS:</span> GMOS 1.17.59 (reverse-engineered)`,
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
-        `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática")}`,
-        `<span class="dim">Shell:</span> gmsh 0.23`,
-        `<span class="dim">${B("Languages", "Lenguajes")}:</span> Python, C, Delphi, ASM`,
-        `<span class="dim">${B("Tools", "Herramientas")}:</span> Ghidra, Burp Suite, Wazuh`,
-        `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz")}`,
+        `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática", "més de 35 anys en informàtica")}`,
+        `<span class="dim">Shell:</span> gmsh 0.24`,
+        `<span class="dim">${B("Languages", "Lenguajes", "Llenguatges")}:</span> Python, C, Delphi, ASM`,
+        `<span class="dim">${B("Tools", "Herramientas", "Eines")}:</span> Ghidra, Burp Suite, Wazuh`,
+        `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz", "cervell humà @ cafè GHz")}`,
       ];
       pre(info.map((l, i) => `<span class="ok">${esc((logo[i] || "").padEnd(22))}</span>${l}`).join("\n"));
     },
@@ -281,22 +280,22 @@ tcp   10.13.37.42:51337      github.com:443         ESTABLISHED
 tcp   10.13.37.42:51338      medium.com:443         ESTABLISHED
 ${pickN(NETSTAT_SITES, 1 + rnd(2)).map(h => `tcp   10.13.37.42:${50000 + rnd(15000)}      ${(h + ":443").padEnd(23)}${["ESTABLISHED", "TIME_WAIT", "SYN_SENT"][rnd(3)]}`).join("\n")}
 tcp   127.0.0.1:31337        0.0.0.0:*              LISTEN
-<span class="dim">${B("# simulated", "# simulado")}</span>`),
+<span class="dim">${B("# simulated", "# simulado", "# simulat")}</span>`),
     mem: () => pre(`              total        used        free
 Mem:           640K        637K          3K
 Swap:            0B          0B          0B
-<span class="dim">${B("# 640K ought to be enough for anybody.", "# 640K deberían bastar para cualquiera.")}</span>`),
+<span class="dim">${B("# 640K ought to be enough for anybody.", "# 640K deberían bastar para cualquiera.", "# 640K haurien de ser suficients per a tothom.")}</span>`),
     df: () => pre(`Filesystem      Size   Used  Avail Use% Mounted on
 /dev/brain      100T    97T     3T  97% /
 /dev/coffee     500M   499M     1M  99% /var/caffeine
 /dev/ghidra      64G    42G    22G  66% /opt/reversing
 /dev/hacking    1337G  1336G     1G  99% /opt/redteam
 tmpfs            16K     1K    15K   7% /tmp/ideas`),
-    dh: () => pre(`${B("SMART health check", "Comprobación SMART")}: <strong>PASSED</strong>
-  ${B("Reallocated sectors", "Sectores reasignados")}:   0
-  ${B("Pending ideas", "Ideas pendientes")}:         42
-  ${B("Power-on hours", "Horas encendido")}:        306600 (~35 ${B("years", "años")})
-  ${B("Temperature", "Temperatura")}:           36.6 °C`),
+    dh: () => pre(`${B("SMART health check", "Comprobación SMART", "Comprovació SMART")}: <strong>PASSED</strong>
+  ${B("Reallocated sectors", "Sectores reasignados", "Sectors reassignats")}:   0
+  ${B("Pending ideas", "Ideas pendientes", "Idees pendents")}:         42
+  ${B("Power-on hours", "Horas encendido", "Hores encès")}:        306600 (~35 ${B("years", "años", "anys")})
+  ${B("Temperature", "Temperatura", "Temperatura")}:           36.6 °C`),
     du: () => pre(`4.0K\tabout.txt\n4.0K\tsummary.txt\n4.0K\tinterests.txt\n4.0K\tarticles.txt\n4.0K\trepos.txt\n12K\tavatar.txt\n4.0K\thint.txt\n4.0K\texplore.txt\n32K\tskills/\n20K\tcontact/\n<strong>92K\ttotal</strong>`),
     ds: () => {
       const bytes = [...new TextEncoder().encode("gabimarti :: reverser :: developer :: always learning\0\x13\x37\xde\xad\xbe\xef")]; let t = "";
@@ -305,7 +304,7 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
         t += (0x7ffde4a0 + i).toString(16).padStart(12, "0") + "  " + row.map(b => b.toString(16).padStart(2, "0")).join(" ").padEnd(47)
           + "  |" + row.map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ".").join("") + "|\n";
       }
-      pre(`<span class="dim">${B("stack dump @ rsp", "volcado de pila @ rsp")}</span>\n` + esc(t.trimEnd()));
+      pre(`<span class="dim">${B("stack dump @ rsp", "volcado de pila @ rsp", "volcat de pila @ rsp")}</span>\n` + esc(t.trimEnd()));
     },
     ps: () => {
       const lab = pickN(PS_LAB, 2).map(c => `${String(2000 + rnd(28000)).padStart(5)} pts/${1 + rnd(3)}    00:${String(rnd(60)).padStart(2, "0")}:${String(rnd(60)).padStart(2, "0")} ${c}`);
@@ -317,7 +316,7 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
 ${lab.join("\n")}
 31337 pts/0    00:00:01 gmsh`);
     },
-    uptime: () => pre(`${new Date().toTimeString().slice(0, 8)} up 35+ ${B("years", "años")}, ${Math.round((Date.now() - t0) / 1000)}s ${B("on this page", "en esta página")}, 1 user, load average: 0.42, 0.13, 0.37`),
+    uptime: () => pre(`${new Date().toTimeString().slice(0, 8)} up 35+ ${B("years", "años", "anys")}, ${Math.round((Date.now() - t0) / 1000)}s ${B("on this page", "en esta página", "en aquesta pàgina")}, 1 user, load average: 0.42, 0.13, 0.37`),
     uname: args => pre(args.includes("-a") ? `GMOS ${HOST} 6.6.6-curiosity #1 SMP x86_64 GNU/Linux` : "GMOS"),
     date: () => print(esc(new Date().toString())),
     hostname: () => print(HOST),
@@ -328,12 +327,12 @@ ${lab.join("\n")}
     sudo: args => {
       if (["su", "-i", "-s"].includes(args[0])) return su();
       if (user === "root" && args.length) return exec(args.join(" "), true);
-      err(B("gabimarti is not in the sudoers file. This incident will be reported. 😉  (hint: 'sudo su')", "gabimarti no está en el fichero sudoers. Se informará de este incidente. 😉  (pista: 'sudo su')"));
+      err(B("gabimarti is not in the sudoers file. This incident will be reported. 😉  (hint: 'sudo su')", "gabimarti no está en el fichero sudoers. Se informará de este incidente. 😉  (pista: 'sudo su')", "gabimarti no és al fitxer sudoers. Es notificarà aquest incident. 😉  (pista: 'sudo su')"));
     },
-    rm: () => err(user === "root" ? B("rm: nope. Not even as root. 🙂", "rm: no. Ni siquiera como root. 🙂") : B("rm: permission denied — nice try.", "rm: permiso denegado — buen intento.")),
-    lang: args => { if (!["en", "es"].includes(args[0])) return err(B("usage: lang <en|es>", "uso: lang <en|es>")); GM.setLang(args[0], true); },
+    rm: () => err(user === "root" ? B("rm: nope. Not even as root. 🙂", "rm: no. Ni siquiera como root. 🙂", "rm: no. Ni tan sols com a root. 🙂") : B("rm: permission denied — nice try.", "rm: permiso denegado — buen intento.", "rm: permís denegat — bon intent.")),
+    lang: args => { if (!["en", "es", "ca"].includes(args[0])) return err(B("usage: lang <en|es|ca>", "uso: lang <en|es|ca>", "ús: lang <en|es|ca>")); GM.setLang(args[0], true); },
     theme: args => {
-      if (args[0] && !["light", "dark"].includes(args[0])) return err(B("usage: theme [light|dark]", "uso: theme [light|dark]"));
+      if (args[0] && !["light", "dark"].includes(args[0])) return err(B("usage: theme [light|dark]", "uso: theme [light|dark]", "ús: theme [light|dark]"));
       args[0] ? GM.setTheme(args[0]) : GM.toggleTheme();
       print(`theme: ${GM.isLight() ? "light" : "dark"}`);
     },
@@ -344,18 +343,18 @@ ${lab.join("\n")}
       GM.setMode("classic");
     },
     reboot: async () => {
-      pre(B("Broadcast message: the system is going down for reboot NOW!", "Mensaje global: ¡el sistema se reinicia AHORA!"));
+      pre(B("Broadcast message: the system is going down for reboot NOW!", "Mensaje global: ¡el sistema se reinicia AHORA!", "Missatge global: el sistema es reinicia ARA!"));
       await sleep(GM.reduce ? 0 : 900); reset(); GM.showBoot();
     },
     shutdown: async () => {
-      pre(B("Broadcast message: the system is going down for poweroff NOW!", "Mensaje global: ¡el sistema se apaga AHORA!"));
+      pre(B("Broadcast message: the system is going down for poweroff NOW!", "Mensaje global: ¡el sistema se apaga AHORA!", "Missatge global: el sistema s'apaga ARA!"));
       await sleep(GM.reduce ? 0 : 900); reset();
       GM.halt(B("System halted.<br>It's now safe to turn off your computer.<br><br><small>press any key to boot</small>",
-        "Sistema detenido.<br>Ya puede apagar el ordenador con seguridad.<br><br><small>pulsa una tecla para arrancar</small>"));
+        "Sistema detenido.<br>Ya puede apagar el ordenador con seguridad.<br><br><small>pulsa una tecla para arrancar</small>", "Sistema aturat.<br>Ja podeu apagar l'ordinador amb seguretat.<br><br><small>prem una tecla per arrencar</small>"));
     },
-    man: args => { const h = HELP.find(([c]) => c.split(/ · | /).includes(args[0])); h ? print(`${esc(h[0])}  ${B(h[1], h[2])}`) : err(B(`No manual entry for ${esc(args[0] || "")}`, `No hay entrada de manual para ${esc(args[0] || "")}`)); },
+    man: args => { const h = HELP.find(([c]) => c.split(/ · | /).includes(args[0])); h ? print(`${esc(h[0])}  ${B(h[1], h[2], h[3])}`) : err(B(`No manual entry for ${esc(args[0] || "")}`, `No hay entrada de manual para ${esc(args[0] || "")}`, `No hi ha cap entrada de manual per a ${esc(args[0] || "")}`)); },
     curl: args => /^(https?:\/\/)?(ifconfig\.me|icanhazip\.com|ipinfo\.io)\/?$/.test(args.find(a => !a.startsWith("-")) || "") ? myip()
-      : err(B("curl: (1) sandboxed — only 'curl ifconfig.me' works here", "curl: (1) entorno limitado — aquí solo funciona 'curl ifconfig.me'")),
+      : err(B("curl: (1) sandboxed — only 'curl ifconfig.me' works here", "curl: (1) entorno limitado — aquí solo funciona 'curl ifconfig.me'", "curl: (1) entorn limitat — aquí només funciona 'curl ifconfig.me'")),
   };
   Object.assign(CMDS, {
     free: CMDS.mem, top: CMDS.ps, ll: () => CMDS.ls(["-la"]), hint: () => CMDS.cat(["~/hint.txt"]), contact: () => CMDS.ls(["~/contact"]),
@@ -372,10 +371,10 @@ ${lab.join("\n")}
     const f = Object.hasOwn(CMDS, cmd) && CMDS[cmd], lower = cmd.toLowerCase();
     if (f) await f(args);
     else if (cmd !== lower && Object.hasOwn(CMDS, lower)) {    // Linux is case-sensitive, and grumpy about it
-      const [en, es_] = SHOUT[rnd(SHOUT.length)];
-      err(`gmsh: ${esc(cmd)}: ${B(en, es_)} ${B(`Try '${esc(lower)}'.`, `Prueba '${esc(lower)}'.`)}`);
+      const [en, es_, ca] = SHOUT[rnd(SHOUT.length)];
+      err(`gmsh: ${esc(cmd)}: ${B(en, es_, ca)} ${B(`Try '${esc(lower)}'.`, `Prueba '${esc(lower)}'.`, `Prova '${esc(lower)}'.`)}`);
     }
-    else err(`gmsh: ${B("command not found", "comando no encontrado")}: ${esc(cmd)} — ${B("type 'help'", "escribe 'help'")}`);
+    else err(`gmsh: ${B("command not found", "comando no encontrado", "ordre no trobada")}: ${esc(cmd)} — ${B("type 'help'", "escribe 'help'", "escriu 'help'")}`);
   }
 
   function reset() {                       // reboot/shutdown: next time the shell starts like a fresh system
@@ -424,9 +423,10 @@ ${lab.join("\n")}
     open() {
       if (!started) {
         started = true; setPrompt();
-        type(print(""), es()
-          ? "gmsh 0.23 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n"
-          : "gmsh 0.23 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
+        type(print(""), {
+          es: "gmsh 0.24 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n",
+          ca: "gmsh 0.24 — gabimarti.github.io\nEscriu 'help' per veure les ordres, o comença per 'cat hint.txt'.\n",
+        }[root.lang] || "gmsh 0.24 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
       }
       input.focus({ preventScroll: true });
     },

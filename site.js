@@ -3,14 +3,14 @@
 const GM = (() => {
   const $ = s => document.querySelector(s), root = document.documentElement;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const B = (en, es = en) => `<span lang="en">${en}</span><span lang="es">${es}</span>`;
+  const B = (en, es = en, ca = es) => `<span lang="en">${en}</span><span lang="es">${es}</span><span lang="ca">${ca}</span>`;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const store = (k, v) => { try { v === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
   const load = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 
   // ---------- language: ?lang= > saved > browser > en ----------
-  const LANGS = ["en", "es"], pick = l => LANGS.includes(l) ? l : null;
+  const LANGS = ["en", "es", "ca"], pick = l => LANGS.includes(l) ? l : null;
   function setLang(l, save) {
     root.lang = l;
     document.querySelectorAll("[data-set-lang]").forEach(b => b.setAttribute("aria-pressed", b.dataset.setLang === l));
@@ -116,6 +116,7 @@ const GM = (() => {
   const T = {
     en: { load: "Loading profile .......... ", hello: "Hello, I'm Gabriel Martí — cybersecurity consultant, reverser & developer.\nHow would you like to explore this site?" },
     es: { load: "Cargando perfil .......... ", hello: "Hola, soy Gabriel Martí — consultor de ciberseguridad, reverser y desarrollador.\n¿Cómo quieres explorar este sitio?" },
+    ca: { load: "Carregant perfil ......... ", hello: "Hola, soc en Gabriel Martí — consultor de ciberseguretat, reverser i desenvolupador.\nCom vols explorar aquest lloc?" },
   };
   const CPU = "Curiosity(TM) 486DX2-66MHz";
   const DRIVES = [["Primary Master", "GM-HDD 1986MB"], ["Primary Slave", "None"], ["Secondary Master", "CD-ROM 52X"], ["Secondary Slave", "ZIP 100"]];
@@ -196,7 +197,7 @@ const GM = (() => {
     const el = $("#grub-timer");
     const tick = () => {
       if (run !== bootRun || !grubLeft) { el.textContent = ""; return; }
-      el.innerHTML = B(`The highlighted entry will be executed automatically in ${grubLeft}s.`, `La entrada resaltada se ejecutará automáticamente en ${grubLeft}s.`);
+      el.innerHTML = B(`The highlighted entry will be executed automatically in ${grubLeft}s.`, `La entrada resaltada se ejecutará automáticamente en ${grubLeft}s.`, `L'entrada ressaltada s'executarà automàticament d'aquí a ${grubLeft}s.`);
       setTimeout(() => { if (run === bootRun && grubLeft && !--grubLeft) entries()[grubSel].click(); else tick(); }, 1000);
     };
     tick();
@@ -242,7 +243,7 @@ const GM = (() => {
     bootOut.innerHTML = `<div class="halt"><div>${msg}</div></div>`;
     await waitKey(); sfx.unlock(); showBoot();
   }
-  const powerOn = () => screen(`<svg class="pwr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar")}</small><p class="pwr-tag">${B("My CV, inside a 90s PC: two operating systems, a BIOS Setup and secrets hidden in every corner.", "Mi CV, dentro de un PC de los 90: dos sistemas operativos, una BIOS y secretos escondidos en cada rincón.")}<br><small class="dim">${B("Explore it all: curious minds always find something more.", "Explóralo todo: los curiosos siempre encuentran algo más.")}</small></p>`);
+  const powerOn = () => screen(`<svg class="pwr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender", "Prem una tecla o fes clic per engegar")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar", "aquest lloc fa sons retro · 🔊 per silenciar")}</small><p class="pwr-tag">${B("My CV, inside a 90s PC: two operating systems, a BIOS Setup and secrets hidden in every corner.", "Mi CV, dentro de un PC de los 90: dos sistemas operativos, una BIOS y secretos escondidos en cada rincón.", "El meu CV, dins d'un PC dels 90: dos sistemes operatius, una BIOS i secrets amagats a cada racó.")}<br><small class="dim">${B("Explore it all: curious minds always find something more.", "Explóralo todo: los curiosos siempre encuentran algo más.", "Explora-ho tot: els curiosos sempre hi troben alguna cosa més.")}</small></p>`);
   const halt = msg => { sfx.fanStop(.5); return screen(msg); };
 
   function setUrl(mode) {
@@ -253,7 +254,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.23", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.24", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });

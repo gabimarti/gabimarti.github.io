@@ -12,7 +12,7 @@ A static site styled as a retro terminal, with no frameworks, no build step, no 
 - **Quick view**: everything on one page. It's also what you get without JavaScript, so search engines see the full content. `ls ~/repos` opens a panel with selected GitHub projects (also `cat repos.txt` in the shell and `TYPE REPOS.TXT` in MS-DOS).
 - **Interactive shell** (`gmsh`, loaded only when chosen): a fake Linux terminal. Try `help`, `whoami`, `ls -a`, `cat avatar.txt`, `neofetch`, `myip`, `dig`… There are two flags to find, and a root challenge (`su`) that unlocks an encrypted CV. `cat explore.txt` (and `EXPLORE.TXT` in MS-DOS) lists what there is to find across the whole machine: both systems, the BIOS Setup and memtest.
 - Strict Content-Security-Policy (only own scripts and styles, no inline code).
-- Bilingual (EN/ES), light/dark theme toggle, fixed-size window, mobile-friendly, WCAG AA/AAA contrast.
+- Three languages (EN/ES/CA: `?lang=en|es|ca`, the browser language, or the buttons; the BIOS Setup, MS-DOS, the Debian boot log and memtest stay in English, as on a real 90s PC), light/dark theme toggle, fixed-size window that compacts on short screens so the quick view never scrolls on desktop, mobile-friendly, WCAG AA/AAA contrast.
 
 Direct links: [`?mode=classic`](https://gabimarti.github.io/?mode=classic) · [`?mode=shell`](https://gabimarti.github.io/?mode=shell) · [`#avatar`](https://gabimarti.github.io/#avatar) · [`#repos`](https://gabimarti.github.io/#repos)
 
