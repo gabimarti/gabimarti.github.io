@@ -32,6 +32,7 @@ Things you can type:
   REBOOT      restart the PC (or Ctrl+Alt+Del)
 
 Too much typing? CV runs CV.BAT: my CV, one section at a time.
+Bored? C:\\GAMES has SNAKE and TETRIS.
 Start with:  TYPE ABOUT.TXT   then   DIR SKILLS   and   DIR CONTACT
 Tip: you can also tap the names in a DIR listing.
 
@@ -112,6 +113,7 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     SKILLS: Object.fromEntries(SKILLS.map((k, i) => [k + ".TXT", [null, null, () => html(`#c-skills dd:nth-of-type(${i + 1})`)]])),
     CONTACT: Object.fromEntries(CONTACTS.map((k, i) => [k + ".URL", [null, null, () => html(`#c-contact li:nth-child(${i + 1}) a`)]])),
     UTILS: { "NOTES.TXT": [null, Y86, () => txt(NOTES)], "LOCKED.COM": [192, Y86] },
+    GAMES: { "SNAKE.EXE": [24576, Y86], "TETRIS.EXE": [32768, Y86], "README.TXT": [null, Y86, () => txt("C:\\GAMES - CD GAMES, then SNAKE or TETRIS.\nArrows (or WASD) move, P pauses, Q or Esc quits. On a phone, use the pad under the board.")] },
   };
   const BACKUP86 = `BACKUP86.TXT - 1986
 The only backup I ever made.
@@ -542,6 +544,7 @@ Lesson learned: test your restores.`;
     DEL: del, ERASE: del,
     PING: ping,
     HACK: hack,
+    SNAKE: () => game("snake"), TETRIS: () => game("tetris"),
     PLAY: play,
     HELP: () => { print("(HELP arrived with MS-DOS 5.0 in 1991: this PC peeked at the future. Here is README.TXT.)"); return CMDS.TYPE("\\README.TXT"); },
     TELNET: async a => {
@@ -555,7 +558,7 @@ Lesson learned: test your restores.`;
     REBOOT: () => finish(),
   };
   // programs on disk: only run if found in cwd / PATH (empty the PATH and they are gone, like on a real PC)
-  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET", "PLAY"]);
+  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET", "PLAY", "SNAKE", "TETRIS"]);
   // split on | outside quotes
   const pipes = t => { const parts = [""]; let q = false; for (const ch of t) { if (ch === '"') q = !q; if (ch === "|" && !q) parts.push(""); else parts[parts.length - 1] += ch; } return parts.map(s => s.trim()); };
   async function capture(fn) {                              // run a command with its output kept off screen, as plain text
@@ -694,6 +697,12 @@ Lesson learned: test your restores.`;
     const m = print("Press any key to stop . . .");
     await Promise.race([anyKey(), sleep(secs * 1000 + 300)]);
     cancelWait?.(); stop(); m.remove();
+  }
+  async function game(name) {                               // C:\GAMES\SNAKE.EXE, TETRIS.EXE (games.js, shared with Linux)
+    try { await GM.need("games.js"); } catch (e) { return err("Program too big to fit in memory"); }
+    form.hidden = true;
+    const score = await GM.games.run(name, print(""));
+    print(`${name.toUpperCase()}: score ${score}`);
   }
   async function coffee() {
     const m = print("Brewing");

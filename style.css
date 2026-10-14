@@ -181,6 +181,10 @@ html:not(.js) .js-only { display: none; }
 :is(.dos, #shell) .c-cy { color: #55ffff; } :is(.dos, #shell) .c-ye { color: #ffff55; } :is(.dos, #shell) .c-ma { color: #ff55ff; } :is(.dos, #shell) .c-gr { color: #55ff55; } :is(.dos, #shell) .c-rd { color: #ff5555; }
 #shell .bbs { background: #000; color: #aaa; padding: .3rem 1ch; }   /* the BBS keeps its black screen inside the shell */
 #shell .matrix { margin: 0; background: #000; color: #33ff33; text-shadow: 0 0 4px #33ff33; overflow: hidden; }
+/* console games (games.js), in MS-DOS and in the shell */
+.game pre { margin: 0; line-height: 1.15; white-space: pre; overflow-x: auto; }
+.game .pad { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0; }
+.game .pad button { font: inherit; min-width: 2.6rem; padding: .25rem .5rem; color: inherit; background: none; border: 1px solid currentColor; border-radius: 4px; cursor: pointer; }
 /* MS-DOS HACK easter egg: green "movie hacking" screen */
 .dos .dos-hack { min-height: calc(100% - 1rem); padding: .4rem 1ch; background: #000; color: #33ff33; text-shadow: 0 0 4px #33ff33; overflow: hidden; white-space: pre; }
 .dos .dos-hack .granted { margin: 1.2rem 0 .4rem; font-size: 2em; font-weight: bold; text-align: center; animation: blink 1s steps(1) infinite; }
