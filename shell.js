@@ -84,8 +84,8 @@
       "Terminar la BIOS (esconde más de lo que muestra).\nEscribir más CTFs.\nEnseñar reversing a quien tenga curiosidad.\nNo fiarse nunca de un programa que solo hace XOR.",
       "Acabar la BIOS (amaga més del que mostra).\nEscriure més CTFs.\nEnsenyar reversing a qui tingui curiositat.\nNo refiar-se mai d'un programa que només fa XOR."),
     [HOME + "/explore.txt"]: () => B(
-      "THIS MACHINE IS BIGGER THAN THIS SHELL\n\n  [ ] 2 flags in this shell: one hides from a plain 'ls', the other only root can read.\n  [ ] root's password: the admin keeps forgetting it... and keeps writing notes about it.\n  [ ] MS-DOS 3.1 (boot menu): 1 flag. LOCKED.COM keeps it, with my CV, behind a password\n      in a directory DIR won't show.\n  [ ] BIOS Setup: press DEL while the memory is being counted.\n      It has 4 undocumented features. F1 gives clues.\n  [ ] memtest86+ (boot menu): leave it running. Old RAM is not always perfect.\n  [ ] Classic Unix jokes still work: sudo, rm, make... and old friends like fortune, cowsay and sl.\n  [ ] A floppy waits in /dev/fd0 and a MIDI collection in /usr/share/midi.\n  [ ] finger the owner of this machine. A 1997 BBS is one telnet away.\n  [ ] Once a year this PC throws a party. Its clock is easier to change than it looks.\n\nHow to get there: 'reboot', and watch the screen closely.",
-      "ESTA MÁQUINA ES MÁS GRANDE QUE ESTA SHELL\n\n  [ ] 2 flags en esta shell: una se esconde de un 'ls' normal, la otra solo la puede leer root.\n  [ ] La contraseña de root: el admin siempre la olvida... y siempre deja notas sobre ello.\n  [ ] MS-DOS 3.1 (menú de arranque): 1 flag. LOCKED.COM la guarda, con mi CV, tras una contraseña\n      en un directorio que DIR no muestra.\n  [ ] BIOS Setup: pulsa SUPR (DEL) mientras se cuenta la memoria.\n      Tiene 4 funciones no documentadas. F1 da pistas.\n  [ ] memtest86+ (menú de arranque): déjalo funcionar. La RAM vieja no siempre es perfecta.\n  [ ] Los chistes clásicos de Unix funcionan: sudo, rm, make... y viejos amigos como fortune, cowsay y sl.\n  [ ] Hay un disquete esperando en /dev/fd0 y una colección MIDI en /usr/share/midi.\n  [ ] Haz finger al dueño de esta máquina. Una BBS de 1997 está a un telnet.\n  [ ] Una vez al año este PC monta una fiesta. Su reloj es más fácil de cambiar de lo que parece.\n\nCómo llegar: 'reboot', y mira la pantalla con atención.", "AQUESTA MÀQUINA ÉS MÉS GRAN QUE AQUESTA SHELL\n\n  [ ] 2 flags en aquesta shell: una s'amaga d'un 'ls' normal, l'altra només la pot llegir root.\n  [ ] La contrasenya de root: l'admin sempre l'oblida... i sempre en deixa notes.\n  [ ] MS-DOS 3.1 (menú d'arrencada): 1 flag. LOCKED.COM la guarda, amb el meu CV, darrere una contrasenya\n      en un directori que DIR no mostra.\n  [ ] BIOS Setup: prem SUPR (DEL) mentre es compta la memòria.\n      Té 4 funcions no documentades. F1 dona pistes.\n  [ ] memtest86+ (menú d'arrencada): deixa'l funcionar. La RAM vella no sempre és perfecta.\n  [ ] Els acudits clàssics d'Unix funcionen: sudo, rm, make... i vells amics com fortune, cowsay i sl.\n  [ ] Hi ha un disquet esperant a /dev/fd0 i una col·lecció MIDI a /usr/share/midi.\n  [ ] Fes finger al propietari d'aquesta màquina. Una BBS de 1997 és a un telnet.\n  [ ] Un cop l'any aquest PC fa festa. El seu rellotge és més fàcil de canviar del que sembla.\n\nCom arribar-hi: 'reboot', i mira la pantalla amb atenció."),
+      "THIS MACHINE IS BIGGER THAN THIS SHELL\n\n  [ ] 2 flags in this shell: one hides from a plain 'ls', the other only root can read.\n  [ ] root's password: the admin keeps forgetting it... and keeps writing notes about it.\n  [ ] MS-DOS 3.1 (boot menu): 1 flag. LOCKED.COM keeps it, with my CV, behind a password\n      in a directory DIR won't show.\n  [ ] BIOS Setup: press DEL while the memory is being counted.\n      It has 4 undocumented features. F1 gives clues.\n  [ ] memtest86+ (boot menu): leave it running. Old RAM is not always perfect.\n  [ ] Classic Unix jokes still work: sudo, rm, make... and old friends like fortune, cowsay and sl.\n  [ ] A floppy waits in /dev/fd0 and a MIDI collection in /usr/share/midi.\n  [ ] finger the owner of this machine. A 1997 BBS is one telnet away.\n  [ ] Once a year this PC throws a party. Its clock is easier to change than it looks.\n  [ ] On some boots you are not alone on this machine. 'who' and 'ps' notice it.\n\nHow to get there: 'reboot', and watch the screen closely.",
+      "ESTA MÁQUINA ES MÁS GRANDE QUE ESTA SHELL\n\n  [ ] 2 flags en esta shell: una se esconde de un 'ls' normal, la otra solo la puede leer root.\n  [ ] La contraseña de root: el admin siempre la olvida... y siempre deja notas sobre ello.\n  [ ] MS-DOS 3.1 (menú de arranque): 1 flag. LOCKED.COM la guarda, con mi CV, tras una contraseña\n      en un directorio que DIR no muestra.\n  [ ] BIOS Setup: pulsa SUPR (DEL) mientras se cuenta la memoria.\n      Tiene 4 funciones no documentadas. F1 da pistas.\n  [ ] memtest86+ (menú de arranque): déjalo funcionar. La RAM vieja no siempre es perfecta.\n  [ ] Los chistes clásicos de Unix funcionan: sudo, rm, make... y viejos amigos como fortune, cowsay y sl.\n  [ ] Hay un disquete esperando en /dev/fd0 y una colección MIDI en /usr/share/midi.\n  [ ] Haz finger al dueño de esta máquina. Una BBS de 1997 está a un telnet.\n  [ ] Una vez al año este PC monta una fiesta. Su reloj es más fácil de cambiar de lo que parece.\n  [ ] En algunos arranques no estás solo en esta máquina. 'who' y 'ps' lo notan.\n\nCómo llegar: 'reboot', y mira la pantalla con atención.", "AQUESTA MÀQUINA ÉS MÉS GRAN QUE AQUESTA SHELL\n\n  [ ] 2 flags en aquesta shell: una s'amaga d'un 'ls' normal, l'altra només la pot llegir root.\n  [ ] La contrasenya de root: l'admin sempre l'oblida... i sempre en deixa notes.\n  [ ] MS-DOS 3.1 (menú d'arrencada): 1 flag. LOCKED.COM la guarda, amb el meu CV, darrere una contrasenya\n      en un directori que DIR no mostra.\n  [ ] BIOS Setup: prem SUPR (DEL) mentre es compta la memòria.\n      Té 4 funcions no documentades. F1 dona pistes.\n  [ ] memtest86+ (menú d'arrencada): deixa'l funcionar. La RAM vella no sempre és perfecta.\n  [ ] Els acudits clàssics d'Unix funcionen: sudo, rm, make... i vells amics com fortune, cowsay i sl.\n  [ ] Hi ha un disquet esperant a /dev/fd0 i una col·lecció MIDI a /usr/share/midi.\n  [ ] Fes finger al propietari d'aquesta màquina. Una BBS de 1997 és a un telnet.\n  [ ] Un cop l'any aquest PC fa festa. El seu rellotge és més fàcil de canviar del que sembla.\n  [ ] En algunes arrencades no estàs sol en aquesta màquina. 'who' i 'ps' ho noten.\n\nCom arribar-hi: 'reboot', i mira la pantalla amb atenció."),
     [HOME + "/skills/hint.txt"]: () => B(
       "Each file here is a skill area: try 'cat dev.txt' or 'cat web-intel.txt'.\nCurious about the machine? 'neofetch', 'mem', 'df', 'ps', 'ls /'.",
       "Cada fichero es un área: prueba 'cat dev.txt' o 'cat web-intel.txt'.\n¿Curiosidad por la máquina? 'neofetch', 'mem', 'df', 'ps', 'ls /'.", "Cada fitxer és una àrea: prova 'cat dev.txt' o 'cat web-intel.txt'.\nCuriositat per la màquina? 'neofetch', 'mem', 'df', 'ps', 'ls /'."),
@@ -97,7 +97,7 @@
       "TODO\n  [x] write 'El Arte de los Hashes' on Medium (cat ~/articles.txt)\n  [ ] stop forgetting the root password!!\n  [ ] delete the old backup in /var/backups — it's only ENCODED, not encrypted...\n      (my favourite chef's recipe: a classic Caesar shift of 13, then base 64, then base 16)\n  [ ] check /etc/shadow permissions (anyone can verify the hash there)",
       "TODO\n  [x] escribir 'El Arte de los Hashes' en Medium (cat ~/articles.txt)\n  [ ] ¡¡dejar de olvidar la contraseña de root!!\n  [ ] borrar el backup viejo de /var/backups — solo está CODIFICADO, no cifrado...\n      (la receta de mi chef favorito: un César clásico de 13, luego base 64, luego base 16)\n  [ ] revisar permisos de /etc/shadow (cualquiera puede verificar el hash)", "TODO\n  [x] escriure 'El Arte de los Hashes' a Medium (cat ~/articles.txt)\n  [ ] deixar d'oblidar la contrasenya de root!!\n  [ ] esborrar el backup vell de /var/backups — només està CODIFICAT, no xifrat...\n      (la recepta del meu xef preferit: un Cèsar clàssic de 13, després base 64, després base 16)\n  [ ] revisar els permisos de /etc/shadow (qualsevol hi pot verificar el hash)"),
     "/etc/hostname": () => HOST,
-    "/etc/motd": () => B("GMOS 1.34.60 — authorized users only. Curious ones too.", "GMOS 1.34.60 — solo usuarios autorizados. Y curiosos.", "GMOS 1.34.60 — només usuaris autoritzats. I curiosos."),
+    "/etc/motd": () => B("GMOS 1.35.60 — authorized users only. Curious ones too.", "GMOS 1.35.60 — solo usuarios autorizados. Y curiosos.", "GMOS 1.35.60 — només usuaris autoritzats. I curiosos."),
     "/etc/shadow": async () => { const v = await vault(); return `root:${v.sha256}:20370:0:99999:7:::\ngabimarti:!:20370:0:99999:7:::\n<span class="dim"># hash: SHA-256 (hex)</span>`; },
     "/var/backups/root_pw.bak": async () => { const v = await vault(); return `<span class="dim"># root password backup — 2019</span>\n${esc(v.backup)}`; },
     "/root/cv.txt": () => esc(cv.slice(cv.indexOf("\n") + 1)),            // decrypted vault: flag line, then the CV
@@ -247,7 +247,7 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
     ["myip · ping · dig · ifconfig", "network tools (real queries)", "herramientas de red (consultas reales)", "eines de xarxa (consultes reals)"],
     ["traceroute · nmap · netstat", "network tools (simulated)", "herramientas de red (simuladas)", "eines de xarxa (simulades)"],
     ["mem · df · dh · du · ds", "memory, disks, disk health, usage, stack dump", "memoria, discos, salud del disco, uso, volcado de pila", "memòria, discos, salut del disc, ús, volcat de pila"],
-    ["ps · uptime · uname · date", "processes and system", "procesos y sistema", "processos i sistema"],
+    ["ps · who · kill · uptime · uname · date", "processes and system", "procesos y sistema", "processos i sistema"],
     ["su · sudo su", "become root (password required)", "hacerse root (requiere contraseña)", "fer-se root (cal contrasenya)"],
     ["history · clear · echo", "shell utilities", "utilidades de la shell", "utilitats de la shell"],
     ["cmd | grep · less · sort · wc · head · tail", "pipes and filters", "tuberías y filtros", "canonades i filtres"],
@@ -259,6 +259,55 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
     ["quick · exit", "quick view (everything at once)", "vista rápida (todo de golpe)", "vista ràpida (tot de cop)"],
     ["reboot · shutdown", "restart the system (the shell starts from scratch)", "reiniciar el sistema (la shell empieza de cero)", "reiniciar el sistema (la shell comença de zero)"],
   ];
+  // Uninvited guest: about 1 boot in 8, "r00t" drops in over telnet and runs Bliss (1997, the first Linux virus that really spread).
+  // Defanged: nothing changes. 'who' and 'ps' see him; 'kill' stops Bliss (it runs as you); only root can kick r00t out.
+  const IP = "31.33.7.1", PID = { sh: 666, bliss: 1997 };
+  const BLISS = ["/bin/ls", "/bin/cat", "/bin/grep", "/usr/bin/less", "/usr/bin/vim", "/usr/bin/telnet", "/usr/bin/finger", "/usr/games/fortune", "/usr/games/cowsay", "/bin/gmsh"];
+  let intr = null, blissed = 0;                             // intr: { bliss, at } while r00t is logged in; blissed: files "infected"
+  const note = h => print(h, "intr");
+  const write = (en, es, ca) => { GM.sfx.blip(); note(`Message from r00t@${IP} on pts/1 at ${GM.now().toTimeString().slice(0, 5)} ...<br>${B(en, es, ca)}<br>EOF`); };
+  async function intruder() {
+    if (intr) return;
+    const me = intr = { bliss: false, at: GM.now() }, alive = async ms => { await sleep(ms); return intr === me; };
+    note(`r00t ${B("has logged on", "ha iniciado sesión en", "ha iniciat sessió a")} pts/1 ${B("from", "desde", "des de")} ${IP}.`);
+    if (!await alive(3000)) return;
+    write("nice CV. mind if I borrow it? ;)", "bonito CV. ¿te importa si me lo llevo? ;)", "bonic CV. et fa res si me l'emporto? ;)");
+    if (!await alive(4000)) return;
+    write("let me introduce a friend: bliss. finest 1997 vintage.", "te presento a un amigo: bliss. cosecha de 1997.", "et presento un amic: bliss. collita del 1997.");
+    me.bliss = true; GM.sfx.err();
+    for (const f of BLISS) {
+      if (!await alive(2500)) return;
+      if (!me.bliss) break;
+      blissed++; note(`bliss: infecting ${f}`);
+    }
+    if (me.bliss) {
+      me.bliss = false; note(`bliss: ${blissed} files infected. Have a nice day.`);
+      write("gg. it's 1998: patch your wu-ftpd. bye!", "gg. estamos en 1998: parchea tu wu-ftpd. ¡adiós!", "gg. som al 1998: posa pegats al teu wu-ftpd. adéu!");
+    } else {
+      write("hey! who killed my bliss? :(", "¡eh! ¿quién ha matado a mi bliss? :(", "eh! qui ha matat el meu bliss? :(");
+      if (!await alive(7000)) return;
+      write("fine, I'm out. this box is weird anyway.", "vale, me largo. esta máquina es rara de todos modos.", "d'acord, me'n vaig. aquesta màquina és estranya igualment.");
+    }
+    if (intr === me) { intr = null; note(`r00t ${B("has logged out", "ha cerrado sesión", "ha tancat la sessió")}.`); }
+  }
+  function kill(args, byName) {                             // kill [-9] PID, killall/pkill NAME
+    const t = args.filter(a => !a.startsWith("-"));
+    if (!t.length) return print(byName ? "usage: killall NAME" : "kill: usage: kill [-9] PID");
+    for (const a of t) {
+      const pid = byName ? { bliss: PID.bliss, sh: PID.sh, r00t: PID.sh, gmsh: 31337 }[a] : +a;
+      if (pid === PID.bliss && intr?.bliss) { intr.bliss = false; note(`bliss: ${B(`terminated after infecting ${blissed} files.`, `terminado tras infectar ${blissed} ficheros.`, `acabat després d'infectar ${blissed} fitxers.`)}`); continue; }
+      if (pid === PID.sh && intr) {
+        if (user !== "root") { err(`kill: (${PID.sh}) - ${B("Operation not permitted (it's r00t's shell: you'd need to be root)", "Operación no permitida (es la shell de r00t: tendrías que ser root)", "Operació no permesa (és la shell de r00t: hauries de ser root)")}`); continue; }
+        intr = null; GM.sfx.ok();
+        note(`r00t ${B("has logged out", "ha cerrado sesión", "ha tancat la sessió")}. ${B("Connection to", "Conexión con", "Connexió amb")} ${IP} ${B("closed. Nice reflexes, sysadmin.", "cerrada. Buenos reflejos, sysadmin.", "tancada. Bons reflexos, sysadmin.")}`);
+        continue;
+      }
+      if (pid === 31337) { print(B("gmsh: nice try. I'm the shell you're typing in.", "gmsh: buen intento. Soy la shell en la que escribes.", "gmsh: bon intent. Sóc la shell on escrius.")); continue; }
+      if ([1, 137, 404, 1337].includes(pid)) { err(`kill: (${pid}) - ${B("Operation not permitted", "Operación no permitida", "Operació no permesa")}`); continue; }
+      err(byName ? `${esc(a)}: ${B("no process found", "ningún proceso encontrado", "cap procés trobat")}` : `kill: (${esc(a)}) - ${B("No such process", "No existe el proceso", "No existeix el procés")}`);
+    }
+  }
+
   const CMDS = {
     help: () => print(`<div class="help">${HELP.map(([c, en, es_, ca]) => {
       const name = c.split(/[ ·]/)[0];
@@ -304,11 +353,11 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
       const logo = [" ██████  ███    ███", "██       ████  ████", "██   ███ ██ ████ ██", "██    ██ ██  ██  ██", " ██████  ██      ██"];
       const info = [
         `<strong>${user}</strong>@<strong>${HOST}</strong>`, "--------------------",
-        `<span class="dim">OS:</span> GMOS 1.34.60 (reverse-engineered)`,
+        `<span class="dim">OS:</span> GMOS 1.35.60 (reverse-engineered)`,
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
         `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática", "més de 35 anys en informàtica")}`,
-        `<span class="dim">Shell:</span> gmsh 0.41`,
+        `<span class="dim">Shell:</span> gmsh 0.42`,
         `<span class="dim">${B("Languages", "Lenguajes", "Llenguatges")}:</span> Python, C, Delphi, ASM`,
         `<span class="dim">${B("Tools", "Herramientas", "Eines")}:</span> Ghidra, Burp Suite, Wazuh`,
         `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz", "cervell humà @ cafè GHz")}`,
@@ -347,6 +396,13 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
       }
       pre(`<span class="dim">${B("stack dump @ rsp", "volcado de pila @ rsp", "volcat de pila @ rsp")}</span>\n` + esc(t.trimEnd()));
     },
+    who: () => {
+      const d = GM.now(), at = x => `${x.toDateString().slice(4, 10)} ${x.toTimeString().slice(0, 5)}`;
+      pre(`${user.padEnd(9)} tty1     ${at(new Date(d - (Date.now() - t0)))}${intr ? `\nr00t      pts/1    ${at(intr.at)} (${IP})` : ""}`);
+    },
+    kill: args => kill(args, false),
+    killall: args => kill(args, true),
+    pkill: args => kill(args, true),
     ps: () => {
       const lab = pickN(PS_LAB, 2).map(c => `${String(2000 + rnd(28000)).padStart(5)} pts/${1 + rnd(3)}    00:${String(rnd(60)).padStart(2, "0")}:${String(rnd(60)).padStart(2, "0")} ${c}`);
       pre(`  PID TTY          TIME CMD
@@ -355,7 +411,7 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
   404 pts/0    01:23:45 ghidra
  1337 pts/0    00:42:00 python3 agent.py --mcp
 ${lab.join("\n")}
-31337 pts/0    00:00:01 gmsh`);
+31337 pts/0    00:00:01 gmsh${intr ? `\n  666 pts/1    00:00:00 sh   <span class="dim">(r00t)</span>` : ""}${intr?.bliss ? `\n 1997 pts/0    00:00:0${blissed % 10} bliss` : ""}`);
     },
     uptime: () => pre(`${GM.now().toTimeString().slice(0, 8)} up 35+ ${B("years", "años", "anys")}, ${Math.round((Date.now() - t0) / 1000)}s ${B("on this page", "en esta página", "en aquesta pàgina")}, 1 user, load average: 0.42, 0.13, 0.37`),
     uname: args => pre(args.includes("-a") ? `GMOS ${HOST} 6.6.6-curiosity #1 SMP x86_64 GNU/Linux` : "GMOS"),
@@ -669,6 +725,10 @@ ${lab.join("\n")}
     let [cmd, ...args] = words(line);
     if (!cmd) return;
     if (Object.hasOwn(aliases, cmd)) [cmd, ...args] = [...words(aliases[cmd]), ...args];
+    if (args.includes("--bliss-uninfect-files-please") && blissed && !intr?.bliss) {   // the real Bliss shipped with this switch
+      note(`bliss: ${B(`cleaning ${blissed} files... done.`, `limpiando ${blissed} ficheros... hecho.`, `netejant ${blissed} fitxers... fet.`)} <span class="dim">(${B("yes, the real Bliss had this option", "sí, el Bliss real tenía esta opción", "sí, el Bliss real tenia aquesta opció")})</span>`);
+      blissed = 0; return;
+    }
     if (cmd.includes("/")) { const p = resolve(cmd); return SCRIPTS[p] ? script(cmd) : isFile(p) || isDir(p) ? err(`gmsh: ${esc(cmd)}: ${B("Permission denied", "Permiso denegado", "Permís denegat")}`) : err(`gmsh: ${esc(cmd)}: ${B("No such file or directory", "No existe el fichero o directorio", "No existeix el fitxer o directori")}`); }
     if (cmd.endsWith(".sh") && SCRIPTS[resolve(cmd)]) return err(`gmsh: ${esc(cmd)}: ${B("command not found. The current directory is not in the PATH: try", "comando no encontrado. El directorio actual no está en el PATH: prueba", "ordre no trobada. El directori actual no és al PATH: prova")} './${esc(cmd)}'`);
     const f = Object.hasOwn(CMDS, cmd) && CMDS[cmd], lower = cmd.toLowerCase();
@@ -681,7 +741,7 @@ ${lab.join("\n")}
   }
 
   function reset() {                       // reboot/shutdown: next time the shell starts like a fresh system
-    user = "gabimarti"; cwd = HOME; cv = null; hist.length = 0; hpos = 0; started = false;
+    user = "gabimarti"; cwd = HOME; cv = null; hist.length = 0; hpos = 0; started = false; intr = null; blissed = 0;
     floppyIn = false; floppyTries = 0; D["/mnt/floppy"] = [];
     if (pending) endPassword();
     out.innerHTML = ""; input.value = ""; setPrompt();
@@ -741,6 +801,7 @@ ${lab.join("\n")}
   }
 
   GM.shell = {
+    intruder,                                               // the r00t visit on demand (tests, or a curious console)
     open() {
       if (!started) {
         started = true; setPrompt();
@@ -749,9 +810,9 @@ ${lab.join("\n")}
           for (const t of GM.tunes.list) { const p = "/usr/share/midi/" + t.file.toLowerCase(); F[p] = () => esc(`MThd\u2592\u2592\u2592\u2592 ${t.title}\nas heard in ${t.game}\n(binary MIDI data: aplay it instead)`); PRE_FILES.add(p); }
         }).catch(() => {});
         type(print(""), {
-          es: "gmsh 0.41 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n",
-          ca: "gmsh 0.41 — gabimarti.github.io\nEscriu 'help' per veure les ordres, o comença per 'cat hint.txt'.\n",
-        }[root.lang] || "gmsh 0.41 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10).then(() => GM.party() && cake());
+          es: "gmsh 0.42 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n",
+          ca: "gmsh 0.42 — gabimarti.github.io\nEscriu 'help' per veure les ordres, o comença per 'cat hint.txt'.\n",
+        }[root.lang] || "gmsh 0.42 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10).then(() => GM.party() ? cake() : Math.random() < 1 / 8 && setTimeout(() => !$("#shell").hidden && intruder(), 15000 + rnd(20000)));
       }
       input.focus({ preventScroll: true });
     },

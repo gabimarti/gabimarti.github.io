@@ -307,3 +307,4 @@ html:not(.js) .js-only { display: none; }
 .dos-party b { color: #fff; }
 .pc1 { color: #ff5555; } .pc2 { color: #55ff55; } .pc3 { color: #5555ff; } .pc4 { color: #ffff55; } .pc5 { color: #ff55ff; } .pc6 { color: #55ffff; }
 .dos-casino { margin: .3rem 0; color: #ffff55; white-space: pre-wrap; }
+#sh-out .intr { color: var(--err); }
