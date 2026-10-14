@@ -40,10 +40,12 @@
   const waitKey = () => new Promise(res => {                // any key or tap (less, read in scripts)
     const k = e => { if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(e.key)) return; e.preventDefault(); e.stopPropagation(); done(e.key); };
     const c = e => { if (e.target.closest("a")) return; done("tap"); };
-    const done = v => { removeEventListener("keydown", k, true); $("#shell").removeEventListener("click", c, true); res(v); };
+    const done = v => { removeEventListener("keydown", k, true); $("#shell").removeEventListener("click", c, true); cancelKey = null; res(v); };
+    cancelKey = () => done("cancel");
     setTimeout(() => { addEventListener("keydown", k, true); $("#shell").addEventListener("click", c, true); });
   });
   const beep = () => GM.sfx.tone(1000, .12, "square", .05);
+  let cancelKey = null, floppyIn = false, floppyTries = 0;
   const run = (c, label = c) => `<button type="button" class="fs" data-run="${esc(c)}">${esc(label)}</button>`;
 
   // ---------- filesystem ----------
@@ -55,9 +57,9 @@
   const SCRIPTS = { [HOME + "/cv.sh"]: CVSH };
   const CONTACTS = ["x", "linkedin", "github", "medium", "email"];
   const D = {
-    "/": ["bin/", "etc/", "home/", "root/", "tmp/", "var/"],
-    "/bin": [], "/tmp": [], "/home": ["gabimarti/"], "/var": ["backups/"],
-    [HOME]: ["about.txt", "summary.txt", "interests.txt", "articles.txt", "repos.txt", "avatar.txt", "hint.txt", "explore.txt", "cv.sh", "skills/", "contact/", ".bash_history", ".notes/", ".secret"],
+    "/": ["bin/", "etc/", "home/", "mnt/", "root/", "tmp/", "usr/", "var/"],
+    "/bin": [], "/tmp": [], "/mnt": ["floppy/"], "/mnt/floppy": [], "/usr": ["share/"], "/usr/share": ["midi/"], "/usr/share/midi": [], "/home": ["gabimarti/"], "/var": ["backups/"],
+    [HOME]: ["about.txt", "summary.txt", "interests.txt", "articles.txt", "repos.txt", "avatar.txt", "hint.txt", "explore.txt", "cv.sh", "skills/", "contact/", ".bash_history", ".notes/", ".plan", ".secret"],
     [HOME + "/skills"]: [...SKILLS.map(k => k + ".txt"), "hint.txt"],
     [HOME + "/contact"]: CONTACTS.map(k => k + ".url"),
     [HOME + "/.notes"]: ["todo.txt"],
@@ -78,9 +80,12 @@
       "Welcome, visitor. A few ideas to get started:\n  1. 'whoami' and 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' and 'cat repos.txt'\n  3. 'ls contact' or 'open github'\n  4. 'cat avatar.txt' for a portrait\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': this machine is bigger than this shell\n  7. './cv.sh': my CV, scripted (any key between sections)\nSome files are hidden. Real hackers use 'ls -a'.",
       "Bienvenido/a. Algunas ideas para empezar:\n  1. 'whoami' y 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' y 'cat repos.txt'\n  3. 'ls contact' u 'open github'\n  4. 'cat avatar.txt' para ver un retrato\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': esta máquina es más grande que esta shell\n  7. './cv.sh': mi CV, en un script (una tecla entre secciones)\nHay ficheros ocultos. Los hackers de verdad usan 'ls -a'.", "Benvingut/da. Algunes idees per començar:\n  1. 'whoami' i 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' i 'cat repos.txt'\n  3. 'ls contact' o 'open github'\n  4. 'cat avatar.txt' per veure un retrat\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': aquesta màquina és més gran que aquesta shell\n  7. './cv.sh': el meu CV, en un script (una tecla entre seccions)\nHi ha fitxers amagats. Els hackers de veritat fan servir 'ls -a'."),
     [HOME + "/cv.sh"]: () => esc(CVSH()),
+    [HOME + "/.plan"]: () => B("Finish the BIOS (it hides more than it shows).\nWrite more CTFs.\nTeach reversing to anyone curious enough.\nNever trust a program that only XORs.",
+      "Terminar la BIOS (esconde más de lo que muestra).\nEscribir más CTFs.\nEnseñar reversing a quien tenga curiosidad.\nNo fiarse nunca de un programa que solo hace XOR.",
+      "Acabar la BIOS (amaga més del que mostra).\nEscriure més CTFs.\nEnsenyar reversing a qui tingui curiositat.\nNo refiar-se mai d'un programa que només fa XOR."),
     [HOME + "/explore.txt"]: () => B(
-      "THIS MACHINE IS BIGGER THAN THIS SHELL\n\n  [ ] 2 flags in this shell. Some files hide from a plain 'ls'.\n  [ ] root. The admin keeps forgetting the password... and keeps writing notes about it.\n  [ ] MS-DOS 3.1 (boot menu): a 1986 program guards my CV, in a directory DIR won't show.\n  [ ] BIOS Setup: press DEL while the memory is being counted.\n      It has 4 undocumented features. F1 gives clues.\n  [ ] memtest86+ (boot menu): leave it running. Old RAM is not always perfect.\n\nHow to get there: 'reboot', and watch the screen closely.",
-      "ESTA MÁQUINA ES MÁS GRANDE QUE ESTA SHELL\n\n  [ ] 2 flags en esta shell. Algunos ficheros se esconden de un 'ls' normal.\n  [ ] root. El admin siempre olvida la contraseña... y siempre deja notas sobre ello.\n  [ ] MS-DOS 3.1 (menú de arranque): un programa de 1986 guarda mi CV, en un directorio que DIR no muestra.\n  [ ] BIOS Setup: pulsa SUPR (DEL) mientras se cuenta la memoria.\n      Tiene 4 funciones no documentadas. F1 da pistas.\n  [ ] memtest86+ (menú de arranque): déjalo funcionar. La RAM vieja no siempre es perfecta.\n\nCómo llegar: 'reboot', y mira la pantalla con atención.", "AQUESTA MÀQUINA ÉS MÉS GRAN QUE AQUESTA SHELL\n\n  [ ] 2 flags en aquesta shell. Alguns fitxers s'amaguen d'un 'ls' normal.\n  [ ] root. L'admin sempre oblida la contrasenya... i sempre en deixa notes.\n  [ ] MS-DOS 3.1 (menú d'arrencada): un programa del 1986 guarda el meu CV, en un directori que DIR no mostra.\n  [ ] BIOS Setup: prem SUPR (DEL) mentre es compta la memòria.\n      Té 4 funcions no documentades. F1 dona pistes.\n  [ ] memtest86+ (menú d'arrencada): deixa'l funcionar. La RAM vella no sempre és perfecta.\n\nCom arribar-hi: 'reboot', i mira la pantalla amb atenció."),
+      "THIS MACHINE IS BIGGER THAN THIS SHELL\n\n  [ ] 2 flags in this shell. Some files hide from a plain 'ls'.\n  [ ] root. The admin keeps forgetting the password... and keeps writing notes about it.\n  [ ] MS-DOS 3.1 (boot menu): a 1986 program guards my CV, in a directory DIR won't show.\n  [ ] BIOS Setup: press DEL while the memory is being counted.\n      It has 4 undocumented features. F1 gives clues.\n  [ ] memtest86+ (boot menu): leave it running. Old RAM is not always perfect.\n  [ ] Classic Unix jokes still work: sudo, rm, make... and old friends like fortune, cowsay and sl.\n  [ ] A floppy waits in /dev/fd0 and a MIDI collection in /usr/share/midi.\n  [ ] finger the owner of this machine. A 1997 BBS is one telnet away.\n\nHow to get there: 'reboot', and watch the screen closely.",
+      "ESTA MÁQUINA ES MÁS GRANDE QUE ESTA SHELL\n\n  [ ] 2 flags en esta shell. Algunos ficheros se esconden de un 'ls' normal.\n  [ ] root. El admin siempre olvida la contraseña... y siempre deja notas sobre ello.\n  [ ] MS-DOS 3.1 (menú de arranque): un programa de 1986 guarda mi CV, en un directorio que DIR no muestra.\n  [ ] BIOS Setup: pulsa SUPR (DEL) mientras se cuenta la memoria.\n      Tiene 4 funciones no documentadas. F1 da pistas.\n  [ ] memtest86+ (menú de arranque): déjalo funcionar. La RAM vieja no siempre es perfecta.\n  [ ] Los chistes clásicos de Unix funcionan: sudo, rm, make... y viejos amigos como fortune, cowsay y sl.\n  [ ] Hay un disquete esperando en /dev/fd0 y una colección MIDI en /usr/share/midi.\n  [ ] Haz finger al dueño de esta máquina. Una BBS de 1997 está a un telnet.\n\nCómo llegar: 'reboot', y mira la pantalla con atención.", "AQUESTA MÀQUINA ÉS MÉS GRAN QUE AQUESTA SHELL\n\n  [ ] 2 flags en aquesta shell. Alguns fitxers s'amaguen d'un 'ls' normal.\n  [ ] root. L'admin sempre oblida la contrasenya... i sempre en deixa notes.\n  [ ] MS-DOS 3.1 (menú d'arrencada): un programa del 1986 guarda el meu CV, en un directori que DIR no mostra.\n  [ ] BIOS Setup: prem SUPR (DEL) mentre es compta la memòria.\n      Té 4 funcions no documentades. F1 dona pistes.\n  [ ] memtest86+ (menú d'arrencada): deixa'l funcionar. La RAM vella no sempre és perfecta.\n  [ ] Els acudits clàssics d'Unix funcionen: sudo, rm, make... i vells amics com fortune, cowsay i sl.\n  [ ] Hi ha un disquet esperant a /dev/fd0 i una col·lecció MIDI a /usr/share/midi.\n  [ ] Fes finger al propietari d'aquesta màquina. Una BBS de 1997 és a un telnet.\n\nCom arribar-hi: 'reboot', i mira la pantalla amb atenció."),
     [HOME + "/skills/hint.txt"]: () => B(
       "Each file here is a skill area: try 'cat dev.txt' or 'cat web-intel.txt'.\nCurious about the machine? 'neofetch', 'mem', 'df', 'ps', 'ls /'.",
       "Cada fichero es un área: prueba 'cat dev.txt' o 'cat web-intel.txt'.\n¿Curiosidad por la máquina? 'neofetch', 'mem', 'df', 'ps', 'ls /'.", "Cada fitxer és una àrea: prova 'cat dev.txt' o 'cat web-intel.txt'.\nCuriositat per la màquina? 'neofetch', 'mem', 'df', 'ps', 'ls /'."),
@@ -100,7 +105,7 @@
   };
   SKILLS.forEach((k, i) => F[`${HOME}/skills/${k}.txt`] = () => html(`#c-skills dd:nth-of-type(${i + 1})`));
   CONTACTS.forEach((k, i) => F[`${HOME}/contact/${k}.url`] = () => html(`#c-contact li:nth-child(${i + 1}) a`));
-  const PRE_FILES = new Set([HOME + "/cv.sh", "/etc/shadow", "/var/backups/root_pw.bak", "/root/cv.txt", HOME + "/.notes/todo.txt", HOME + "/.bash_history"]);
+  const PRE_FILES = new Set([HOME + "/cv.sh", HOME + "/.plan", "/etc/shadow", "/var/backups/root_pw.bak", "/root/cv.txt", HOME + "/.notes/todo.txt", HOME + "/.bash_history"]);
 
   function resolve(p) {
     if (!p) return cwd;
@@ -365,10 +370,21 @@ ${lab.join("\n")}
     su: () => su(),
     sudo: args => {
       if (["su", "-i", "-s"].includes(args[0])) return su();
+      if (args.join(" ") === "make me a sandwich") return print(B("Okay. 🥪", "Vale. 🥪", "D'acord. 🥪"));   // xkcd 149
       if (user === "root" && args.length) return exec(args.join(" "), true);
       err(B("gabimarti is not in the sudoers file. This incident will be reported. 😉  (hint: 'sudo su')", "gabimarti no está en el fichero sudoers. Se informará de este incidente. 😉  (pista: 'sudo su')", "gabimarti no és al fitxer sudoers. Es notificarà aquest incident. 😉  (pista: 'sudo su')"));
     },
-    rm: () => err(user === "root" ? B("rm: nope. Not even as root. 🙂", "rm: no. Ni siquiera como root. 🙂", "rm: no. Ni tan sols com a root. 🙂") : B("rm: permission denied — nice try.", "rm: permiso denegado — buen intento.", "rm: permís denegat — bon intent.")),
+    rm: async args => {
+      const a = args.join(" ");
+      if (/-\w*(rf|fr)\w*|-r\w* -f|-f\w* -r/.test(a) && /(^|\s)\/\*?(\s|$)/.test(a)) {   // rm -rf /: the drama
+        form.hidden = true;
+        for (const d of ["/bin", "/etc", "/usr/share/midi", "/var/backups", "/home/gabimarti", "/root"]) { print(`removed directory '${d}'`, "dim"); GM.sfx.tick(); await sleep(GM.reduce ? 10 : 260); }
+        await sleep(GM.reduce ? 0 : 500);
+        err(B("rm: cannot remove '/': Nice try. This is JavaScript: / is read-only, and a page refresh brings everything back.", "rm: no se puede borrar '/': Buen intento. Esto es JavaScript: / es de solo lectura y recargar la página lo devuelve todo.", "rm: no es pot esborrar '/': Bon intent. Això és JavaScript: / és de només lectura i recarregar la pàgina ho torna tot."));
+        form.hidden = false; input.focus({ preventScroll: true }); return;
+      }
+      err(user === "root" ? B("rm: nope. Not even as root. 🙂", "rm: no. Ni siquiera como root. 🙂", "rm: no. Ni tan sols com a root. 🙂") : B("rm: permission denied — nice try.", "rm: permiso denegado — buen intento.", "rm: permís denegat — bon intent."));
+    },
     lang: args => { if (!["en", "es", "ca"].includes(args[0])) return err(B("usage: lang <en|es|ca>", "uso: lang <en|es|ca>", "ús: lang <en|es|ca>")); GM.setLang(args[0], true); },
     theme: args => {
       if (args[0] && !["light", "dark"].includes(args[0])) return err(B("usage: theme [light|dark]", "uso: theme [light|dark]", "ús: theme [light|dark]"));
@@ -463,6 +479,90 @@ ${lab.join("\n")}
     vi: args => editor("vi", args), vim: args => editor("vi", args), nano: args => editor("nano", args),
   });
   Object.assign(CMDS, { printenv: CMDS.env, more: CMDS.less, view: CMDS.vi, pico: CMDS.nano });
+
+  // ---------- easter eggs (phase 1b) ----------
+  const pick = a => a[rnd(a.length)];
+  const FORTUNES = ["Talk is cheap. Show me the code. — Linus Torvalds", "UNIX is simple. It just takes a genius to understand its simplicity. — Dennis Ritchie",
+    "Any sufficiently advanced technology is indistinguishable from magic. — Arthur C. Clarke", "The best way to predict the future is to invent it. — Alan Kay",
+    "There are 10 types of people: those who understand binary and those who don't.", "It's not a bug, it's an undocumented feature.",
+    "Weeks of coding can save you hours of planning.", "Real programmers count from 0.", "The quieter you become, the more you are able to hear.",
+    "Curiosity is the best exploit."];
+  const cow = t => {
+    const w = Math.min(Math.max(...t.split("\n").map(l => l.length)), 60), lines = (t.match(new RegExp(`.{1,${w}}(\\s|$)`, "g")) || [t.slice(0, w)]).map(l => l.trim());
+    return ` ${"_".repeat(w + 2)}\n` + lines.map((l, i) => `${lines.length === 1 ? "<" : i === 0 ? "/" : i === lines.length - 1 ? "\\" : "|"} ${l.padEnd(w)} ${lines.length === 1 ? ">" : i === 0 ? "\\" : i === lines.length - 1 ? "/" : "|"}`).join("\n")
+      + `\n ${"-".repeat(w + 2)}\n        \\   ^__^\n         \\  (oo)\\_______\n            (__)\\       )\\/\\\n                ||----w |\n                ||     ||`;
+  };
+  const TRAIN = ["      ====        ___________", "  _D _|  |_______/  GMSH 1997 \\__", "   |(_)---  |   [] [] [] [] []  |", "   /     |  |____________________|",
+    "  | ________|___O========O========O", " ==/_/     \\_/    \\_/      \\_/     "];
+  const BACKUP86 = "BACKUP86.TXT - 1986\nThe only backup I ever made.\nWhat it contains: this text file.\nLesson learned: test your restores.";
+  const HISCORE = "HIGH SCORES - DIGGER (1983)\n 1. GABIMARTI   999990\n 2. GABIMARTI   871200\n 3. YOU              0   <- the night is young";
+  async function anim(frames, ms, cls) {                     // frames (pre html) in one element; any key stops
+    form.hidden = true; const el = pre(""); if (cls) el.classList.add(cls);
+    let stop = false; waitKey().then(() => { stop = true; });
+    for (const f of frames) { if (stop) break; el.innerHTML = f; main.scrollTop = main.scrollHeight; await sleep(GM.reduce ? 5 : ms); }
+    cancelKey?.(); form.hidden = false; input.focus({ preventScroll: true }); return el;
+  }
+  Object.assign(CMDS, {
+    fortune: () => pre(esc(pick(FORTUNES))),
+    cowsay: args => pre(esc(cow(args.join(" ") || pick(FORTUNES)))),
+    make: args => args.join(" ") === "me a sandwich" ? print(B("What? Make it yourself.", "¿Qué? Háztelo tú.", "Què? Fes-te'l tu.")) : err(`make: *** ${B("No targets specified and no makefile found.", "No se han indicado objetivos ni hay makefile.", "No s'han indicat objectius ni hi ha makefile.")}  Stop.`),
+    sl: async () => {
+      const frames = [];
+      for (let x = 64; x > -36; x -= 2) frames.push(esc(TRAIN.map(l => x >= 0 ? " ".repeat(x) + l : l.slice(-x)).join("\n")));
+      (await anim(frames, 45)).remove();
+      print(B("(sl: you typed sl instead of ls. The train always wins.)", "(sl: escribiste sl en vez de ls. El tren siempre gana.)", "(sl: has escrit sl en lloc de ls. El tren sempre guanya.)"), "dim");
+    },
+    cmatrix: async () => {
+      const COLS = 60, ROWS = 14, CH = "01アイウエオカキクケコｱｲｳｴｵ$#@%&*+=<>", drops = Array.from({ length: COLS }, () => -Math.floor(Math.random() * ROWS)), frames = [];
+      for (let f = 0; f < 120; f++) {
+        const g = Array.from({ length: ROWS }, () => Array(COLS).fill(" "));
+        drops.forEach((d, c) => { for (let r = Math.max(0, d - 6); r <= Math.min(ROWS - 1, d); r++) g[r][c] = CH[(Math.random() * CH.length) | 0]; drops[c] = d >= ROWS + 6 ? 0 : d + 1; });
+        frames.push(esc(g.map(r => r.join("")).join("\n")));
+      }
+      (await anim(frames, 50, "matrix")).remove();
+      print(B("(cmatrix: wake up, Neo... any key brought you back.)", "(cmatrix: despierta, Neo... una tecla te ha traído de vuelta.)", "(cmatrix: desperta, Neo... una tecla t'ha tornat.)"), "dim");
+    },
+    telnet: async args => {
+      if (!args[0]) return err(B("usage: telnet host   (any host will do: they all lead to the same BBS)", "uso: telnet host   (cualquier host sirve: todos llevan a la misma BBS)", "ús: telnet host   (qualsevol host serveix: tots porten a la mateixa BBS)"));
+      try { await GM.need("bbs.js"); } catch (e) { return err("telnet: no route to host"); }
+      await GM.bbs.run({ host: args[0], print, err, askLine, sleep, esc, sfx: GM.sfx, cls: () => { out.innerHTML = ""; }, reduce: GM.reduce,
+        wink: B("(telnet: plain text, no encryption, 1997 style. Don't type real passwords.)", "(telnet: texto plano, sin cifrar, estilo 1997. No escribas contraseñas reales.)", "(telnet: text pla, sense xifrar, estil 1997. No escriguis contrasenyes reals.)") });
+      setPrompt();
+    },
+    finger: args => {
+      const u = (args[0] || "gabimarti").replace(/@.*/, "");
+      if (u === "root") return pre(`Login: root                     Name: root\nNever logged in.\nPlan:\n${B("Forget the password. Again.", "Olvidar la contraseña. Otra vez.", "Oblidar la contrasenya. Una altra vegada.")}`);
+      if (u !== "gabimarti") return err(`finger: ${esc(u)}: no such user.`);
+      pre(`Login: gabimarti                Name: Gabriel Martí\nDirectory: /home/gabimarti     Shell: /bin/gmsh\nOn since ${esc(new Date(t0).toString().slice(0, 21))} on tty1\nMail last read Fri Dec 19 23:59 1997\nPlan:\n${F[HOME + "/.plan"]()}`);
+    },
+    mount: async args => {
+      const a = args.join(" ");
+      if (!a) return pre("/dev/sda1 on / type gmfs (ro)\nproc on /proc type proc (rw)" + (floppyIn ? "\n/dev/fd0 on /mnt/floppy type msdos (ro)" : ""));
+      if (!/fd0|floppy/.test(a)) return err(`mount: ${esc(a)}: ${B("special device does not exist", "no existe el dispositivo especial", "no existeix el dispositiu especial")}`);
+      if (floppyIn) return err("mount: /dev/fd0: already mounted on /mnt/floppy");
+      form.hidden = true; GM.sfx.floppy(); await sleep(GM.reduce ? 50 : 1300); form.hidden = false; input.focus({ preventScroll: true });
+      if (++floppyTries < 3) return err(`mount: /dev/fd0: ${B("no medium found (floppies wanted patience: try again)", "no se encontró ningún medio (las disqueteras pedían paciencia: prueba otra vez)", "no s'ha trobat cap suport (les disqueteres demanaven paciència: torna-ho a provar)")}`);
+      floppyIn = true; D["/mnt/floppy"] = ["backup86.txt", "hiscore.txt"];
+      F["/mnt/floppy/backup86.txt"] = () => esc(BACKUP86); F["/mnt/floppy/hiscore.txt"] = () => esc(HISCORE);
+      PRE_FILES.add("/mnt/floppy/backup86.txt"); PRE_FILES.add("/mnt/floppy/hiscore.txt");
+      print(B("(a dusty floppy labelled BACKUP 86 turns up) /dev/fd0 mounted on /mnt/floppy", "(aparece un disquete polvoriento etiquetado BACKUP 86) /dev/fd0 montado en /mnt/floppy", "(apareix un disquet polsós etiquetat BACKUP 86) /dev/fd0 muntat a /mnt/floppy"));
+    },
+    umount: () => { if (!floppyIn) return err("umount: /mnt/floppy: not mounted"); floppyIn = false; D["/mnt/floppy"] = []; if (cwd.startsWith("/mnt/floppy")) { cwd = "/mnt"; setPrompt(); } },
+    aplay: async args => {
+      const L = GM.tunes?.list;
+      if (!L) return err("aplay: no sound card found (tunes.js not loaded)");
+      const a = args.find(x => !x.startsWith("-"));
+      if (!a) return err(B("usage: aplay <file.mid>   (try ls /usr/share/midi)", "uso: aplay <fichero.mid>   (prueba ls /usr/share/midi)", "ús: aplay <fitxer.mid>   (prova ls /usr/share/midi)"));
+      const p = resolve(a), t = a.endsWith("*.mid") ? pick(L) : L.find(x => "/usr/share/midi/" + x.file.toLowerCase() === p);
+      if (!t) return err(`aplay: ${esc(a)}: ${B("No such file or directory", "No existe el fichero o directorio", "No existeix el fitxer o directori")}`);
+      const [stop, secs] = GM.tunes.play(t.tune);
+      print(`Playing MIDI '${esc(t.file.toLowerCase())}': ${esc(t.title)} (${B("as heard in", "como en", "com a")} ${esc(t.game)})`);
+      form.hidden = true; const m = print(B("Press any key to stop", "Pulsa una tecla para parar", "Prem una tecla per aturar"), "dim");
+      await Promise.race([waitKey(), sleep(secs * 1000 + 300)]);
+      cancelKey?.(); stop(); m.remove(); form.hidden = false; input.focus({ preventScroll: true });
+    },
+  });
+  Object.assign(CMDS, { play: CMDS.aplay });
 
   // text sources for filters: files given, else the pipe; [name, plain text] or null after an error
   async function sources(files, stdin, cmd) {
@@ -565,6 +665,7 @@ ${lab.join("\n")}
 
   function reset() {                       // reboot/shutdown: next time the shell starts like a fresh system
     user = "gabimarti"; cwd = HOME; cv = null; hist.length = 0; hpos = 0; started = false;
+    floppyIn = false; floppyTries = 0; D["/mnt/floppy"] = [];
     if (pending) endPassword();
     out.innerHTML = ""; input.value = ""; setPrompt();
   }
@@ -609,6 +710,10 @@ ${lab.join("\n")}
     open() {
       if (!started) {
         started = true; setPrompt();
+        if (!D["/usr/share/midi"].length) GM.need("tunes.js").then(() => {      // /usr/share/midi: the same tunes as the BIOS and MS-DOS
+          D["/usr/share/midi"] = GM.tunes.list.map(t => t.file.toLowerCase());
+          for (const t of GM.tunes.list) { const p = "/usr/share/midi/" + t.file.toLowerCase(); F[p] = () => esc(`MThd\u2592\u2592\u2592\u2592 ${t.title}\nas heard in ${t.game}\n(binary MIDI data: aplay it instead)`); PRE_FILES.add(p); }
+        }).catch(() => {});
         type(print(""), {
           es: "gmsh 0.30 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n",
           ca: "gmsh 0.30 — gabimarti.github.io\nEscriu 'help' per veure les ordres, o comença per 'cat hint.txt'.\n",

@@ -64,7 +64,7 @@
       // connect
       print(`Trying ${esc(host)}...`); await wait(700);
       print(`Connected to ${esc(host)}.<br>Escape character is '^]'.`);
-      print(`<span class="dim">(TELNET on MS-DOS 3.10? This PC peeked at the future again.)</span>`); await wait(500);
+      print(`<span class="dim">${io.wink ?? "(TELNET on MS-DOS 3.10? This PC peeked at the future again.)"}</span>`); await wait(500);
       sfx.ok(); cls();
       pre(`${C("c-cy", esc(LOGO))}\n${C("c-ye", "  Node 1 of 4 · 28800 bps · 24h · Barcelona")}\n`);
       const handle = (await ask("Enter your handle (or ENTER for GUEST): ")).toUpperCase().replace(/[^A-Z0-9_]/g, "").slice(0, 12) || "GUEST";

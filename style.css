@@ -177,8 +177,10 @@ html:not(.js) .js-only { display: none; }
 .dos .dos-prompt { white-space: pre; }
 .dos #dos-in { flex: 1; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; caret-color: #aaa; }
 /* MS-DOS TELNET BBS (bbs.js): ANSI-like colours */
-.dos .bbs { margin: 0; }
-.dos .c-cy { color: #55ffff; } .dos .c-ye { color: #ffff55; } .dos .c-ma { color: #ff55ff; } .dos .c-gr { color: #55ff55; } .dos .c-rd { color: #ff5555; }
+:is(.dos, #shell) .bbs { margin: 0; }
+:is(.dos, #shell) .c-cy { color: #55ffff; } :is(.dos, #shell) .c-ye { color: #ffff55; } :is(.dos, #shell) .c-ma { color: #ff55ff; } :is(.dos, #shell) .c-gr { color: #55ff55; } :is(.dos, #shell) .c-rd { color: #ff5555; }
+#shell .bbs { background: #000; color: #aaa; padding: .3rem 1ch; }   /* the BBS keeps its black screen inside the shell */
+#shell .matrix { margin: 0; background: #000; color: #33ff33; text-shadow: 0 0 4px #33ff33; overflow: hidden; }
 /* MS-DOS HACK easter egg: green "movie hacking" screen */
 .dos .dos-hack { min-height: calc(100% - 1rem); padding: .4rem 1ch; background: #000; color: #33ff33; text-shadow: 0 0 4px #33ff33; overflow: hidden; white-space: pre; }
 .dos .dos-hack .granted { margin: 1.2rem 0 .4rem; font-size: 2em; font-weight: bold; text-align: center; animation: blink 1s steps(1) infinite; }
