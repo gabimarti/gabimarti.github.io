@@ -87,6 +87,10 @@ const GM = (() => {
         else { noise(.025, .6, 2400 + r * 2400); tone(150 + r * 150, .025, "triangle", .035); }
       },
       err: () => tone(170, .14, "sawtooth", .035),
+      floppy: () => {                                     // drive motor hum + head seeks (MS-DOS drive A:)
+        tone(55, 1.3, "sawtooth", .02);
+        for (let i = 0; i < 9; i++) noise(.03, .5, 1500 + Math.random() * 900, .15 + i * .12 + Math.random() * .04);
+      },
     };
   })();
   const soundIcon = () => { const b = $(".snd"); if (b) { b.textContent = sfx.on ? "🔊" : "🔇"; b.setAttribute("aria-pressed", sfx.on); } };
@@ -254,7 +258,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.25", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.26", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });

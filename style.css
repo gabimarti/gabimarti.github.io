@@ -176,6 +176,10 @@ html:not(.js) .js-only { display: none; }
 .dos .dos-form { display: flex; } .dos .dos-form[hidden] { display: none; }
 .dos .dos-prompt { white-space: pre; }
 .dos #dos-in { flex: 1; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; caret-color: #aaa; }
+/* MS-DOS HACK easter egg: green "movie hacking" screen */
+.dos .dos-hack { min-height: calc(100% - 1rem); padding: .4rem 1ch; background: #000; color: #33ff33; text-shadow: 0 0 4px #33ff33; overflow: hidden; white-space: pre; }
+.dos .dos-hack .granted { margin: 1.2rem 0 .4rem; font-size: 2em; font-weight: bold; text-align: center; animation: blink 1s steps(1) infinite; }
+.dos .dos-hack .coffee { text-align: center; }
 /* MS-DOS Editor (EDIT, read-only): blue screen, grey menu and status bars */
 .dos .dos-edit { display: flex; flex-direction: column; min-height: calc(100% - 1rem); background: #0000aa; color: #fff; }
 .dos .dos-edit .ed-menu, .dos .dos-edit .ed-status { background: #aaa; color: #000; white-space: pre; }

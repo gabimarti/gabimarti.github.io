@@ -262,6 +262,7 @@
   }
 
   GM.bios = {
+    get driveA() { const x = items().find(y => y.k === "Drive A"); return x.v[x.i]; },   // read by MS-DOS (drive A:)
     get quickPost() { return items().find(x => x.k === "Quick Power On Self Test").i === 1; },
     open(container) {
       el = document.createElement("div"); el.className = "bios"; container.append(el);

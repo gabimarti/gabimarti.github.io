@@ -4,6 +4,8 @@
 // the password is XORed inside the program, so DEBUG (D = dump, U = unassemble) gives it away. Data: vault.json "dos".
 // Batch files run (CV.BAT, AUTOEXEC.BAT): @, ECHO ON/OFF/., REM, PAUSE, GOTO/:label, IF, SET/%VAR%, %0-%9, CALL, ECHO ^G = beep.
 // Pipes (|) and input redirection (<) feed MORE, FIND and SORT. Commands newer than 1985 run with a wink.
+// Easter eggs: DIR /WTF, FORMAT C:, DEL *.* (-> REGRETS.TXT), PING, HACK; drive A: makes floppy noise, asks
+// Abort, Retry, Fail? and finds a 1986 backup disk on the 3rd try (BIOS Setup Drive A = None -> no drive A:).
 // open() resolves "classic" on EXIT, or nothing on REBOOT / Ctrl+Alt+Del (site.js then restarts the POST).
 "use strict";
 (() => {
@@ -38,6 +40,8 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
 [ ] This disk: a directory that DIR won't show. How does this PC boot?
 [ ] LOCKED.COM: my CV and a flag. DEBUG knows what it hides.
 [ ] DIR doesn't list every file either. ATTRIB is less discreet.
+[ ] The commands every DOS user feared still work. Sort of.
+[ ] Drive A: is still there. Bring patience (and Retry).
 [ ] Debian GNU/Linux (boot menu): 2 flags and a root account.
 [ ] BIOS Setup: press DEL during the memory test.
     4 undocumented features. F1 gives clues.
@@ -103,6 +107,22 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     CONTACT: Object.fromEntries(CONTACTS.map((k, i) => [k + ".URL", [null, null, () => html(`#c-contact li:nth-child(${i + 1}) a`)]])),
     UTILS: { "NOTES.TXT": [null, Y86, () => txt(NOTES)], "LOCKED.COM": [192, Y86] },
   };
+  const BACKUP86 = `BACKUP86.TXT - 1986
+The only backup I ever made.
+What it contains: this text file.
+Lesson learned: test your restores.`;
+  const HISCORE = `HIGH SCORES - DIGGER (1983)
+ 1. GABIMARTI   999990
+ 2. GABIMARTI   871200
+ 3. YOU              0   <- the night is young`;
+  const FSA = {                                             // the 1986 disk that turns up in drive A:
+    "BACKUP86.TXT": [null, Y86, () => txt(BACKUP86)],
+    "HISCORE.TXT": [null, Y86, () => txt(HISCORE)],
+  };
+  const REGRETS = () => `REGRETS.TXT - created by DEL *.* on ${today()}
+- I typed DEL *.* on someone else's PC.
+- The weekend is gone. The files are fine: this disk is write-protected.
+- Next time: COPY *.* A: first.`;
   const HIDDEN = new Set(["UTILS"]);                        // hidden directories (ATTRIB only lists files, so UTILS stays a secret)
   const ATTR0 = { "IO.SYS": "RHS", "MSDOS.SYS": "RHS" };     // file attributes (default: A)
   const DAYS = "Sun Mon Tue Wed Thu Fri Sat".split(" ");
@@ -138,14 +158,15 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
   }
 
   let el, out, form, input, promptEl, done, cwd = [], hist = [], hpos = 0, pending = null;
-  let env, attrs, vol, echoOn, batchDepth = 0, abort = false, cancelWait = null;
-  const pathStr = (p = cwd) => "C:\\" + p.join("\\");
-  const node = p => p.reduce((n, k) => n?.[k], FS);
+  let env, attrs, vol, echoOn, batchDepth = 0, abort = false, cancelWait = null, busy = false;
+  let drive = "C", cwds = { C: [], A: [] }, floppyIn = false, floppyTries = 0;
+  const pathStr = (p = cwd) => drive + ":\\" + p.join("\\");
+  const node = (p, root = drive === "A" ? FSA : FS) => p.reduce((n, k) => n?.[k], root);
   const isDir = n => n && !Array.isArray(n);
   const print = h => { const d = document.createElement("div"); d.innerHTML = h; out.append(d); el.closest("main").scrollTop = 1e9; return d; };
   const err = h => { sfx.err(); return print(h); };
   const promptText = () => (env.PROMPT ?? "$N$G").replace(/\$(.)/g, (_, c) => ({
-    P: pathStr(), G: ">", L: "<", B: "|", Q: "=", N: "C", $: "$", _: "\n", V: "MS-DOS Version 3.10",
+    P: pathStr(), G: ">", L: "<", B: "|", Q: "=", N: drive, $: "$", _: "\n", V: "MS-DOS Version 3.10",
     D: dateLine().slice(16), T: timeLine().slice(16), E: "", H: "" })[c.toUpperCase()] ?? "");
   const setPrompt = t => { promptEl.textContent = t ?? (echoOn ? promptText() : ""); };
   // a program waiting for input: label is the prompt, cb gets the line (DATE/TIME ignore it, DEBUG loops, LOCKED wants a password)
@@ -170,7 +191,8 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     setTimeout(() => { document.addEventListener("keydown", k, true); el.addEventListener("click", c, true); });
   });
   function resolve(arg) {                                   // DOS path (case-insensitive, \ or /) -> array, or null
-    const a = arg.toUpperCase().replace(/\//g, "\\").replace(/^C:/, "");
+    let a = arg.toUpperCase().replace(/\//g, "\\");
+    if (/^[A-Z]:/.test(a)) { if (a[0] !== drive) return null; a = a.slice(2); }   // another drive: see onDrive()
     const p = a.startsWith("\\") ? [] : [...cwd];
     for (const part of a.split("\\").filter(Boolean)) {
       if (part === ".") continue;
@@ -179,12 +201,14 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     }
     return node(p) ? p : null;
   }
-  const searchPath = () => (env.PATH || "").split(";").filter(Boolean).map(d => resolve(d.replace(/^C:/i, "") || "\\")).filter(p => p && isDir(node(p)));
+  const searchPath = () => (env.PATH || "").split(";").filter(Boolean).map(d => d.toUpperCase().replace(/^C:/, "").split("\\").filter(Boolean)).filter(p => isDir(node(p, FS)));
   function findProgram(name) {                              // name, name.COM/.EXE/.BAT in cwd, then in PATH -> [path array, file]
     const n = name.toUpperCase().replace(/\//g, "\\"), exts = /\.(COM|EXE|BAT)$/.test(n) ? [""] : [".COM", ".EXE", ".BAT"];
     for (const e of exts) {
       if (n.includes("\\")) { const p = resolve(n + e); if (p && !isDir(node(p))) return p; continue; }
-      for (const dir of [cwd, ...searchPath()]) if (node([...dir, n + e]) && !isDir(node([...dir, n + e]))) return [...dir, n + e];
+      const here = node([...cwd, n + e]);
+      if (here && !isDir(here)) return [...cwd, n + e];
+      for (const dir of searchPath()) { const f = node([...dir, n + e], FS); if (f && !isDir(f)) return [...dir, n + e]; }   // PATH: always drive C:
     }
     return null;
   }
@@ -202,8 +226,10 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     if (f[0]) return f[0];
     const t = document.createElement("div"); t.innerHTML = f[2](); return t.textContent.length;
   }
-  const volLine = () => vol ? ` Volume in drive C is ${esc(vol)}` : " Volume in drive C has no label";
+  const volLine = () => drive === "A" ? " Volume in drive A is BACKUP 86" : vol ? ` Volume in drive C is ${esc(vol)}` : " Volume in drive C has no label";
   function dir(arg) {
+    if (/\/WTF\b/i.test(arg)) return wtf();
+    arg = arg.replace(/\/\w+/g, "").trim();                   // /W, /P...: ignored
     const p = arg ? resolve(arg) : cwd, n = p && node(p);
     if (!isDir(n)) return err("File not found");
     const up = p.length ? [[".", null], [".."]] : [], rows = [];
@@ -216,12 +242,18 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
         const btn = v ? `<button type="button" class="fs" data-dos="CD \\${path}">${label}</button>` : label;
         rows.push(`${btn}     &lt;DIR&gt;    ${today().padStart(8)}  12:00p`);
       } else {
-        const s = size(v), btn = v[2] ? `<button type="button" class="fs file" data-dos="TYPE \\${path}">${label}</button>` : label;
+        const s = size(v), btn = v[2] ? `<button type="button" class="fs file" data-dos="TYPE ${drive}:\\${path}">${label}</button>` : label;
         bytes += s;
         rows.push(`${btn} ${String(s).padStart(9)}  ${v[1] || today().padStart(8) + "  12:00p"}`);
       }
     }
-    print(`<pre>${volLine()}\n Directory of  ${esc(pathStr(p))}\n\n${rows.join("\n")}\n${String(count).padStart(9)} File(s)  ${20123648 - bytes} bytes free</pre>`);
+    print(`<pre>${volLine()}\n Directory of  ${esc(pathStr(p))}\n\n${rows.join("\n")}\n${String(count).padStart(9)} File(s)  ${(drive === "A" ? 1440000 : 20123648) - bytes} bytes free</pre>`);
+  }
+  function wtf() {                                          // DIR /WTF: the files nobody admits having
+    const F = [["REALITY", "SYS", 0, "12-31-99  11:59p"], ["COFFEE", "EXE", 65535, " 1-01-80   6:00a"], ["MOTIVATE", "BAT", 0, " 2-30-86  12:00p"],
+      ["DEADLINE", "TMP", 999999, " 4-01-86   9:00a"], ["BUGS", "LOG", 1048576, " 3-13-85   1:13a"], ["EXCUSES", "DOC", 640, " 8-08-88   8:08p"],
+      ["WEEKEND", "ZIP", 1, " 5-05-85   5:05p"], ["MEETING", "EXE", 2000000, " 9-09-89   9:09a"], ["SLEEP", "DAT", 404, " 6-06-86   3:00a"]];
+    print(`<pre>${volLine()}\n Directory of  C:\\WTF\n\n${F.map(([b, e, s, d]) => `${b.padEnd(8)} ${e.padEnd(3)} ${String(s).padStart(9)}  ${d}`).join("\n")}\n        ${F.length} File(s)  0 bytes free (and 0 patience)</pre>`);
   }
 
   // ---------- DEBUG: D [addr], U [addr], R, G, Q over the loaded .COM (or empty memory) ----------
@@ -490,7 +522,10 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     },
     DEBUG: debug,
     LOCKED: locked,
-    FORMAT: () => err("Nice try. This disk holds 35 years of work."),
+    FORMAT: format,
+    DEL: del, ERASE: del,
+    PING: ping,
+    HACK: hack,
     FDISK: () => err("Nice try. The partitions are staying where they are."),
     EXIT: () => finish("classic"),
     REBOOT: () => finish(),
@@ -505,7 +540,11 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
   }
   async function run(t, stdin) {
     t = t.trim(); if (!t) return;
-    if (/^[a-z]:$/i.test(t)) return /^c:$/i.test(t) ? null : err("Invalid drive specification");
+    if (/^[a-z]:$/i.test(t)) return switchDrive(t[0].toUpperCase());
+    if (drive !== "A" && /^(dir|type|vol)\s+a:/i.test(t)) {          // DIR A:, TYPE A:\X from drive C:
+      if (!await accessA()) return;
+      return onDrive("A", () => run(t.replace(/\sa:/i, " ")));
+    }
     const ps = pipes(t);
     if (ps.length > 1) {
       let data = stdin;
@@ -529,8 +568,112 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     if (pending) { const cb = pending; pending = null; input.type = "text"; setPrompt(); return cb(line); }
     const t = line.trim(); if (!t) return;
     hist.push(t); hpos = hist.length;
-    await run(t);
+    busy = true; form.hidden = true;                         // no typing while a command runs (PING, FORMAT, HACK...)
+    try { await run(t); } finally { busy = false; if (!batchDepth) { form.hidden = false; input.focus({ preventScroll: true }); } }
   }
+  // ---------- drive A: ----------
+  const driveA = () => GM.bios?.driveA ?? "1.44M, 3.5 in.";   // BIOS Setup > STANDARD CMOS SETUP > Drive A
+  async function accessA() {                                // floppy noise; empty drive twice, then a dusty 1986 disk
+    if (driveA() === "None") { err("Invalid drive specification"); return false; }
+    for (;;) {
+      sfx.floppy(); await sleep(GM.reduce ? 100 : 1300);
+      if (floppyIn || ++floppyTries >= 3) {
+        if (!floppyIn) print(`<span class="dim">(a dusty ${esc(driveA().replace(/^\S+ /, ""))} disk labelled BACKUP 86 turns up in the drive)</span>`);
+        floppyIn = true; return true;
+      }
+      print("<br>Not ready reading drive A");
+      const k = (await askLine("Abort, Retry, Fail?")).trim().toUpperCase();
+      if (!batchDepth) form.hidden = true;
+      if (k[0] !== "R") return false;
+    }
+  }
+  async function switchDrive(d) {
+    if (d === drive) return;
+    if (d !== "A" && d !== "C") return err("Invalid drive specification");
+    if (d === "A" && !await accessA()) return;
+    cwds[drive] = cwd; drive = d; cwd = cwds[d]; setPrompt();
+  }
+  async function onDrive(d, fn) {                           // run one command on another drive and come back
+    const back = drive; cwds[back] = cwd; drive = d; cwd = cwds[d];
+    try { await fn(); } finally { cwds[d] = cwd; drive = back; cwd = cwds[back]; }
+  }
+
+  // ---------- easter eggs ----------
+  async function format(a) {
+    const d = (a.match(/^([a-z]):/i) || [])[1]?.toUpperCase();
+    if (!d) return err("Required parameter missing");
+    if (d === "A") {
+      if (!await accessA()) return;
+      print("Insert new diskette for drive A:");
+      await askLine("and press ENTER when ready...");
+      sfx.floppy(); await sleep(GM.reduce ? 100 : 1300);
+      return err("Write protect error writing drive A<br>(that disk is the only backup from 1986: the write-protect tab stays on)");
+    }
+    if (d !== "C") return err("Invalid drive specification");
+    print("<br>WARNING, ALL DATA ON NON-REMOVABLE DISK<br>DRIVE C: WILL BE LOST!");
+    if (!/^y/i.test(await askLine("Proceed with Format (Y/N)?"))) return;
+    print("Are you REALLY sure? 35 years of work live on this disk.");
+    if (!/^y/i.test(await askLine("Last chance. Format anyway (Y/N)?"))) return print("Wise choice.");
+    form.hidden = true;
+    const bar = print("");
+    for (let p = 0; p <= 100 && !abort; p += 4) {
+      bar.innerHTML = `<pre>Formatting...  Head: ${p % 2}  Cylinder: ${String(Math.round(p * 6.15)).padStart(3)}\n[${"#".repeat(p / 4)}${".".repeat(25 - p / 4)}] ${p}% complete</pre>`;
+      sfx.tick(); await sleep(GM.reduce ? 20 : 120);
+    }
+    print("Format complete."); await sleep(700);
+    sfx.err(); print("<br><strong>Nice try. This is JavaScript.</strong><br>Restoring drive C: from good old common sense... done. Not a single byte was harmed.");
+    sfx.ok();
+  }
+  async function del(a) {
+    const spec = a.trim().toUpperCase();
+    if (!spec) return err("Required parameter missing");
+    if (spec === "*.*" || spec === "." || spec.endsWith("\\*.*")) {
+      if (!/^y/i.test(await askLine("Are you sure (Y/N)?"))) return;
+      form.hidden = true;
+      const dot = print("Deleting your weekend");
+      for (let i = 0; i < 6; i++) { await sleep(GM.reduce ? 20 : 300); dot.textContent += "."; sfx.tick(); }
+      dot.textContent += " done.";
+      if (drive === "C") { node(cwd)["REGRETS.TXT"] = [null, null, () => txt(REGRETS())]; print("1 file created: REGRETS.TXT (the only thing DEL ever created)"); }
+      return;
+    }
+    const p = resolve(spec), n = p && node(p);
+    if (!n || isDir(n)) return err("File not found");
+    if (p.at(-1) === "REGRETS.TXT") { delete node(p.slice(0, -1))["REGRETS.TXT"]; return print("Regrets deleted. If only it were that easy."); }
+    err("Access denied");
+  }
+  async function ping(a) {
+    const host = a.trim().split(/\s+/)[0];
+    if (!host) return err("Usage: PING host   (try PING 8.8.8.8)");
+    print(`<br>Pinging ${esc(host)} with 32 bytes of data:<br>`);
+    const times = [42, 640, 1997, 0, 386];
+    for (let i = 0; i < 4 && !abort; i++) {
+      await sleep(GM.reduce ? 50 : 650); sfx.tick();
+      print(`Reply from ${esc(host)}: bytes=32 time=${times[(Math.random() * times.length) | 0]}ms TTL=1997`);
+    }
+    print(`<br>Ping statistics for ${esc(host)}:<br>    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)<br><span class="dim">(TTL=1997 can't exist: the maximum is 255. TCP/IP for DOS came years later; this one runs on imagination.)</span>`);
+  }
+  async function hack() {                                   // green "movie hacking" screen
+    const box = document.createElement("div"); box.className = "dos-hack";
+    out.hidden = form.hidden = true; el.append(box);
+    const line = s => { const d = document.createElement("div"); d.textContent = s; box.append(d); while (box.childElementCount > 30) box.firstChild.remove(); return d; };
+    const hex = () => Array.from({ length: 8 }, () => hx((Math.random() * 65536) | 0, 4)).join(" ");
+    const STAGES = ["Bypassing the mainframe firewall", "Cracking 4096-bit RSA with a pocket calculator", "Tracing the IP through 7 proxies",
+      "Downloading more RAM", "Injecting SQL into the office printer", "Reversing the polarity of the neutron flow"];
+    for (const s of STAGES) {
+      line(`> ${s}`); const bar = line("");
+      for (let p = 0; p <= 20; p++) {
+        bar.textContent = `  [${"#".repeat(p)}${" ".repeat(20 - p)}] ${p * 5}%`;
+        if (p % 5 === 0) line("  " + hex());
+        sfx.clack("x"); await sleep(GM.reduce ? 5 : 45);
+      }
+    }
+    const g = document.createElement("div"); g.className = "granted"; g.textContent = "ACCESS GRANTED"; box.append(g);
+    const c = document.createElement("div"); c.className = "coffee"; c.textContent = "You have unlocked the coffee machine. \u2615"; box.append(c);
+    sfx.ok(); line(""); line("Press any key to log out before someone notices...");
+    await anyKey();
+    box.remove(); out.hidden = false;
+  }
+
   function finish(next) {
     cancelWait?.(); abort = true;
     document.removeEventListener("keydown", onKey, true);
@@ -547,7 +690,8 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
       el.innerHTML = `<div class="dos-out"></div><form class="dos-form" autocomplete="off" hidden><label class="dos-prompt" for="dos-in"></label><input id="dos-in" spellcheck="false" autocapitalize="off" autocomplete="off"></form>`;
       container.append(el);
       out = el.querySelector(".dos-out"); form = el.querySelector("form"); input = el.querySelector("input"); promptEl = el.querySelector("label");
-      cwd = []; hist = []; hpos = 0; pending = null; batchDepth = 0; abort = false; echoOn = true; vol = "GABIMARTI";
+      cwd = []; hist = []; hpos = 0; pending = null; batchDepth = 0; abort = false; echoOn = true; vol = "GABIMARTI"; busy = false;
+      drive = "C"; cwds = { C: cwd, A: [] }; floppyIn = false; floppyTries = 0;
       env = { COMSPEC: "C:\\COMMAND.COM", PATH: "C:\\DOS;C:\\UTILS", PROMPT: "$P$G" }; attrs = { ...ATTR0 };
       print("  Booting 'MS-DOS 3.1'<br><br>rootnoverify (hd0,1)<br>chainloader +1<br><br>"); await sleep(900);
       print("Starting MS-DOS...<br><br>"); await sleep(1400);
@@ -563,7 +707,7 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
       });
       el.addEventListener("click", e => {
         const b = e.target.closest("[data-dos]");
-        if (b && !pending && !batchDepth) exec(b.dataset.dos);
+        if (b && !pending && !batchDepth && !busy) exec(b.dataset.dos);
         if (!e.target.closest("a") && !getSelection().toString() && !form.hidden) input.focus({ preventScroll: true });
       });
       document.addEventListener("keydown", onKey, true);
