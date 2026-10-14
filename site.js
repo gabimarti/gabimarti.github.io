@@ -242,7 +242,7 @@ const GM = (() => {
     bootOut.innerHTML = `<div class="halt"><div>${msg}</div></div>`;
     await waitKey(); sfx.unlock(); showBoot();
   }
-  const powerOn = () => screen(`<svg class="pwr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar")}</small>`);
+  const powerOn = () => screen(`<svg class="pwr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar")}</small><p class="pwr-tag">${B("My CV, inside a 90s PC: two operating systems, a BIOS Setup and secrets hidden in every corner.", "Mi CV, dentro de un PC de los 90: dos sistemas operativos, una BIOS y secretos escondidos en cada rincón.")}<br><small class="dim">${B("Explore it all: curious minds always find something more.", "Explóralo todo: los curiosos siempre encuentran algo más.")}</small></p>`);
   const halt = msg => { sfx.fanStop(.5); return screen(msg); };
 
   function setUrl(mode) {
@@ -253,7 +253,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.22", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.23", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
