@@ -1,5 +1,5 @@
 // Windows 3.1 for gabimarti.github.io: type WIN at the MS-DOS prompt (dos.js). Loaded on demand.
-// Program Manager with a "Gabriel Martí" group; each icon opens the CV content (the quick view's #c-* sections) in a window.
+// Program Manager with a "Gabriel Martí" group; each icon opens the CV content (the quick view's #c-* sections) in a window, plus Calculator and Media Player (tunes.js).
 // Windows move by their title bar (desktop), come to the front on click, maximize and close; on phones they stack full width.
 // GM.win31.run(container, { html, sfx, sleep }) -> Promise resolved by "Exit Windows".
 "use strict";
@@ -14,6 +14,7 @@
     ["🎨", "Paintbrush", "Paintbrush - AVATAR.BMP", io => io.html("#avatar .avatar")],
     ["📇", "Contacts", "Cardfile - CONTACT.CRD", io => io.html("#c-contact")],
     ["🧮", "Calculator", "Calculator", "calc"],
+    ["🎵", "Media Player", "Media Player", "mplayer"],
     ["⚙", "Control Panel", "Control Panel", "control"],
     ["🚪", "Exit Windows", null, "exit"],
   ];
@@ -94,6 +95,36 @@
     draw(); w.focus({ preventScroll: true });
   }
 
+  // Media Player: the PC speaker tunes of tunes.js (shared with the BIOS and MS-DOS). Stops when its window closes.
+  function playerWindow(w, io) {
+    const L = GM.tunes.list, $ = s => w.querySelector(s);
+    let cur = 0, stop = null, timer = 0, t0 = 0, len = 0;
+    const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+    const draw = (el = 0) => {
+      $("progress").value = len ? el / len : 0;
+      $(".w31-mtime").textContent = `${fmt(el)} / ${fmt(len)}`;
+      $(".w31-mnow").textContent = `${L[cur].title} — ${L[cur].game}`;
+      w.querySelectorAll("[data-mt]").forEach(b => b.setAttribute("aria-current", +b.dataset.mt === cur));
+    };
+    const halt = () => { stop?.(); stop = null; clearInterval(timer); draw(); };
+    const play = i => {
+      stop?.(); clearInterval(timer);
+      cur = (i + L.length) % L.length; [stop, len] = GM.tunes.play(L[cur].tune); t0 = performance.now();
+      timer = setInterval(() => {
+        const el = (performance.now() - t0) / 1000;
+        if (el < len) draw(el); else if ($(".w31-mrep").checked) play(cur); else halt();
+      }, 250);
+      draw();
+    };
+    w.addEventListener("click", e => {
+      const b = e.target.closest("[data-mp],[data-mt]"); if (!b) return;
+      if (b.dataset.mt) return play(+b.dataset.mt);
+      ({ play: () => play(cur), stop: halt, prev: () => play(cur - 1), next: () => play(cur + 1) })[b.dataset.mp]();
+    });
+    w.addEventListener("w31close", halt);
+    draw();
+  }
+
   GM.win31 = {
     calc,                                                  // engine, exposed for the tests
     async run(container, io) {
@@ -137,11 +168,21 @@
             + `<div class="w31-ckeys">${KEYS.map(([k, l]) => `<button type="button" class="w31-btn" data-ck="${k}">${l}</button>`).join("")}</div></div>`, "w31-calcwin");
           w.tabIndex = -1; io.sfx.blip(); return calcWindow(w, io);
         }
+        if (content === "mplayer") {
+          try { await GM.need("tunes.js"); } catch (e) { return; }
+          const w = win(title, `<div class="w31-mnow"></div><div class="w31-mbar"><progress max="1" value="0"></progress><span class="w31-mtime"></span></div>`
+            + `<p class="w31-btns">${[["prev", "⏮"], ["play", "▶"], ["stop", "■"], ["next", "⏭"]].map(([k, l]) => `<button type="button" class="w31-btn" data-mp="${k}" aria-label="${k}" title="${k}">${l}</button>`).join(" ")}`
+            + ` <label><input type="checkbox" class="w31-mrep"> Repeat</label></p>`
+            + `<ol class="w31-mlist">${GM.tunes.list.map((t, i) => `<li><button type="button" data-mt="${i}">${esc(t.title)} <span>— ${esc(t.game)}</span></button></li>`).join("")}</ol>`, "w31-mpwin");
+          io.sfx.blip(); return playerWindow(w, io);
+        }
         io.sfx.blip(); win(title, content(io));
       };
+      const close = w => { w.dispatchEvent(new Event("w31close")); w.remove(); };   // w31close: windows with timers/sound clean up
+      const closeAll = () => root.querySelectorAll(".w31-win").forEach(close);
       const confirmExit = () => {
         const w = win("Exit Windows", `<p>This will end your Windows session.</p><p class="w31-btns"><button type="button" class="w31-btn" data-exit="ok">OK</button> <button type="button" class="w31-btn" data-exit="cancel">Cancel</button></p>`, "w31-dlg");
-        w.addEventListener("click", e => { const b = e.target.closest("[data-exit]"); if (!b) return; if (b.dataset.exit === "ok") { io.sfx.ok(); done(); } else w.remove(); });
+        w.addEventListener("click", e => { const b = e.target.closest("[data-exit]"); if (!b) return; if (b.dataset.exit === "ok") { closeAll(); io.sfx.ok(); done(); } else w.remove(); });
       };
 
       root.addEventListener("click", e => {
@@ -149,7 +190,7 @@
         const icon = e.target.closest(".w31-icon"); if (icon) return open(+icon.dataset.w31);
         const w = e.target.closest(".w31-win"); if (!w) return;
         w.style.zIndex = ++z;
-        if (e.target.closest(".w31-ctl")) w.remove();
+        if (e.target.closest(".w31-ctl")) close(w);
         else if (e.target.closest(".w31-max")) w.classList.toggle("w31-maxed");
       });
       // drag by the title bar (pointer events; skipped on narrow screens, where windows stack)
