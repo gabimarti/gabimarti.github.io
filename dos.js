@@ -43,13 +43,15 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
   const EXPLORE = `EXPLORE.TXT - THINGS TO FIND ON THIS PC
 =======================================
 [ ] This disk: a directory that DIR won't show. How does this PC boot?
-[ ] LOCKED.COM: my CV and a flag. DEBUG knows what it hides.
+[ ] 1 flag on this PC: LOCKED.COM keeps it, with my CV, behind a password.
+    DEBUG knows the password.
 [ ] DIR doesn't list every file either. ATTRIB is less discreet.
 [ ] The commands every DOS user feared still work. Sort of.
 [ ] Drive A: is still there. Bring patience (and Retry).
 [ ] A 1997 BBS is still online, and its SYSOP still answers. Look in C:\\DOS.
 [ ] This PC used to play music. Its drivers still load at boot.
-[ ] Debian GNU/Linux (boot menu): 2 flags and a root account.
+[ ] Debian GNU/Linux (boot menu): 2 flags, one of them only for root.
+    The admin keeps forgetting root's password, and writing notes about it.
 [ ] BIOS Setup: press DEL during the memory test.
     4 undocumented features. F1 gives clues.
 [ ] memtest86+ (boot menu): let it run. Old RAM fails sometimes.
@@ -152,10 +154,10 @@ Lesson learned: test your restores.`;
   const ATTR0 = { "IO.SYS": "RHS", "MSDOS.SYS": "RHS", "42.TXT": "AH" };     // file attributes (default: A)
   const DAYS = "Sun Mon Tue Wed Thu Fri Sat".split(" ");
   const p2 = n => String(n).padStart(2, "0"), hx = (n, w = 2) => n.toString(16).toUpperCase().padStart(w, "0");
-  const today = () => { const d = new Date(); return `${d.getMonth() + 1}-${p2(d.getDate())}-${String(d.getFullYear()).slice(2)}`; };
-  const dateLine = () => { const d = new Date(); return `Current date is ${DAYS[d.getDay()]} ${p2(d.getMonth() + 1)}-${p2(d.getDate())}-${d.getFullYear()}`; };
-  const timeLine = () => { const d = new Date(); return `Current time is ${d.getHours()}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.${p2(Math.floor(d.getMilliseconds() / 10))}`; };
-  const tooLate = () => { const h = new Date().getHours(); return h >= 3 && h < 6; };   // 03:00-05:59
+  const today = () => { const d = GM.now(); return `${d.getMonth() + 1}-${p2(d.getDate())}-${String(d.getFullYear()).slice(2)}`; };
+  const dateLine = () => { const d = GM.now(); return `Current date is ${DAYS[d.getDay()]} ${p2(d.getMonth() + 1)}-${p2(d.getDate())}-${d.getFullYear()}`; };
+  const timeLine = () => { const d = GM.now(); return `Current time is ${d.getHours()}:${p2(d.getMinutes())}:${p2(d.getSeconds())}.${p2(Math.floor(d.getMilliseconds() / 10))}`; };
+  const tooLate = () => { const h = GM.now().getHours(); return h >= 3 && h < 6; };   // 03:00-05:59
   const beep = () => sfx.tone(1000, .12, "square", .05);
 
   // ---------- LOCKED.COM: a real-looking image built from vault.json (key and XORed bytes) ----------
@@ -492,7 +494,17 @@ Lesson learned: test your restores.`;
       if (p.join("\\") === "UTILS\\LOCKED.COM") try { [mem] = await lockedImage(); } catch (e) { /* binary noise below */ }
       print(`<pre>${esc(mem ? [...mem].map(b => b >= 0x20 && b < 0x7f ? String.fromCharCode(b) : b ? "▒" : " ").join("") : "MZ▒▒▒▒▒▒")}</pre>`);
     },
-    DATE: async () => { print(dateLine()); await askLine("Enter new date (mm-dd-yy): "); },
+    DATE: async a => {                                      // sets the PC clock (GM.now) for the rest of the visit
+      if (!a) print(dateLine());
+      for (let line = a; ; line = "") {
+        if (!line) line = await askLine("Enter new date (mm-dd-yy): ");
+        if (!line.trim()) return;
+        const m = line.trim().match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2}|\d{4})$/), t = GM.now();
+        const y = m && (m[3].length === 2 ? (+m[3] < 80 ? 2000 : 1900) + +m[3] : +m[3]);
+        if (m && y >= 1980 && y <= 2099) { t.setFullYear(y, m[1] - 1, m[2]); if (t.getMonth() === m[1] - 1 && t.getDate() === +m[2]) return GM.setNow(t); }
+        print("Invalid date");
+      }
+    },
     TIME: async () => {
       print(timeLine());
       if (tooLate()) print("It is too late to be using DOS.");

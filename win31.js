@@ -133,7 +133,7 @@
   function clockWindow(w) {
     const $ = s => w.querySelector(s);
     const tick = () => {
-      const d = new Date(), s = d.getSeconds(), m = d.getMinutes() + s / 60, h = d.getHours() % 12 + m / 60;
+      const d = GM.now(), s = d.getSeconds(), m = d.getMinutes() + s / 60, h = d.getHours() % 12 + m / 60;
       [[".w31-kh", h * 30], [".w31-km", m * 6], [".w31-ks", s * 6]].forEach(([k, a]) => $(k).setAttribute("transform", `rotate(${a} 50 50)`));
       $(".w31-kdig").textContent = d.toLocaleTimeString("en-US");     // a US-English 1992 build, like the rest of the chrome
       $(".w31-kdate").textContent = d.toLocaleDateString("en-US");

@@ -12,8 +12,9 @@
   const BACKDOORS = ["AWARD_SW", "AWARD?SW", "AWARD_PW", "LKWPETER", "J262", "BIOSTAR", "ALFAROME", "SYXZ", "589589"];   // real ones
   const PAGES = {
     "STANDARD CMOS SETUP": [
-      ro("Date (mm:dd:yy)", () => { const d = new Date(); return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${p2(d.getDate())} ${d.getFullYear()}`; }),
-      ro("Time (hh:mm:ss)", () => { const d = new Date(); return `${p2(d.getHours())} : ${p2(d.getMinutes())} : ${p2(d.getSeconds())}`; }),
+      { k: "Date (mm:dd:yy)", v: [""], i: 0, f: d => { const t = GM.now(); t.setDate(t.getDate() + d); GM.setNow(t); },   // PgUp/PgDn: one day
+        show: () => { const d = GM.now(); return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${p2(d.getDate())} ${d.getFullYear()}`; } },
+      ro("Time (hh:mm:ss)", () => { const d = GM.now(); return `${p2(d.getHours())} : ${p2(d.getMinutes())} : ${p2(d.getSeconds())}`; }),
       ro("Primary Master", "GM-HDD 1986MB"),
       ro("Secondary Master", "CD-ROM 52X"),
       ro("Secondary Slave", "ZIP 100"),
@@ -113,7 +114,7 @@
         : "ALL 4 SECRETS FOUND — you would have made a fine 90s technician.");
     } else {
       body = box("b-page", PAGES[page].map((x, j) => {
-        const v = x.ro ? (typeof x.ro === "function" ? x.ro() : x.ro) : x.v[x.i];
+        const v = x.ro ? (typeof x.ro === "function" ? x.ro() : x.ro) : x.show ? x.show() : x.v[x.i];
         return `<button type="button" data-i="${j}"${j === sel ? ' class="hi"' : ""}${x.ro ? " disabled" : ""}><span>${esc(x.k)}</span><b>${esc(v)}</b></button>`;
       }).join(""));
       body += box("b-keys", `<button type="button" data-key="Escape">ESC</button> : Quit &nbsp; ↑ ↓ : Select Item &nbsp; <button type="button" data-key="+">PU/+</button> <button type="button" data-key="-">PD/-</button> : Modify<br><button type="button" data-key="F10">F10</button> : Save &amp; Exit Setup &nbsp; (tap an item to change it)`);
@@ -166,7 +167,7 @@
   }
   function change(d) {
     const x = PAGES[page][sel]; if (!x || !x.v) return;
-    if (x.f) return x.f();
+    if (x.f) { x.f(d); if (x.show) { sfx.key(); render(); } return; }
     x.i = (x.i + d + x.v.length) % x.v.length; sfx.key(); render();
   }
   function move(d) {                                    // pages skip read-only rows; the main menu jumps columns with ← →

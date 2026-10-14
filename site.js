@@ -258,7 +258,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.38", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.39", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
@@ -276,7 +276,10 @@ const GM = (() => {
     } else shellEl.hidden = true;
   }
 
-  const api = { $, B, esc, sleep, reduce, type, sfx, need, setLang, toggleTheme, setTheme, isLight, setMode, showBoot, halt, shell: null };
+  // the PC's clock: BIOS Setup, MS-DOS DATE and Linux 'date -s' (root) move it for the rest of the visit; every system reads it
+  let clockOff = 0;
+  const now = () => new Date(Date.now() + clockOff), setNow = d => { clockOff = d - Date.now(); };
+  const api = { $, B, esc, sleep, reduce, type, sfx, need, now, setNow, setLang, toggleTheme, setTheme, isLight, setMode, showBoot, halt, shell: null };
 
   // ---------- start ----------
   document.addEventListener("DOMContentLoaded", () => {

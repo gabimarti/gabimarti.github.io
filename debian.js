@@ -52,7 +52,7 @@
         for (const [t, ms] of LOG) { add(t); await wait(ms); }
         add("gabimarti.github.io login: "); await wait(700); await typeIn(out, "gabimarti"); add("\n");
         add("Password: "); await wait(400); await typeIn(out, "********", false); add("\n"); await wait(600);
-        const d = new Date();
+        const d = GM.now();
         add(`Last login: ${DAYS[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()} on tty1\nLinux gabimarti 2.0.34 #1 Mon Jul 6 21:12:04 CEST 1998 i486 unknown\n`);
         await wait(1200);
       } finally {
