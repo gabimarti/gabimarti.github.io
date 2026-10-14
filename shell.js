@@ -11,24 +11,53 @@
   const hist = []; let hpos = 0; const t0 = Date.now();
 
   // ---------- output ----------
+  let sink = out;                                       // where print() writes: the screen, or a pipe buffer
   const print = (h, cls = "") => {
-    const d = document.createElement("div"); d.className = "line " + cls; d.innerHTML = h; out.append(d);
+    const d = document.createElement("div"); d.className = "line " + cls; d.innerHTML = h; sink.append(d);
     main.scrollTop = main.scrollHeight; return d;
   };
   const err = h => { GM.sfx.err(); return print(h, "err"); }, pre = h => print(h, "pre");
   const rnd = n => Math.floor(Math.random() * n), pickN = (a, n) => [...a].sort(() => Math.random() - .5).slice(0, n);
   const disp = p => p === HOME || p.startsWith(HOME + "/") ? "~" + p.slice(HOME.length) : p;
-  const promptHtml = () => `<span class="prompt${user === "root" ? " root" : ""}">${user}@${HOST}:${esc(disp(cwd))}${user === "root" ? "#" : "$"}</span>`;
-  const setPrompt = txt => { promptEl.className = "prompt" + (user === "root" ? " root" : ""); promptEl.textContent = txt ?? `${user}@${HOST}:${disp(cwd)}${user === "root" ? "#" : "$"}`; };
+  const env = { HOME, USER: "gabimarti", SHELL: "/bin/gmsh", PATH: "/usr/local/bin:/usr/bin:/bin", TERM: "vt100", LANG: "en_US.UTF-8" };
+  const aliases = { ll: "ls -la", la: "ls -a", l: "ls" };
+  const unquote = s => s.replace(/^(["'])([\s\S]*)\1$/, "$2");
+  const promptText = () => env.PS1 ? env.PS1.replace(/\\([uhwW$dt])/g, (_, c) => ({ u: user, h: HOST, w: disp(cwd), W: disp(cwd).split("/").pop() || "/",
+    $: user === "root" ? "#" : "$", d: new Date().toDateString(), t: new Date().toTimeString().slice(0, 8) })[c]) : `${user}@${HOST}:${disp(cwd)}${user === "root" ? "#" : "$"}`;
+  const promptHtml = () => `<span class="prompt${user === "root" ? " root" : ""}">${esc(promptText())}</span>`;
+  const setPrompt = txt => { promptEl.className = "prompt" + (user === "root" ? " root" : ""); promptEl.textContent = txt ?? promptText(); };
+  // plain text of some output, in the active language (pipes, filters, editors)
+  function plain(h) {
+    const d = document.createElement("div");
+    d.innerHTML = h.replace(/<br\s*\/?>/gi, "\n").replace(/<\/(li|p|dd|dt|div|pre|h\d)>/gi, "$&\n");
+    d.querySelectorAll("[lang]").forEach(x => { if (x.lang !== root.lang) x.remove(); });
+    return d.textContent.replace(/\n{3,}/g, "\n\n").replace(/\n+$/, "");
+  }
+  async function capture(fn) { const s = sink; sink = document.createElement("div"); try { await fn(); return plain(sink.innerHTML); } finally { sink = s; } }
+  const words = line => (line.match(/"[^"]*"|'[^']*'|\S+/g) || []).map(unquote);
+  // a line typed by a program (vi, nano): same prompt mechanism as su's password
+  const askLine = (label, secret = false) => new Promise(res => { pending = res; input.type = secret ? "password" : "text"; input.value = ""; setPrompt(label); input.focus({ preventScroll: true }); });
+  const waitKey = () => new Promise(res => {                // any key or tap (less, read in scripts)
+    const k = e => { if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(e.key)) return; e.preventDefault(); e.stopPropagation(); done(e.key); };
+    const c = e => { if (e.target.closest("a")) return; done("tap"); };
+    const done = v => { removeEventListener("keydown", k, true); $("#shell").removeEventListener("click", c, true); res(v); };
+    setTimeout(() => { addEventListener("keydown", k, true); $("#shell").addEventListener("click", c, true); });
+  });
+  const beep = () => GM.sfx.tone(1000, .12, "square", .05);
   const run = (c, label = c) => `<button type="button" class="fs" data-run="${esc(c)}">${esc(label)}</button>`;
 
   // ---------- filesystem ----------
   const SKILLS = ["offensive", "reversing", "web-intel", "defense", "grc", "dev", "languages"];
+  const CVSH_TEXT = { en: "#!/bin/sh\n# cv.sh - my CV for people who'd rather script than type\nclear\necho \"== cv.sh - Gabriel Marti (@gabimarti), shell edition ==\"\necho \"my CV for people who'd rather script than type. Any key between sections (q quits).\"\necho -e \"\\a\"\nread -p \"Press any key to start...\"\nclear; echo \"[1/7] whoami\"; whoami; cat summary.txt; read -p \"-- any key --\"\nclear; echo \"[2/7] skills\"; echo \"offensive/\"; cat skills/offensive.txt; echo \"reversing/\"; cat skills/reversing.txt; echo \"web-intel/\"; cat skills/web-intel.txt; echo \"defense/\"; cat skills/defense.txt; echo \"grc/\"; cat skills/grc.txt; echo \"dev/\"; cat skills/dev.txt; echo \"languages/\"; cat skills/languages.txt; read -p \"-- any key --\"\nclear; echo \"[3/7] about\"; cat about.txt; read -p \"-- any key --\"\nclear; echo \"[4/7] interests\"; cat interests.txt; read -p \"-- any key --\"\nclear; echo \"[5/7] github repos\"; cat repos.txt; read -p \"-- any key --\"\nclear; echo \"[6/7] articles\"; cat articles.txt; read -p \"-- any key --\"\nclear; echo \"[7/7] contact\"; ls contact\necho -e \"\\a\\a\"\necho \"Done: 7 sections, 0 commands typed by you. That's the spirit.\"\necho \"More secrets: cat explore.txt\"",
+    es: "#!/bin/sh\n# cv.sh - mi CV para quien prefiere un script a teclear\nclear\necho \"== cv.sh - Gabriel Marti (@gabimarti), edición shell ==\"\necho \"mi CV para quien prefiere un script a teclear. Una tecla entre secciones (q para salir).\"\necho -e \"\\a\"\nread -p \"Pulsa una tecla para empezar...\"\nclear; echo \"[1/7] whoami\"; whoami; cat summary.txt; read -p \"-- una tecla --\"\nclear; echo \"[2/7] skills\"; echo \"offensive/\"; cat skills/offensive.txt; echo \"reversing/\"; cat skills/reversing.txt; echo \"web-intel/\"; cat skills/web-intel.txt; echo \"defense/\"; cat skills/defense.txt; echo \"grc/\"; cat skills/grc.txt; echo \"dev/\"; cat skills/dev.txt; echo \"languages/\"; cat skills/languages.txt; read -p \"-- una tecla --\"\nclear; echo \"[3/7] sobre mí\"; cat about.txt; read -p \"-- una tecla --\"\nclear; echo \"[4/7] intereses\"; cat interests.txt; read -p \"-- una tecla --\"\nclear; echo \"[5/7] github repos\"; cat repos.txt; read -p \"-- una tecla --\"\nclear; echo \"[6/7] artículos\"; cat articles.txt; read -p \"-- una tecla --\"\nclear; echo \"[7/7] contacto\"; ls contact\necho -e \"\\a\\a\"\necho \"Hecho: 7 secciones, 0 comandos tecleados por ti. Así se hace.\"\necho \"Más secretos: cat explore.txt\"",
+    ca: "#!/bin/sh\n# cv.sh - el meu CV per a qui prefereix un script a teclejar\nclear\necho \"== cv.sh - Gabriel Marti (@gabimarti), edició shell ==\"\necho \"el meu CV per a qui prefereix un script a teclejar. Una tecla entre seccions (q per sortir).\"\necho -e \"\\a\"\nread -p \"Prem una tecla per començar...\"\nclear; echo \"[1/7] whoami\"; whoami; cat summary.txt; read -p \"-- una tecla --\"\nclear; echo \"[2/7] skills\"; echo \"offensive/\"; cat skills/offensive.txt; echo \"reversing/\"; cat skills/reversing.txt; echo \"web-intel/\"; cat skills/web-intel.txt; echo \"defense/\"; cat skills/defense.txt; echo \"grc/\"; cat skills/grc.txt; echo \"dev/\"; cat skills/dev.txt; echo \"languages/\"; cat skills/languages.txt; read -p \"-- una tecla --\"\nclear; echo \"[3/7] sobre mi\"; cat about.txt; read -p \"-- una tecla --\"\nclear; echo \"[4/7] interessos\"; cat interests.txt; read -p \"-- una tecla --\"\nclear; echo \"[5/7] github repos\"; cat repos.txt; read -p \"-- una tecla --\"\nclear; echo \"[6/7] articles\"; cat articles.txt; read -p \"-- una tecla --\"\nclear; echo \"[7/7] contacte\"; ls contact\necho -e \"\\a\\a\"\necho \"Fet: 7 seccions, 0 ordres teclejades per tu. Així es fa.\"\necho \"Més secrets: cat explore.txt\"" };
+  const CVSH = () => CVSH_TEXT[root.lang] || CVSH_TEXT.en;   // ~/cv.sh, in the active language
+  const SCRIPTS = { [HOME + "/cv.sh"]: CVSH };
   const CONTACTS = ["x", "linkedin", "github", "medium", "email"];
   const D = {
     "/": ["bin/", "etc/", "home/", "root/", "tmp/", "var/"],
     "/bin": [], "/tmp": [], "/home": ["gabimarti/"], "/var": ["backups/"],
-    [HOME]: ["about.txt", "summary.txt", "interests.txt", "articles.txt", "repos.txt", "avatar.txt", "hint.txt", "explore.txt", "skills/", "contact/", ".bash_history", ".notes/", ".secret"],
+    [HOME]: ["about.txt", "summary.txt", "interests.txt", "articles.txt", "repos.txt", "avatar.txt", "hint.txt", "explore.txt", "cv.sh", "skills/", "contact/", ".bash_history", ".notes/", ".secret"],
     [HOME + "/skills"]: [...SKILLS.map(k => k + ".txt"), "hint.txt"],
     [HOME + "/contact"]: CONTACTS.map(k => k + ".url"),
     [HOME + "/.notes"]: ["todo.txt"],
@@ -46,8 +75,9 @@
     [HOME + "/repos.txt"]: () => html("#c-repos"),
     [HOME + "/avatar.txt"]: () => html("#avatar .avatar"),
     [HOME + "/hint.txt"]: () => B(
-      "Welcome, visitor. A few ideas to get started:\n  1. 'whoami' and 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' and 'cat repos.txt'\n  3. 'ls contact' or 'open github'\n  4. 'cat avatar.txt' for a portrait\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': this machine is bigger than this shell\nSome files are hidden. Real hackers use 'ls -a'.",
-      "Bienvenido/a. Algunas ideas para empezar:\n  1. 'whoami' y 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' y 'cat repos.txt'\n  3. 'ls contact' u 'open github'\n  4. 'cat avatar.txt' para ver un retrato\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': esta máquina es más grande que esta shell\nHay ficheros ocultos. Los hackers de verdad usan 'ls -a'.", "Benvingut/da. Algunes idees per començar:\n  1. 'whoami' i 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' i 'cat repos.txt'\n  3. 'ls contact' o 'open github'\n  4. 'cat avatar.txt' per veure un retrat\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': aquesta màquina és més gran que aquesta shell\nHi ha fitxers amagats. Els hackers de veritat fan servir 'ls -a'."),
+      "Welcome, visitor. A few ideas to get started:\n  1. 'whoami' and 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' and 'cat repos.txt'\n  3. 'ls contact' or 'open github'\n  4. 'cat avatar.txt' for a portrait\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': this machine is bigger than this shell\n  7. './cv.sh': my CV, scripted (any key between sections)\nSome files are hidden. Real hackers use 'ls -a'.",
+      "Bienvenido/a. Algunas ideas para empezar:\n  1. 'whoami' y 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' y 'cat repos.txt'\n  3. 'ls contact' u 'open github'\n  4. 'cat avatar.txt' para ver un retrato\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': esta máquina es más grande que esta shell\n  7. './cv.sh': mi CV, en un script (una tecla entre secciones)\nHay ficheros ocultos. Los hackers de verdad usan 'ls -a'.", "Benvingut/da. Algunes idees per començar:\n  1. 'whoami' i 'cat summary.txt'\n  2. 'ls skills', 'cat articles.txt' i 'cat repos.txt'\n  3. 'ls contact' o 'open github'\n  4. 'cat avatar.txt' per veure un retrat\n  5. 'neofetch', 'myip', 'fingerprint'\n  6. 'cat explore.txt': aquesta màquina és més gran que aquesta shell\n  7. './cv.sh': el meu CV, en un script (una tecla entre seccions)\nHi ha fitxers amagats. Els hackers de veritat fan servir 'ls -a'."),
+    [HOME + "/cv.sh"]: () => esc(CVSH()),
     [HOME + "/explore.txt"]: () => B(
       "THIS MACHINE IS BIGGER THAN THIS SHELL\n\n  [ ] 2 flags in this shell. Some files hide from a plain 'ls'.\n  [ ] root. The admin keeps forgetting the password... and keeps writing notes about it.\n  [ ] MS-DOS 3.1 (boot menu): a 1986 program guards my CV, in a directory DIR won't show.\n  [ ] BIOS Setup: press DEL while the memory is being counted.\n      It has 4 undocumented features. F1 gives clues.\n  [ ] memtest86+ (boot menu): leave it running. Old RAM is not always perfect.\n\nHow to get there: 'reboot', and watch the screen closely.",
       "ESTA MÁQUINA ES MÁS GRANDE QUE ESTA SHELL\n\n  [ ] 2 flags en esta shell. Algunos ficheros se esconden de un 'ls' normal.\n  [ ] root. El admin siempre olvida la contraseña... y siempre deja notas sobre ello.\n  [ ] MS-DOS 3.1 (menú de arranque): un programa de 1986 guarda mi CV, en un directorio que DIR no muestra.\n  [ ] BIOS Setup: pulsa SUPR (DEL) mientras se cuenta la memoria.\n      Tiene 4 funciones no documentadas. F1 da pistas.\n  [ ] memtest86+ (menú de arranque): déjalo funcionar. La RAM vieja no siempre es perfecta.\n\nCómo llegar: 'reboot', y mira la pantalla con atención.", "AQUESTA MÀQUINA ÉS MÉS GRAN QUE AQUESTA SHELL\n\n  [ ] 2 flags en aquesta shell. Alguns fitxers s'amaguen d'un 'ls' normal.\n  [ ] root. L'admin sempre oblida la contrasenya... i sempre en deixa notes.\n  [ ] MS-DOS 3.1 (menú d'arrencada): un programa del 1986 guarda el meu CV, en un directori que DIR no mostra.\n  [ ] BIOS Setup: prem SUPR (DEL) mentre es compta la memòria.\n      Té 4 funcions no documentades. F1 dona pistes.\n  [ ] memtest86+ (menú d'arrencada): deixa'l funcionar. La RAM vella no sempre és perfecta.\n\nCom arribar-hi: 'reboot', i mira la pantalla amb atenció."),
@@ -62,7 +92,7 @@
       "TODO\n  [x] write 'El Arte de los Hashes' on Medium (cat ~/articles.txt)\n  [ ] stop forgetting the root password!!\n  [ ] delete the old backup in /var/backups — it's only ENCODED, not encrypted...\n      (my favourite chef's recipe: a classic Caesar shift of 13, then base 64, then base 16)\n  [ ] check /etc/shadow permissions (anyone can verify the hash there)",
       "TODO\n  [x] escribir 'El Arte de los Hashes' en Medium (cat ~/articles.txt)\n  [ ] ¡¡dejar de olvidar la contraseña de root!!\n  [ ] borrar el backup viejo de /var/backups — solo está CODIFICADO, no cifrado...\n      (la receta de mi chef favorito: un César clásico de 13, luego base 64, luego base 16)\n  [ ] revisar permisos de /etc/shadow (cualquiera puede verificar el hash)", "TODO\n  [x] escriure 'El Arte de los Hashes' a Medium (cat ~/articles.txt)\n  [ ] deixar d'oblidar la contrasenya de root!!\n  [ ] esborrar el backup vell de /var/backups — només està CODIFICAT, no xifrat...\n      (la recepta del meu xef preferit: un Cèsar clàssic de 13, després base 64, després base 16)\n  [ ] revisar els permisos de /etc/shadow (qualsevol hi pot verificar el hash)"),
     "/etc/hostname": () => HOST,
-    "/etc/motd": () => B("GMOS 1.22.59 — authorized users only. Curious ones too.", "GMOS 1.22.59 — solo usuarios autorizados. Y curiosos.", "GMOS 1.22.59 — només usuaris autoritzats. I curiosos."),
+    "/etc/motd": () => B("GMOS 1.23.59 — authorized users only. Curious ones too.", "GMOS 1.23.59 — solo usuarios autorizados. Y curiosos.", "GMOS 1.23.59 — només usuaris autoritzats. I curiosos."),
     "/etc/shadow": async () => { const v = await vault(); return `root:${v.sha256}:20370:0:99999:7:::\ngabimarti:!:20370:0:99999:7:::\n<span class="dim"># hash: SHA-256 (hex)</span>`; },
     "/var/backups/root_pw.bak": async () => { const v = await vault(); return `<span class="dim"># root password backup — 2019</span>\n${esc(v.backup)}`; },
     "/root/cv.txt": () => esc(cv.slice(cv.indexOf("\n") + 1)),            // decrypted vault: flag line, then the CV
@@ -70,7 +100,7 @@
   };
   SKILLS.forEach((k, i) => F[`${HOME}/skills/${k}.txt`] = () => html(`#c-skills dd:nth-of-type(${i + 1})`));
   CONTACTS.forEach((k, i) => F[`${HOME}/contact/${k}.url`] = () => html(`#c-contact li:nth-child(${i + 1}) a`));
-  const PRE_FILES = new Set(["/etc/shadow", "/var/backups/root_pw.bak", "/root/cv.txt", HOME + "/.notes/todo.txt", HOME + "/.bash_history"]);
+  const PRE_FILES = new Set([HOME + "/cv.sh", "/etc/shadow", "/var/backups/root_pw.bak", "/root/cv.txt", HOME + "/.notes/todo.txt", HOME + "/.bash_history"]);
 
   function resolve(p) {
     if (!p) return cwd;
@@ -215,6 +245,10 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
     ["ps · uptime · uname · date", "processes and system", "procesos y sistema", "processos i sistema"],
     ["su · sudo su", "become root (password required)", "hacerse root (requiere contraseña)", "fer-se root (cal contrasenya)"],
     ["history · clear · echo", "shell utilities", "utilidades de la shell", "utilitats de la shell"],
+    ["cmd | grep · less · sort · wc · head · tail", "pipes and filters", "tuberías y filtros", "canonades i filtres"],
+    ["./cv.sh · sh <script>", "my CV, scripted", "mi CV, en un script", "el meu CV, en un script"],
+    ["alias · export · env · PS1", "aliases, variables and the prompt", "alias, variables y el prompt", "àlies, variables i el prompt"],
+    ["vi · nano", "read-only editors", "editores de solo lectura", "editors de només lectura"],
     ["lang <en|es|ca> · theme [light|dark]", "language and colours", "idioma y colores", "idioma i colors"],
     ["quick · exit", "quick view (everything at once)", "vista rápida (todo de golpe)", "vista ràpida (tot de cop)"],
     ["reboot · shutdown", "restart the system (the shell starts from scratch)", "reiniciar el sistema (la shell empieza de cero)", "reiniciar el sistema (la shell comença de zero)"],
@@ -222,7 +256,7 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
   const CMDS = {
     help: () => print(`<div class="help">${HELP.map(([c, en, es_, ca]) => {
       const name = c.split(/[ ·]/)[0];
-      return `<span>${run(name)}${esc(c.slice(name.length))}</span><span class="dim">${B(en, es_, ca)}</span>`;
+      return `<div class="row"><span>${run(name)}${esc(c.slice(name.length))}</span><span class="dim">${B(en, es_, ca)}</span></div>`;   // rows: display contents (grid) + one line each in pipes
     }).join("")}</div>`),
     whoami: () => user === "root" ? print("root") : print(`<strong>Gabriel Martí</strong> <span class="dim">(@gabimarti)</span>\n${html("#c-role")}`),
     id: () => pre(user === "root" ? "uid=0(root) gid=0(root) groups=0(root)" : "uid=1337(gabimarti) gid=31337(reversers) groups=31337(reversers),80(web),73(hamradio)"),
@@ -243,7 +277,8 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
       if (isDir(p)) { cwd = p; setPrompt(); return; }
       err(`cd: ${esc(args[0])}: ${isFile(p) ? B("Not a directory", "No es un directorio", "No és un directori") : B("No such file or directory", "No existe el fichero o directorio", "No existeix el fitxer o directori")}`);
     },
-    cat: async args => {
+    cat: async (args, stdin) => {
+      if (!args.length && stdin !== undefined) return pre(esc(stdin));
       if (!args.length) return err(B("usage: cat <file>   (try 'ls')", "uso: cat <fichero>   (prueba 'ls')", "ús: cat <fitxer>   (prova 'ls')"));
       for (const a of args) {
         const p = resolve(a);
@@ -263,11 +298,11 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
       const logo = [" ██████  ███    ███", "██       ████  ████", "██   ███ ██ ████ ██", "██    ██ ██  ██  ██", " ██████  ██      ██"];
       const info = [
         `<strong>${user}</strong>@<strong>${HOST}</strong>`, "--------------------",
-        `<span class="dim">OS:</span> GMOS 1.22.59 (reverse-engineered)`,
+        `<span class="dim">OS:</span> GMOS 1.23.59 (reverse-engineered)`,
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
         `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática", "més de 35 anys en informàtica")}`,
-        `<span class="dim">Shell:</span> gmsh 0.29`,
+        `<span class="dim">Shell:</span> gmsh 0.30`,
         `<span class="dim">${B("Languages", "Lenguajes", "Llenguatges")}:</span> Python, C, Delphi, ASM`,
         `<span class="dim">${B("Tools", "Herramientas", "Eines")}:</span> Ghidra, Burp Suite, Wazuh`,
         `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz", "cervell humà @ cafè GHz")}`,
@@ -296,7 +331,7 @@ tmpfs            16K     1K    15K   7% /tmp/ideas`),
   ${B("Pending ideas", "Ideas pendientes", "Idees pendents")}:         42
   ${B("Power-on hours", "Horas encendido", "Hores encès")}:        306600 (~35 ${B("years", "años", "anys")})
   ${B("Temperature", "Temperatura", "Temperatura")}:           36.6 °C`),
-    du: () => pre(`4.0K\tabout.txt\n4.0K\tsummary.txt\n4.0K\tinterests.txt\n4.0K\tarticles.txt\n4.0K\trepos.txt\n12K\tavatar.txt\n4.0K\thint.txt\n4.0K\texplore.txt\n32K\tskills/\n20K\tcontact/\n<strong>92K\ttotal</strong>`),
+    du: () => pre(`4.0K\tabout.txt\n4.0K\tsummary.txt\n4.0K\tinterests.txt\n4.0K\tarticles.txt\n4.0K\trepos.txt\n12K\tavatar.txt\n4.0K\thint.txt\n4.0K\texplore.txt\n4.0K\tcv.sh\n32K\tskills/\n20K\tcontact/\n<strong>96K\ttotal</strong>`),
     ds: () => {
       const bytes = [...new TextEncoder().encode("gabimarti :: reverser :: developer :: always learning\0\x13\x37\xde\xad\xbe\xef")]; let t = "";
       for (let i = 0; i < bytes.length; i += 16) {
@@ -318,7 +353,11 @@ ${lab.join("\n")}
     },
     uptime: () => pre(`${new Date().toTimeString().slice(0, 8)} up 35+ ${B("years", "años", "anys")}, ${Math.round((Date.now() - t0) / 1000)}s ${B("on this page", "en esta página", "en aquesta pàgina")}, 1 user, load average: 0.42, 0.13, 0.37`),
     uname: args => pre(args.includes("-a") ? `GMOS ${HOST} 6.6.6-curiosity #1 SMP x86_64 GNU/Linux` : "GMOS"),
-    date: () => print(esc(new Date().toString())),
+    date: () => {
+      print(esc(new Date().toString()));
+      const h = new Date().getHours();
+      if (h >= 3 && h < 6) print(B("It's too late to be using Linux. Even the daemons are asleep.", "Es demasiado tarde para usar Linux. Hasta los daemons duermen.", "És massa tard per fer servir Linux. Fins i tot els daemons dormen."), "dim");
+    },
     hostname: () => print(HOST),
     echo: args => print(esc(args.join(" "))),
     history: () => pre(hist.map((h, i) => `${String(i + 1).padStart(4)}  ${esc(h)}`).join("\n")),
@@ -361,15 +400,162 @@ ${lab.join("\n")}
     ip: CMDS.ifconfig, nslookup: CMDS.dig, logout: CMDS.exit, quit: CMDS.exit, poweroff: CMDS.shutdown, halt: CMDS.shutdown,
   });
   Object.assign(CMDS, {
+    grep: async (args, stdin) => {
+      const flags = args.filter(a => /^-[a-z]+$/.test(a)).join(""), rest = args.filter(a => !/^-[a-z]+$/.test(a)), pat = rest[0];
+      if (pat === undefined) return err(B("usage: grep [-i -v -n -c] pattern [file...]", "uso: grep [-i -v -n -c] patrón [fichero...]", "ús: grep [-i -v -n -c] patró [fitxer...]"));
+      let re; try { re = new RegExp(pat, flags.includes("i") ? "i" : ""); } catch (e) { re = { test: l => l.includes(pat) }; }
+      const srcs = await sources(rest.slice(1), stdin, "grep"); if (!srcs) return;
+      const outL = [];
+      for (const [name, text] of srcs) {
+        const hits = text.split("\n").map((l, i) => [i + 1, l]).filter(([, l]) => re.test(l) !== flags.includes("v"));
+        const tag = srcs.length > 1 ? name + ":" : "";
+        if (flags.includes("c")) outL.push(tag + hits.length);
+        else hits.forEach(([n, l]) => outL.push(tag + (flags.includes("n") ? n + ":" : "") + l));
+      }
+      if (outL.length) pre(esc(outL.join("\n")));
+    },
+    wc: async (args, stdin) => {
+      const flags = args.filter(a => a.startsWith("-")).join(""), srcs = await sources(args.filter(a => !a.startsWith("-")), stdin, "wc"); if (!srcs) return;
+      pre(esc(srcs.map(([name, t]) => {
+        const c = [t ? t.split("\n").length : 0, (t.match(/\S+/g) || []).length, t.length];
+        const pick = flags ? c.filter((_, i) => flags.includes("lwc"[i])) : c;
+        return pick.map(n => String(n).padStart(7)).join("") + (name ? " " + name : "");
+      }).join("\n")));
+    },
+    head: (args, stdin) => cut(args, stdin, "head"),
+    tail: (args, stdin) => cut(args, stdin, "tail"),
+    sort: async (args, stdin) => {
+      const srcs = await sources(args.filter(a => !a.startsWith("-")), stdin, "sort"); if (!srcs) return;
+      const lines = srcs.flatMap(([, t]) => t.split("\n"));
+      lines.sort(args.includes("-n") ? (a, b) => parseFloat(a) - parseFloat(b) : (a, b) => a.localeCompare(b));
+      if (args.includes("-r")) lines.reverse();
+      pre(esc(lines.join("\n")));
+    },
+    less: async (args, stdin) => {
+      const srcs = await sources(args.filter(a => !a.startsWith("-")), stdin, "less"); if (!srcs) return;
+      const lines = srcs.flatMap(([, t]) => t.split("\n"));
+      form.hidden = true;
+      try {
+        for (let i = 0; i < lines.length; i += 20) {
+          pre(esc(lines.slice(i, i + 20).join("\n")));
+          if (i + 20 >= lines.length) break;
+          const m = print(`--More--(${Math.round((i + 20) / lines.length * 100)}%)`, "dim"); const k = await waitKey(); m.remove();
+          if (k === "q" || k === "Escape") break;
+        }
+      } finally { form.hidden = false; input.focus({ preventScroll: true }); main.scrollTop = main.scrollHeight; }
+    },
+    alias: args => {
+      if (!args.length) return pre(esc(Object.entries(aliases).map(([k, v]) => `alias ${k}='${v}'`).join("\n")));
+      const m = args.join(" ").match(/^([\w.-]+)=(.*)$/);
+      if (!m) return aliases[args[0]] ? pre(esc(`alias ${args[0]}='${aliases[args[0]]}'`)) : err(`alias: ${esc(args[0])}: not found`);
+      aliases[m[1]] = unquote(m[2]);
+    },
+    unalias: args => { delete aliases[args[0]]; },
+    export: args => {
+      if (!args.length) return CMDS.env();
+      const m = args.join(" ").match(/^([A-Za-z_]\w*)=(.*)$/);
+      if (!m) return err(B("usage: export NAME=value", "uso: export NOMBRE=valor", "ús: export NOM=valor"));
+      env[m[1]] = unquote(m[2]); if (m[1] === "PS1") setPrompt();
+    },
+    unset: args => { delete env[args[0]]; if (args[0] === "PS1") setPrompt(); },
+    env: () => pre(esc(Object.entries({ ...env, USER: user }).map(([k, v]) => `${k}=${v}`).join("\n"))),
+    sh: args => script(args[0]), bash: args => script(args[0]), source: args => script(args[0]),
+    vi: args => editor("vi", args), vim: args => editor("vi", args), nano: args => editor("nano", args),
   });
+  Object.assign(CMDS, { printenv: CMDS.env, more: CMDS.less, view: CMDS.vi, pico: CMDS.nano });
+
+  // text sources for filters: files given, else the pipe; [name, plain text] or null after an error
+  async function sources(files, stdin, cmd) {
+    if (!files.length) {
+      if (stdin === undefined) { err(B(`${cmd}: missing file operand (or pipe something into it: cat about.txt | ${cmd})`, `${cmd}: falta el fichero (o pásale algo con una tubería: cat about.txt | ${cmd})`, `${cmd}: falta el fitxer (o passa-li alguna cosa amb una canonada: cat about.txt | ${cmd})`)); return null; }
+      return [["", stdin]];
+    }
+    const res = [];
+    for (const f of files) {
+      const p = resolve(f);
+      if (denied(p)) { err(`${cmd}: ${esc(f)}: ${B("Permission denied", "Permiso denegado", "Permís denegat")}`); continue; }
+      if (!isFile(p)) { err(`${cmd}: ${esc(f)}: ${B("No such file or directory", "No existe el fichero o directorio", "No existeix el fitxer o directori")}`); continue; }
+      try { res.push([f, plain(await F[p]())]); } catch (e) { err(`${cmd}: ${esc(f)}: I/O error`); }
+    }
+    return res.length ? res : null;
+  }
+  async function cut(args, stdin, cmd) {
+    let n = 10; const files = [];
+    for (let i = 0; i < args.length; i++) { if (args[i] === "-n") n = +args[++i]; else if (/^-\d+$/.test(args[i])) n = -args[i]; else files.push(args[i]); }
+    const srcs = await sources(files, stdin, cmd); if (!srcs) return;
+    pre(esc(srcs.map(([, t]) => { const l = t.split("\n"); return (cmd === "head" ? l.slice(0, n) : l.slice(-n)).join("\n"); }).join("\n")));
+  }
+  // scripts: comments, echo [-e] with \a = beep, read -p (waits a key, q quits), sleep; anything else runs as a command
+  async function script(file) {
+    if (!file) return err(B("usage: sh <script>", "uso: sh <script>", "ús: sh <script>"));
+    const p = resolve(file);
+    if (!SCRIPTS[p]) return isFile(p) ? err(`sh: ${esc(file)}: ${B("not a script", "no es un script", "no és un script")}`) : err(`sh: ${esc(file)}: ${B("No such file or directory", "No existe el fichero o directorio", "No existeix el fitxer o directori")}`);
+    form.hidden = true;
+    try {
+      for (const raw of SCRIPTS[p]().split("\n")) {
+        const line = raw.trim(); if (!line || line.startsWith("#")) continue;
+        for (const part of line.split(/\s*;\s*/)) {
+          const w = words(part);
+          if (w[0] === "echo") {
+            let t = w.slice(1).filter(x => x !== "-e" && x !== "-n").join(" ");
+            const bells = (t.match(/\\a/g) || []).length; t = t.replace(/\\a/g, "");
+            for (let i = 0; i < bells; i++) setTimeout(beep, i * 220);
+            if (t) print(esc(t)); continue;
+          }
+          if (w[0] === "read") {
+            const m = print(esc(w[w.indexOf("-p") + 1] || ""), "dim"); const k = await waitKey(); m.remove();
+            if (k === "q" || k === "Escape") return print("^C", "echo");
+            continue;
+          }
+          if (w[0] === "sleep") { await sleep(GM.reduce ? 0 : +w[1] * 1000); continue; }
+          await runLine(part);
+        }
+        await sleep(30);
+      }
+    } finally { form.hidden = false; input.focus({ preventScroll: true }); main.scrollTop = main.scrollHeight; }
+  }
+  // vi / nano: read-only viewers (and the oldest joke in Unix: how do you exit vim?)
+  async function editor(kind, args) {
+    const a = args.find(x => !x.startsWith("-")), p = a && resolve(a);
+    if (p && denied(p)) return err(`${kind}: ${esc(a)}: ${B("Permission denied", "Permiso denegado", "Permís denegat")}`);
+    const lines = p && isFile(p) ? plain(await F[p]()).split("\n") : [];
+    if (kind === "vi") {
+      pre(esc(lines.join("\n")) + (lines.length ? "\n" : "") + Array(Math.max(1, 8 - lines.length)).fill('<span class="dim">~</span>').join("\n") + `\n"${esc(a || "[No Name]")}" [readonly] ${lines.length}L`);
+      for (;;) {
+        const c = (await askLine(":")).trim().replace(/^:/, "");
+        if (/^q!?$/.test(c)) break;
+        if (/^(w|wq|x)!?$/.test(c)) { err("E45: 'readonly' option is set (add ! to override)... " + B("just kidding, this file system is read-only. Try :q", "es broma, el sistema de ficheros es de solo lectura. Prueba :q", "és broma, el sistema de fitxers és de només lectura. Prova :q")); continue; }
+        err(`E492: Not an editor command: ${esc(c)} &nbsp;` + B("(hint: :q to quit. You're not the first one stuck in vim.)", "(pista: :q para salir. No eres el primero atrapado en vim.)", "(pista: :q per sortir. No ets el primer atrapat al vim.)"));
+      }
+      print(B("You exited vim. Few people can say that.", "Has salido de vim. Pocos pueden decirlo.", "Has sortit del vim. Pocs ho poden dir."), "dim");
+    } else {
+      pre(`  GNU nano 1.0          ${esc(a || "New Buffer")}          [ Read Only ]\n\n${esc(lines.join("\n"))}\n\n^X Exit   ^O WriteOut   ^W Where Is   ^K Cut Text`);
+      while (!/^(\^x|x|exit|q)$/i.test((await askLine("^X? ")).trim())) err(B("Read-only buffer. ^X (or x) to exit.", "Búfer de solo lectura. ^X (o x) para salir.", "Búfer de només lectura. ^X (o x) per sortir."));
+    }
+  }
 
   async function exec(line, silent = false) {
     if (!silent) print(`${promptHtml()} ${esc(line)}`, "echo");
-    const [cmd, ...args] = line.trim().split(/\s+/);
+    line = line.trim(); if (!line) return;
+    if (!silent) { hist.push(line); hpos = hist.length; }
+    await runLine(line);
+  }
+  const pipes = t => { const parts = [""]; let q = ""; for (const ch of t) { if ((ch === '"' || ch === "'") && (!q || q === ch)) q = q ? "" : ch; if (ch === "|" && !q) parts.push(""); else parts[parts.length - 1] += ch; } return parts.map(s => s.trim()); };
+  async function runLine(line, stdin) {
+    const ps = pipes(line);
+    if (ps.length > 1) {
+      let data = stdin;
+      for (const [i, part] of ps.entries()) { if (i < ps.length - 1) data = await capture(() => runLine(part, data)); else return runLine(part, data); }
+    }
+    if (/>/.test(line.replace(/"[^"]*"|'[^']*'/g, ""))) return err(`gmsh: ${B("cannot write: read-only file system", "no se puede escribir: sistema de ficheros de solo lectura", "no es pot escriure: sistema de fitxers de només lectura")}`);
+    line = line.replace(/\$\{?([A-Za-z_]\w*)\}?/g, (_, k) => k === "USER" ? user : env[k] ?? "");
+    let [cmd, ...args] = words(line);
     if (!cmd) return;
-    if (!silent) { hist.push(line.trim()); hpos = hist.length; }
+    if (Object.hasOwn(aliases, cmd)) [cmd, ...args] = [...words(aliases[cmd]), ...args];
+    if (cmd.includes("/")) { const p = resolve(cmd); return SCRIPTS[p] ? script(cmd) : isFile(p) || isDir(p) ? err(`gmsh: ${esc(cmd)}: ${B("Permission denied", "Permiso denegado", "Permís denegat")}`) : err(`gmsh: ${esc(cmd)}: ${B("No such file or directory", "No existe el fichero o directorio", "No existeix el fitxer o directori")}`); }
+    if (cmd.endsWith(".sh") && SCRIPTS[resolve(cmd)]) return err(`gmsh: ${esc(cmd)}: ${B("command not found. The current directory is not in the PATH: try", "comando no encontrado. El directorio actual no está en el PATH: prueba", "ordre no trobada. El directori actual no és al PATH: prova")} './${esc(cmd)}'`);
     const f = Object.hasOwn(CMDS, cmd) && CMDS[cmd], lower = cmd.toLowerCase();
-    if (f) await f(args);
+    if (f) await f(args, stdin);
     else if (cmd !== lower && Object.hasOwn(CMDS, lower)) {    // Linux is case-sensitive, and grumpy about it
       const [en, es_, ca] = SHOUT[rnd(SHOUT.length)];
       err(`gmsh: ${esc(cmd)}: ${B(en, es_, ca)} ${B(`Try '${esc(lower)}'.`, `Prueba '${esc(lower)}'.`, `Prova '${esc(lower)}'.`)}`);
@@ -387,7 +573,7 @@ ${lab.join("\n")}
   form.addEventListener("submit", async e => {
     e.preventDefault();
     const v = input.value; input.value = ""; GM.sfx.key();
-    if (pending) { const cb = pending; print(esc(promptEl.textContent), "echo"); endPassword(); await cb(v); return; }
+    if (pending) { const cb = pending; print(esc(promptEl.textContent) + (input.type === "password" ? "" : " " + esc(v)), "echo"); endPassword(); await cb(v); return; }
     await exec(v);
   });
   input.addEventListener("keydown", e => {
@@ -424,9 +610,9 @@ ${lab.join("\n")}
       if (!started) {
         started = true; setPrompt();
         type(print(""), {
-          es: "gmsh 0.29 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n",
-          ca: "gmsh 0.29 — gabimarti.github.io\nEscriu 'help' per veure les ordres, o comença per 'cat hint.txt'.\n",
-        }[root.lang] || "gmsh 0.29 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
+          es: "gmsh 0.30 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n",
+          ca: "gmsh 0.30 — gabimarti.github.io\nEscriu 'help' per veure les ordres, o comença per 'cat hint.txt'.\n",
+        }[root.lang] || "gmsh 0.30 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
       }
       input.focus({ preventScroll: true });
     },

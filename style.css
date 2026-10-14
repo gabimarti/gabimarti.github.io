@@ -208,10 +208,10 @@ html:not(.js) .js-only { display: none; }
 #sh-out .echo { margin-top: .6rem; }
 #sh-out :is(ul, dl, dd, figure) { margin: 0; }
 #sh-out .avatar { margin: .3rem 0; }
-.help { display: grid; grid-template-columns: max-content 1fr; gap: 0 3ch; padding-left: 2ch; white-space: normal; }
+.help { display: grid; grid-template-columns: max-content 1fr; gap: 0 3ch; padding-left: 2ch; white-space: normal; } .help .row { display: contents; }
 .prompt { color: var(--accent); white-space: nowrap; }
 .prompt.root { color: var(--err); }
-#sh-form { display: flex; gap: 1ch; margin-top: .6rem; }
+#sh-form { display: flex; gap: 1ch; margin-top: .6rem; } #sh-form[hidden] { display: none; }
 #sh-in { flex: 1; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--fg); font: inherit; caret-color: var(--accent); }
 .fs { font: inherit; padding: 0; border: 0; background: none; cursor: pointer; color: var(--link); text-decoration: underline dotted; text-underline-offset: 3px; }
 .fs.file { color: var(--fg); }
@@ -224,7 +224,7 @@ html:not(.js) .js-only { display: none; }
   .title { display: none; }
   .tools { margin-left: auto; }
   .skills, .help { grid-template-columns: 1fr; }
-  .skills dd, .help > span:nth-child(even) { padding-left: 2ch; }
+  .skills dd, .help .row > span + span { padding-left: 2ch; }
   .help > span:nth-child(even) { margin-bottom: .2rem; }
   #sh-in, .dos #dos-in { font-size: 16px; }
   #boot-out { font-size: min(13px, 2.9vw); }
