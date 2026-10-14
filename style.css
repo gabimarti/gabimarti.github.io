@@ -185,6 +185,30 @@ html:not(.js) .js-only { display: none; }
 .game pre { margin: 0; line-height: 1.15; white-space: pre; overflow-x: auto; }
 .game .pad { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0; }
 .game .pad button { font: inherit; min-width: 2.6rem; padding: .25rem .5rem; color: inherit; background: none; border: 1px solid currentColor; border-radius: 4px; cursor: pointer; }
+/* Windows 3.1 (win31.js, WIN from MS-DOS): teal desktop, grey windows, blue title bars */
+.dos .w31 { position: relative; height: min(38rem, calc(100dvh - 8rem));   /* definite height: windows are absolute */ background: #008080; color: #000; overflow: hidden; font-family: Arial, Helvetica, sans-serif; font-size: 14px; }
+.w31-splash { display: grid; place-items: center; min-height: 26rem; color: #fff; text-align: center; }
+.w31-logo { font-size: 1.4rem; line-height: 1.2; } .w31-logo b { font-size: 2.6rem; font-style: italic; } .w31-logo span { font-size: 2rem; }
+.w31-win { position: absolute; width: min(36rem, 92%); max-height: 80%; display: flex; flex-direction: column; background: #c0c0c0; border: 2px solid #000; box-shadow: 2px 2px 0 #000; }
+.w31-win.w31-maxed { left: 0 !important; top: 0 !important; width: 100%; height: 100%; max-height: none; }
+.w31-pm { width: min(40rem, 94%); }
+.w31-title { display: flex; align-items: center; gap: .3rem; background: #000080; color: #fff; padding: 1px 2px; cursor: move; user-select: none; touch-action: none; }
+.w31-title span { flex: 1; text-align: center; font-weight: bold; }
+.w31-title button { font: inherit; font-size: 10px; width: 1.4rem; height: 1.2rem; padding: 0; background: #c0c0c0; color: #000; border: 1px solid #000; cursor: pointer; }
+.w31-body { overflow: auto; padding: .5rem .7rem; background: #fff; margin: 2px; flex: 1; }
+.w31-body :is(a, .dim) { color: #000080; }
+.w31-body pre { font: 6px/1 monospace; }
+.w31-group .w31-gtitle { background: #000080; color: #fff; padding: 0 .4rem; margin-bottom: .4rem; }
+.w31-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr)); gap: .6rem; }
+.w31-icon { display: flex; flex-direction: column; align-items: center; gap: .2rem; font: inherit; background: none; border: 0; color: #000; cursor: pointer; padding: .3rem; }
+.w31-icon:focus-visible { outline: 1px dotted #000; }
+.w31-ic { font-size: 1.8rem; line-height: 1; }
+.w31-btn { font: inherit; padding: .15rem .9rem; background: #c0c0c0; border: 2px outset #fff; cursor: pointer; }
+.w31-dlg { width: min(22rem, 90%); left: 30% !important; top: 30% !important; }
+@media (max-width: 640px) {
+  .dos .w31 { height: auto; min-height: 26rem; }
+  .w31-win { position: relative; left: 0 !important; top: 0 !important; width: auto; max-height: none; margin: .4rem; }
+}
 /* MS-DOS HACK easter egg: green "movie hacking" screen */
 .dos .dos-hack { min-height: calc(100% - 1rem); padding: .4rem 1ch; background: #000; color: #33ff33; text-shadow: 0 0 4px #33ff33; overflow: hidden; white-space: pre; }
 .dos .dos-hack .granted { margin: 1.2rem 0 .4rem; font-size: 2em; font-weight: bold; text-align: center; animation: blink 1s steps(1) infinite; }

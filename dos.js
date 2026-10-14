@@ -33,6 +33,7 @@ Things you can type:
 
 Too much typing? CV runs CV.BAT: my CV, one section at a time.
 Bored? C:\\GAMES has SNAKE and TETRIS.
+Prefer windows? Type WIN for Windows 3.1 (yes, on top of DOS, like in 1992).
 Start with:  TYPE ABOUT.TXT   then   DIR SKILLS   and   DIR CONTACT
 Tip: you can also tap the names in a DIR listing.
 
@@ -60,7 +61,7 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
 - But the program knows it: it has to compare what I type with something...
   and it only XORs it, with a key that changes on every byte.
 - DEBUG LOCKED.COM, then U (unassemble) and D (dump). .COM programs start at 0100.`;
-  const AUTOEXEC = "PROMPT $P$G\nPATH C:\\DOS;C:\\UTILS\nDATE\nTIME";
+  const AUTOEXEC = "PROMPT $P$G\nPATH C:\\DOS;C:\\UTILS;C:\\WINDOWS\nDATE\nTIME";
   const SKILLS = ["OFFENSE", "REVERSE", "WEBINTEL", "DEFENSE", "GRC", "DEV", "LANGUAGE"];
   const SKILL_NAMES = ["offensive/", "reversing/", "web-intel/", "defense/", "grc/", "dev/", "languages/"];
   const CONTACTS = ["X", "LINKEDIN", "GITHUB", "MEDIUM", "EMAIL"];
@@ -113,6 +114,7 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     SKILLS: Object.fromEntries(SKILLS.map((k, i) => [k + ".TXT", [null, null, () => html(`#c-skills dd:nth-of-type(${i + 1})`)]])),
     CONTACT: Object.fromEntries(CONTACTS.map((k, i) => [k + ".URL", [null, null, () => html(`#c-contact li:nth-child(${i + 1}) a`)]])),
     UTILS: { "NOTES.TXT": [null, Y86, () => txt(NOTES)], "LOCKED.COM": [192, Y86] },
+    WINDOWS: { "WIN.COM": [44170, " 3-10-92   3:10a"], "PROGMAN.EXE": [115312, " 3-10-92   3:10a"], "WRITE.EXE": [244976, " 3-10-92   3:10a"] },
     GAMES: { "SNAKE.EXE": [24576, Y86], "TETRIS.EXE": [32768, Y86], "README.TXT": [null, Y86, () => txt("C:\\GAMES - CD GAMES, then SNAKE or TETRIS.\nArrows (or WASD) move, P pauses, Q or Esc quits. On a phone, use the pad under the board.")] },
   };
   const BACKUP86 = `BACKUP86.TXT - 1986
@@ -544,6 +546,7 @@ Lesson learned: test your restores.`;
     DEL: del, ERASE: del,
     PING: ping,
     HACK: hack,
+    WIN: windows,
     SNAKE: () => game("snake"), TETRIS: () => game("tetris"),
     PLAY: play,
     HELP: () => { print("(HELP arrived with MS-DOS 5.0 in 1991: this PC peeked at the future. Here is README.TXT.)"); return CMDS.TYPE("\\README.TXT"); },
@@ -558,7 +561,7 @@ Lesson learned: test your restores.`;
     REBOOT: () => finish(),
   };
   // programs on disk: only run if found in cwd / PATH (empty the PATH and they are gone, like on a real PC)
-  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET", "PLAY", "SNAKE", "TETRIS"]);
+  const EXTERNAL = new Set(["CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET", "PLAY", "SNAKE", "TETRIS", "WIN"]);
   // split on | outside quotes
   const pipes = t => { const parts = [""]; let q = false; for (const ch of t) { if (ch === '"') q = !q; if (ch === "|" && !q) parts.push(""); else parts[parts.length - 1] += ch; } return parts.map(s => s.trim()); };
   async function capture(fn) {                              // run a command with its output kept off screen, as plain text
@@ -704,6 +707,13 @@ Lesson learned: test your restores.`;
     const score = await GM.games.run(name, print(""));
     print(`${name.toUpperCase()}: score ${score}`);
   }
+  async function windows() {                                // WIN: Windows 3.1 on top of DOS (win31.js)
+    try { await GM.need("win31.js"); } catch (e) { return err("Program too big to fit in memory"); }
+    out.hidden = form.hidden = true;
+    await GM.win31.run(el, { html, sfx, sleep });
+    out.hidden = false;
+    print("<br>(Windows 3.1 ended. Back to MS-DOS, where it all began.)<br>");
+  }
   async function coffee() {
     const m = print("Brewing");
     for (let i = 0; i < 5; i++) { await sleep(GM.reduce ? 20 : 350); m.textContent += " ."; sfx.tick(); }
@@ -755,7 +765,7 @@ Lesson learned: test your restores.`;
         FS.MUSIC = { "PLAY.COM": [3187, Y86], "MPU401.SYS": [2048, Y86], "README.TXT": [null, Y86, () => txt(MUSIC_README)],
           MIDI: Object.fromEntries(GM.tunes.list.map(t => [t.file, [null, Y86, () => txt(`MThd\u2592\u2592\u2592\u2592 ${t.title}\nas heard in ${t.game}\n(binary MIDI data: PLAY it instead)`)]])) };
       } catch (e) { /* no music today */ }
-      env = { COMSPEC: "C:\\COMMAND.COM", PATH: "C:\\DOS;C:\\UTILS", PROMPT: "$P$G" }; attrs = { ...ATTR0 };
+      env = { COMSPEC: "C:\\COMMAND.COM", PATH: "C:\\DOS;C:\\UTILS;C:\\WINDOWS", PROMPT: "$P$G" }; attrs = { ...ATTR0 };
       print("  Booting 'MS-DOS 3.1'<br><br>rootnoverify (hd0,1)<br>chainloader +1<br><br>"); await sleep(900);
       print("Starting MS-DOS...<br><br>"); await sleep(1400);
       print(dateLine()); print("Enter new date (mm-dd-yy): "); await sleep(800); sfx.clack("\n");
