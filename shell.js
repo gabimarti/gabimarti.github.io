@@ -62,7 +62,7 @@
       "TODO\n  [x] write 'El Arte de los Hashes' on Medium (cat ~/articles.txt)\n  [ ] stop forgetting the root password!!\n  [ ] delete the old backup in /var/backups — it's only ENCODED, not encrypted...\n      (my favourite chef's recipe: a classic Caesar shift of 13, then base 64, then base 16)\n  [ ] check /etc/shadow permissions (anyone can verify the hash there)",
       "TODO\n  [x] escribir 'El Arte de los Hashes' en Medium (cat ~/articles.txt)\n  [ ] ¡¡dejar de olvidar la contraseña de root!!\n  [ ] borrar el backup viejo de /var/backups — solo está CODIFICADO, no cifrado...\n      (la receta de mi chef favorito: un César clásico de 13, luego base 64, luego base 16)\n  [ ] revisar permisos de /etc/shadow (cualquiera puede verificar el hash)", "TODO\n  [x] escriure 'El Arte de los Hashes' a Medium (cat ~/articles.txt)\n  [ ] deixar d'oblidar la contrasenya de root!!\n  [ ] esborrar el backup vell de /var/backups — només està CODIFICAT, no xifrat...\n      (la recepta del meu xef preferit: un Cèsar clàssic de 13, després base 64, després base 16)\n  [ ] revisar els permisos de /etc/shadow (qualsevol hi pot verificar el hash)"),
     "/etc/hostname": () => HOST,
-    "/etc/motd": () => B("GMOS 1.21.59 — authorized users only. Curious ones too.", "GMOS 1.21.59 — solo usuarios autorizados. Y curiosos.", "GMOS 1.21.59 — només usuaris autoritzats. I curiosos."),
+    "/etc/motd": () => B("GMOS 1.22.59 — authorized users only. Curious ones too.", "GMOS 1.22.59 — solo usuarios autorizados. Y curiosos.", "GMOS 1.22.59 — només usuaris autoritzats. I curiosos."),
     "/etc/shadow": async () => { const v = await vault(); return `root:${v.sha256}:20370:0:99999:7:::\ngabimarti:!:20370:0:99999:7:::\n<span class="dim"># hash: SHA-256 (hex)</span>`; },
     "/var/backups/root_pw.bak": async () => { const v = await vault(); return `<span class="dim"># root password backup — 2019</span>\n${esc(v.backup)}`; },
     "/root/cv.txt": () => esc(cv.slice(cv.indexOf("\n") + 1)),            // decrypted vault: flag line, then the CV
@@ -263,11 +263,11 @@ Nmap done: 1 IP address (1 host up) scanned in ${(0.3 + Math.random() * 2).toFix
       const logo = [" ██████  ███    ███", "██       ████  ████", "██   ███ ██ ████ ██", "██    ██ ██  ██  ██", " ██████  ██      ██"];
       const info = [
         `<strong>${user}</strong>@<strong>${HOST}</strong>`, "--------------------",
-        `<span class="dim">OS:</span> GMOS 1.21.59 (reverse-engineered)`,
+        `<span class="dim">OS:</span> GMOS 1.22.59 (reverse-engineered)`,
         `<span class="dim">Host:</span> ${HOST}`,
         `<span class="dim">Kernel:</span> 6.6.6-curiosity`,
         `<span class="dim">Uptime:</span> ${B("35+ years in IT", "más de 35 años en informática", "més de 35 anys en informàtica")}`,
-        `<span class="dim">Shell:</span> gmsh 0.28`,
+        `<span class="dim">Shell:</span> gmsh 0.29`,
         `<span class="dim">${B("Languages", "Lenguajes", "Llenguatges")}:</span> Python, C, Delphi, ASM`,
         `<span class="dim">${B("Tools", "Herramientas", "Eines")}:</span> Ghidra, Burp Suite, Wazuh`,
         `<span class="dim">CPU:</span> ${B("human brain @ coffee GHz", "cerebro humano @ café GHz", "cervell humà @ cafè GHz")}`,
@@ -424,9 +424,9 @@ ${lab.join("\n")}
       if (!started) {
         started = true; setPrompt();
         type(print(""), {
-          es: "gmsh 0.28 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n",
-          ca: "gmsh 0.28 — gabimarti.github.io\nEscriu 'help' per veure les ordres, o comença per 'cat hint.txt'.\n",
-        }[root.lang] || "gmsh 0.28 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
+          es: "gmsh 0.29 — gabimarti.github.io\nEscribe 'help' para ver los comandos, o empieza por 'cat hint.txt'.\n",
+          ca: "gmsh 0.29 — gabimarti.github.io\nEscriu 'help' per veure les ordres, o comença per 'cat hint.txt'.\n",
+        }[root.lang] || "gmsh 0.29 — gabimarti.github.io\nType 'help' for the list of commands, or start with 'cat hint.txt'.\n", 10);
       }
       input.focus({ preventScroll: true });
     },
