@@ -1,7 +1,7 @@
 // Award-style CMOS Setup Utility for gabimarti.github.io. Loaded on demand by site.js when DEL is pressed during POST.
 // Settings live in memory only (a page reload is a dead CMOS battery). "Quick Power On Self Test" really speeds up the POST.
 // Easter eggs (F1 hints at them): Ctrl+F1 (or 5 taps on the title) shows a hidden menu, real 90s Award backdoor passwords
-// unlock Curiosity Overdrive = Ludicrous (saving it releases the magic smoke) and the PC Speaker Test plays one of 17 tunes from 90s games.
+// unlock Curiosity Overdrive = Ludicrous (saving it releases the magic smoke) and the PC Speaker Test plays one of 20 tunes from 90s games.
 "use strict";
 (() => {
   const { esc, sfx } = GM;
