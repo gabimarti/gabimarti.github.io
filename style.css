@@ -250,6 +250,19 @@ html:not(.js) .js-only { display: none; }
 .w31-msgrid .w31-n1 { color: #00f; } .w31-msgrid .w31-n2 { color: #008000; } .w31-msgrid .w31-n3 { color: #f00; } .w31-msgrid .w31-n4 { color: #000080; }
 .w31-msgrid .w31-n5 { color: #800000; } .w31-msgrid .w31-n6 { color: #008080; } .w31-msgrid .w31-n8 { color: #808080; }
 .w31-mswin [data-msflag][aria-pressed=true] { border-style: inset; font-weight: bold; }
+.w31-chesswin { width: auto; }
+.w31-chesswin .w31-body { background: #c0c0c0; }
+.w31-xstat { background: #fff; border: 2px inset #fff; padding: .15rem .4rem; margin-bottom: .4rem; min-height: 1.5em; }
+.w31-xboard { --sq: min(2.4rem, 8.5vw); display: grid; grid-template-columns: repeat(8, var(--sq)); width: max-content; margin: 0 auto; border: 3px solid #000; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.w31-xboard button { width: var(--sq); height: var(--sq); padding: 0; border: 0; font: calc(var(--sq) * .8)/1 "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols 2", serif; cursor: pointer; }
+.w31-xl { background: #fff; } .w31-xd { background: #808080; }
+.w31-xboard .w31-xw { color: #fff; text-shadow: -1px 0 #000, 1px 0 #000, 0 -1px #000, 0 1px #000; } .w31-xboard .w31-xb { color: #000; }
+.w31-xboard .w31-xlast { background: #ffff80; } .w31-xboard .w31-xd.w31-xlast { background: #c0c040; }
+.w31-xboard .w31-xsel { box-shadow: inset 0 0 0 3px #000080; }
+.w31-xboard .w31-xto { background-image: radial-gradient(circle, #000080 18%, transparent 21%); }
+.w31-xboard .w31-xto.w31-xw, .w31-xboard .w31-xto.w31-xb { background-image: none; box-shadow: inset 0 0 0 3px #f00; }
+.w31-xboard .w31-xchk { background: #f00; }
+.w31-xpromo { text-align: center; margin: .4rem 0 0; } .w31-xpromo .w31-btn { font-size: 1.4rem; padding: 0 .4rem; }
 .w31-clockwin { width: min(15rem, 80%); }
 .w31-clockwin .w31-body { background: #c0c0c0; text-align: center; }
 .w31-kface { width: 100%; max-width: 12rem; background: #fff; border: 2px solid #808080; border-radius: 50%; fill: #008080; }

@@ -1,5 +1,5 @@
 // Windows 3.1 for gabimarti.github.io: type WIN at the MS-DOS prompt (dos.js). Loaded on demand.
-// Program Manager with a "Gabriel Martí" group; each icon opens the CV content (the quick view's #c-* sections) in a window, plus Calculator, Media Player (tunes.js), Clock and a "Games" group with Minesweeper.
+// Program Manager with a "Gabriel Martí" group; each icon opens the CV content (the quick view's #c-* sections) in a window, plus Calculator, Media Player (tunes.js), Clock and a "Games" group with Minesweeper and Chess (chess.js).
 // Windows move by their title bar (desktop), come to the front on click, minimize to desktop icons, maximize and close; on phones they stack full width.
 // GM.win31.run(container, { html, sfx, sleep }) -> Promise resolved by "Exit Windows".
 "use strict";
@@ -19,6 +19,7 @@
     ["⚙", "Control Panel", "Control Panel", "control"],
     ["🚪", "Exit Windows", null, "exit"],
     ["💣", "Minesweeper", "Minesweeper", "mines", "Games"],
+    ["♞", "Chess", "Chess", "chess", "Games"],
   ];
   const GROUPS = ["Gabriel Martí", "Games"];
   let z = 10;
@@ -322,6 +323,11 @@
             + `<div class="w31-msgrid">${Array.from({ length: 81 }, (_, i) => `<button type="button" data-mc="${i}"></button>`).join("")}</div>`
             + `<p class="w31-btns"><button type="button" class="w31-btn" data-msflag aria-pressed="false">🚩 Flag</button></p>`, "w31-mswin");
           io.sfx.blip(); return minesWindow(w, io);
+        }
+        if (content === "chess") {
+          try { await GM.need("chess.js"); } catch (e) { return; }
+          const w = win(title, "", "w31-chesswin");
+          io.sfx.blip(); return GM.chess.mount(w, io);
         }
         io.sfx.blip(); win(title, content(io));
       };
