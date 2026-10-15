@@ -20,3 +20,4 @@ User-agent: ImagesiftBot
 Disallow: /
 
 Sitemap: https://gabimarti.github.io/sitemap.xml
+Sitemap: https://gabimarti.github.io/analitix/sitemap.xml
