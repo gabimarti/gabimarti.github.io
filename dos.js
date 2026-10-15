@@ -370,7 +370,7 @@ on their own on the right day, if this PC's clock agrees.`;
   async function party() {
     try { await GM.need("tunes.js"); } catch (e) { /* confetti without music */ }
     const W = 56, H = 11, BITS = [..."☺☻♥♦♣♠•○♪♫☼*+"], d = GM.now();
-    const MSG = { 4: "  *** PARTY TIME ***  ", 6: ` Today is ${p2(d.getMonth() + 1)}-${p2(d.getDate())}. This PC celebrates. ` };
+    const MSG = { 4: "  *** PARTY TIME ***  ", 6: ` Today is ${p2(d.getMonth() + 1)}-${p2(d.getDate())} 3C Edition. This PC celebrates. ` };
     const grid = Array.from({ length: H }, () => Array(W).fill(null));
     const pre = document.createElement("pre"); pre.className = "dos-party"; print("PARTY.COM v1.0 - resident<br>").append(pre);
     const [stop, secs] = GM.tunes ? GM.tunes.play(GM.tunes.party) : [() => {}, 5];
@@ -847,6 +847,7 @@ on their own on the right day, if this PC's clock agrees.`;
       el.innerHTML = `<div class="dos-out"></div><form class="dos-form" autocomplete="off" hidden><label class="dos-prompt" for="dos-in"></label><input id="dos-in" spellcheck="false" autocapitalize="off" autocomplete="off"></form>`;
       container.append(el);
       out = el.querySelector(".dos-out"); form = el.querySelector("form"); input = el.querySelector("input"); promptEl = el.querySelector("label");
+      new ResizeObserver(toBottom).observe(out);        // output that grows after print (PARTY.COM, viruses, FORMAT) stays in view
       cwd = []; hist = []; hpos = 0; pending = null; batchDepth = 0; abort = false; echoOn = true; vol = "GABIMARTI"; busy = false;
       drive = "C"; cwds = { C: cwd, A: [] }; floppyIn = false; floppyTries = 0;
       if (!FS.MUSIC) try {                              // C:\MUSIC\MIDI is built from the shared tunes
