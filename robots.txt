@@ -18,3 +18,5 @@ User-agent: Diffbot
 User-agent: omgili
 User-agent: ImagesiftBot
 Disallow: /
+
+Sitemap: https://gabimarti.github.io/sitemap.xml
