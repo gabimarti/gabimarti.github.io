@@ -1,11 +1,11 @@
 // Windows 3.1 for gabimarti.github.io: type WIN at the MS-DOS prompt (dos.js). Loaded on demand.
-// Program Manager with a "Gabriel Martí" group; each icon opens the CV content (the quick view's #c-* sections) in a window, plus Calculator, Media Player (tunes.js) and Clock.
+// Program Manager with a "Gabriel Martí" group; each icon opens the CV content (the quick view's #c-* sections) in a window, plus Calculator, Media Player (tunes.js), Clock and a "Games" group with Minesweeper.
 // Windows move by their title bar (desktop), come to the front on click, minimize to desktop icons, maximize and close; on phones they stack full width.
 // GM.win31.run(container, { html, sfx, sleep }) -> Promise resolved by "Exit Windows".
 "use strict";
 (() => {
   const { esc } = GM;
-  const APPS = [   // [icon, label, window title, content (html) or special]
+  const APPS = [   // [icon, label, window title, content (html) or special, Program Manager group (default: the first)]
     ["📝", "Write", "Write - CV.WRI", io => `<p><strong>Gabriel Martí</strong> (@gabimarti)</p>${io.html("#c-role")}${io.html("#c-summary")}`],
     ["🗂", "Cardfile", "Cardfile - SKILLS.CRD", io => io.html("#c-skills")],
     ["📁", "File Manager", "File Manager - C:\\REPOS", io => io.html("#c-repos")],
@@ -18,7 +18,9 @@
     ["🕐", "Clock", "Clock", "clock"],
     ["⚙", "Control Panel", "Control Panel", "control"],
     ["🚪", "Exit Windows", null, "exit"],
+    ["💣", "Minesweeper", "Minesweeper", "mines", "Games"],
   ];
+  const GROUPS = ["Gabriel Martí", "Games"];
   let z = 10;
   const HOURGLASS = `<span class="w31-hg" aria-hidden="true"><svg viewBox="0 0 16 22" width="22" height="30" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" stroke="#000" d="M2 1h12v2h-1v3c0 2-3 3-3 5s3 3 3 5v3h1v2H2v-2h1v-3c0-2 3-3 3-5S3 8 3 6V3H2z"/><path d="M5 6h6c0 1-2 2-3 3C7 8 5 7 5 6zM8 15c1 1 3 2 3 4H5c0-2 2-3 3-4z"/></svg></span>`;   // phones (no mouse cursor); desktops get it as the cursor (style.css)
   // our own waving four-colour flag (drawn here, not Microsoft's bitmap), with the trailing pixels of the 1992 splash
@@ -146,6 +148,88 @@
     });
   }
 
+  // Minesweeper engine (no DOM): 9x9 with 10 mines, laid on the first click away from it and its neighbours (a safe start).
+  // reveal(i) opens a cell (a 0 opens its neighbours too; on an open number whose flags are all placed it opens the rest),
+  // flag(i) toggles a flag. state: ready -> playing -> won | lost.
+  function mines(W = 9, H = 9, N = 10, rnd = Math.random) {
+    const n = W * H, mine = Array(n).fill(false), open = Array(n).fill(false), flag = Array(n).fill(false);
+    let state = "ready", boom = -1;
+    const around = i => {
+      const x = i % W, y = i / W | 0, r = [];
+      for (let b = y - 1; b <= y + 1; b++) for (let a = x - 1; a <= x + 1; a++) if ((a !== x || b !== y) && a >= 0 && a < W && b >= 0 && b < H) r.push(b * W + a);
+      return r;
+    };
+    const count = i => around(i).filter(j => mine[j]).length;
+    const flood = i => {
+      for (const todo = [i]; todo.length;) { const j = todo.pop(); if (open[j] || flag[j]) continue; open[j] = true; if (!mine[j] && !count(j)) todo.push(...around(j)); }
+    };
+    const reveal = i => {
+      if (state === "won" || state === "lost" || flag[i]) return;
+      if (state === "ready") {
+        const keep = new Set([i, ...around(i)]), free = [...Array(n).keys()].filter(j => !keep.has(j));
+        for (let k = 0; k < N; k++) mine[free.splice(rnd() * free.length | 0, 1)[0]] = true;
+        state = "playing";
+      }
+      const todo = !open[i] ? [i] : count(i) === around(i).filter(j => flag[j]).length ? around(i) : [];
+      todo.forEach(flood);
+      boom = todo.find(j => mine[j] && open[j]) ?? -1;
+      if (boom >= 0) state = "lost"; else if (open.filter(Boolean).length === n - N) state = "won";
+    };
+    const toggle = i => { if ((state === "ready" || state === "playing") && !open[i]) flag[i] = !flag[i]; };
+    return {
+      W, H, reveal, flag: toggle, cell: i => ({ open: open[i], flag: flag[i], mine: mine[i], n: count(i), boom: i === boom }),
+      get state() { return state; }, get left() { return N - flag.filter(Boolean).length; },
+    };
+  }
+
+  function minesWindow(w, io) {                            // wires a Minesweeper window to mines(); the timer stops when it closes
+    let g, t = 0, timer = 0, flagMode = false, held = false, press = 0;
+    const $ = s => w.querySelector(s);
+    const led = v => String(Math.max(-99, Math.min(999, v))).padStart(3, "0");
+    const draw = () => {
+      const end = g.state === "won" || g.state === "lost";
+      w.querySelectorAll("[data-mc]").forEach(b => {
+        const c = g.cell(+b.dataset.mc);
+        b.className = c.open ? `w31-mo w31-n${c.n}${c.boom ? " w31-mboom" : ""}` : "";
+        b.textContent = c.open ? (c.mine ? "💣" : c.n || "") : end && c.mine && !c.flag ? (g.state === "won" ? "🚩" : "💣") : c.flag ? (end && !c.mine ? "❌" : "🚩") : "";
+        b.disabled = end;
+      });
+      $('[data-ms="left"]').textContent = led(g.state === "won" ? 0 : g.left);
+      $('[data-ms="time"]').textContent = led(t);
+      $(".w31-msface").textContent = { won: "😎", lost: "😵" }[g.state] || "🙂";
+    };
+    const stop = () => { clearInterval(timer); timer = 0; };
+    const fresh = () => { stop(); g = mines(); t = 0; draw(); };
+    const act = (i, flagIt) => {
+      if (flagIt) { g.flag(i); io.sfx.key(); return draw(); }
+      const before = g.state; g.reveal(i);
+      if (before === "ready" && g.state !== "ready") { t = 1; timer = setInterval(() => { if (t < 999) t++; draw(); }, 1000); }
+      if (g.state === "lost") { stop(); io.sfx.err(); } else if (g.state === "won") { stop(); io.sfx.ok(); } else io.sfx.key();
+      draw();
+    };
+    w.addEventListener("click", e => {
+      if (e.target.closest(".w31-msface")) return fresh();
+      const f = e.target.closest("[data-msflag]");
+      if (f) { flagMode = !flagMode; f.setAttribute("aria-pressed", flagMode); return; }
+      const b = e.target.closest("[data-mc]"); if (!b) return;
+      if (held) { held = false; return; }                  // a long press already flagged it
+      act(+b.dataset.mc, flagMode);
+    });
+    w.addEventListener("contextmenu", e => {               // right click (or a phone's long press) = flag
+      const b = e.target.closest("[data-mc]"); if (!b) return;
+      e.preventDefault(); if (!held) act(+b.dataset.mc, true);
+    });
+    w.addEventListener("pointerdown", e => {               // the face holds its breath; touch: long press = flag
+      const b = e.target.closest("[data-mc]"); if (!b || b.disabled) return;
+      $(".w31-msface").textContent = "😮"; held = false;
+      if (e.pointerType !== "mouse") press = setTimeout(() => { held = true; act(+b.dataset.mc, true); }, 450);
+    });
+    const release = () => { clearTimeout(press); draw(); };
+    w.addEventListener("pointerup", release); w.addEventListener("pointercancel", release);
+    w.addEventListener("w31close", stop);
+    fresh();
+  }
+
   // 10-15 (GM.party): fireworks over the desktop, chunky VGA pixels, ~9 s of bursts with a pop each
   function fireworks(root, sfx) {
     const c = document.createElement("canvas"); c.className = "w31-fw"; root.append(c);
@@ -172,7 +256,7 @@
   }
 
   GM.win31 = {
-    calc,                                                  // engine, exposed for the tests
+    calc, mines,                                           // engines, exposed for the tests
     async run(container, io) {
       const root = document.createElement("div"); root.className = "w31";
       root.innerHTML = `<div class="w31-splash"><div>${FLAG}<div class="w31-logo">Microsoft<br><b>Windows</b><sup>™</sup> <span>3.1</span></div><p>Copyright © 1985-1992 Microsoft Corp.<br>gabimarti edition</p></div></div>`;
@@ -194,8 +278,8 @@
         w.style.left = `${2 + n * 3}%`; w.style.top = `${4 + n * 4}%`; w.style.zIndex = ++z;   // CSSOM: allowed by the CSP
         root.append(w); return w;
       };
-      const pm = win("Program Manager", `<div class="w31-group"><div class="w31-gtitle">Gabriel Martí</div><div class="w31-icons">${APPS.map(([ic, label], i) =>
-        `<button type="button" class="w31-icon" data-w31="${i}"><span class="w31-ic" aria-hidden="true">${ic}</span>${esc(label)}</button>`).join("")}</div></div>`, "w31-pm");
+      const pm = win("Program Manager", GROUPS.map(g => `<div class="w31-group"><div class="w31-gtitle">${esc(g)}</div><div class="w31-icons">${APPS.map(([ic, label, , , grp = GROUPS[0]], i) =>
+        grp !== g ? "" : `<button type="button" class="w31-icon" data-w31="${i}"><span class="w31-ic" aria-hidden="true">${ic}</span>${esc(label)}</button>`).join("")}</div></div>`).join(""), "w31-pm");
       pm.querySelector(".w31-ctl").remove();                // closing Program Manager = Exit Windows: use the icon
       if (GM.party()) {
         fireworks(root, io.sfx);
@@ -232,6 +316,12 @@
         if (content === "clock") {
           const w = win(title, `${CLOCK}<div class="w31-kdigital"><div class="w31-kdig"></div><div class="w31-kdate"></div></div><p class="w31-btns"><button type="button" class="w31-btn" data-kmode>Digital</button></p>`, "w31-clockwin");
           io.sfx.blip(); return clockWindow(w);
+        }
+        if (content === "mines") {
+          const w = win(title, `<div class="w31-mshead"><output class="w31-msled" data-ms="left"></output><button type="button" class="w31-msface" aria-label="New game" title="New game"></button><output class="w31-msled" data-ms="time"></output></div>`
+            + `<div class="w31-msgrid">${Array.from({ length: 81 }, (_, i) => `<button type="button" data-mc="${i}"></button>`).join("")}</div>`
+            + `<p class="w31-btns"><button type="button" class="w31-btn" data-msflag aria-pressed="false">🚩 Flag</button></p>`, "w31-mswin");
+          io.sfx.blip(); return minesWindow(w, io);
         }
         io.sfx.blip(); win(title, content(io));
       };
