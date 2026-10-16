@@ -148,7 +148,7 @@ html:not(.js) .js-only { display: none; }
 .pwr-ver { margin-top: 2.5rem; font-size: .8em; letter-spacing: .05em; }
 .pwr { width: 3rem; height: 3rem; color: var(--accent); }   /* SVG: Android fonts lack the power glyph */
 #boot { height: 100%; display: flow-root; } #boot[hidden] { display: none; }   /* flow-root: .grub-ttl margin must not collapse out and add a scrollbar; [hidden] must still win */
-#boot-out:has(:is(.halt, .bios, .mt, .dos, .vic)) { height: 100%; }
+#boot-out:has(:is(.halt, .bios, .mt, .dos, .vic, .zx)) { height: 100%; }
 .del { font: inherit; color: var(--accent); background: none; border: 1px solid var(--accent); border-radius: 3px; padding: 0 .4ch; cursor: pointer; animation: del-blink 1s steps(1) infinite; }
 @keyframes del-blink { 50% { color: var(--panel); background: var(--accent); } }
 /* Award CMOS Setup (bios.js): always blue, whatever the site theme */
@@ -355,6 +355,9 @@ html:not(.js) .js-only { display: none; }
 .vic-keys { display: flex; gap: 1ch; margin: 0; }
 .vic-keys button { font: inherit; color: #ddd; background: #333; border: 1px solid #666; padding: .1rem 1ch; cursor: pointer; }
 .vic-help { margin: 0; max-width: 46rem; text-align: center; font-size: .8rem; color: #888; }
+/* Sinclair ZX Spectrum (spectrum.js): a canvas with the border drawn in; same helper elements as the VIC */
+.zx { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; min-height: 100%; padding: .6rem; background: #111; color: #ccc; }
+.zx-scr { width: min(100%, 40rem, calc((100dvh - 14rem) * 1.25)); height: auto; aspect-ratio: 5 / 4; image-rendering: pixelated; cursor: text; }
 .vs0 { background: #000000; --vbg: #000000; } .vf0 { color: #000000; } .vr0 { background: #000000; color: var(--vbg); }
 .vs1 { background: #ffffff; --vbg: #ffffff; } .vf1 { color: #ffffff; } .vr1 { background: #ffffff; color: var(--vbg); }
 .vs2 { background: #b61f21; --vbg: #b61f21; } .vf2 { color: #b61f21; } .vr2 { background: #b61f21; color: var(--vbg); }
