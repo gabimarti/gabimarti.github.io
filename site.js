@@ -42,6 +42,24 @@ const GM = (() => {
       o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + dur + .02);
       return o;
     }
+    const held = new Set();
+    function hold(freq, vol, type = "square") {            // a sound that lasts until stopped (the VIC-20 voices)
+      if (!ready()) return null;
+      const g = ctx.createGain(); g.connect(ctx.destination);
+      let src, f;
+      if (type === "noise") {
+        const b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), d = b.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        src = ctx.createBufferSource(); src.buffer = b; src.loop = true;
+        f = ctx.createBiquadFilter(); f.type = "bandpass"; f.Q.value = .7; src.connect(f).connect(g);
+      } else { src = ctx.createOscillator(); src.type = type; src.connect(g); }
+      const h = {
+        set(hz, v) { (f || src).frequency.value = hz; g.gain.value = v; },
+        stop() { if (held.delete(h)) src.stop(); },
+      };
+      h.set(freq, vol); src.start(); held.add(h);
+      return h;
+    }
     function brown() {                                     // brown noise: fan rumble
       if (noiseBuf) return noiseBuf;
       noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -73,9 +91,9 @@ const GM = (() => {
       g.gain.exponentialRampToValueAtTime(1e-4, t + fade); s.stop(t + fade + .1); hum.stop(t + fade + .1);
     }
     return {
-      unlock, fanStart, fanStop, tone,
+      unlock, fanStart, fanStop, tone, hold,
       get on() { return on; },
-      toggle() { on = !on; store("sound", on ? "on" : "off"); on ? unlock() : fanStop(.2); return on; },
+      toggle() { on = !on; store("sound", on ? "on" : "off"); on ? unlock() : (fanStop(.2), held.forEach(h => h.stop())); return on; },
       post: () => tone(1000, .25, "square", .06),                                // the classic single POST beep
       tick: () => tone(2100, .01, "square", .015),                               // memory counter
       ok: () => { tone(988, .06, "square", .035); tone(1319, .08, "square", .035, .07); },
@@ -251,7 +269,7 @@ const GM = (() => {
     bootOut.innerHTML = `<div class="halt"><div>${msg}</div></div>`;
     await waitKey(); sfx.unlock(); showBoot();
   }
-  const VERSION = "1.31.0";                            // whole-site release, shown on the power-on screen: A.B.C = era.features.fixes
+  const VERSION = "1.32.0";                            // whole-site release, shown on the power-on screen: A.B.C = era.features.fixes
   const powerOn = () => screen(`<svg class="pwr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender", "Prem una tecla o fes clic per engegar")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar", "aquest lloc fa sons retro · 🔊 per silenciar")}</small><p class="pwr-tag">${B("My CV, inside a 90s PC: two operating systems, a BIOS Setup and secrets hidden in every corner.", "Mi CV, dentro de un PC de los 90: dos sistemas operativos, una BIOS y secretos escondidos en cada rincón.", "El meu CV, dins d'un PC dels 90: dos sistemes operatius, una BIOS i secrets amagats a cada racó.")}<br><small class="dim">${B("Explore it all: curious minds always find something more.", "Explóralo todo: los curiosos siempre encuentran algo más.", "Explora-ho tot: els curiosos sempre hi troben alguna cosa més.")}</small></p><p class="pwr-ver dim">Vers: ${VERSION}</p>`);
   const halt = msg => { sfx.fanStop(.5); return screen(msg); };
 
@@ -263,7 +281,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.50", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.51", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });

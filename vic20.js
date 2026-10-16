@@ -1,7 +1,8 @@
 // Commodore VIC-20 for gabimarti.github.io (GRUB > Vintage machines). Loaded on demand by site.js.
 // Not an emulator and no ROM: CBM BASIC V2 rewritten in JS, on the VIC's 22x23 screen, at roughly its speed.
 // Tape: LOAD loads the next program on the cassette, LOAD "NAME" looks for one; SAVE keeps yours for this visit.
-// POKE 36879 (screen/border), 646 (text colour) and 36874-36878 (sound) do what they did. SYS 64802 resets.
+// POKE 36879 (screen/border), 646 (text colour), 7680+ (screen), 38400+ (colour) and 36874-36878 (sound) do what they did.
+// SYS 64802 resets.
 // Esc is RUN/STOP; with no program running it (or the button) goes back to the PC.
 "use strict";
 (() => {
@@ -27,8 +28,31 @@
 100 PRINT "YES! IN";T;"TRIES."
 110 PRINT:PRINT "IT TOOK ME A WEEK OF"
 120 PRINT "PAPER TO SEE IT RUN."`],
-    ["HELLO", `10 PRINT "GABI ";
-20 GOTO 10`],
+    ["QUIZ", `10 REM CAPITALS QUIZ
+20 REM DATA, READ, ARRAYS AND RND
+30 DIM C$(9),K$(9),U(9)
+40 FOR I=0 TO 9:READ C$(I),K$(I):NEXT
+50 PRINT CHR$(147);CHR$(28);"CAPITALS QUIZ"
+60 PRINT CHR$(31);"5 QUESTIONS.":PRINT
+70 S=0:FOR I=0 TO 9:U(I)=0:NEXT
+80 FOR Q=1 TO 5
+90 N=INT(RND(1)*10):IF U(N) THEN 90
+100 U(N)=1
+110 PRINT CHR$(144);"CAPITAL OF ";C$(N)
+120 INPUT A$
+130 IF A$=K$(N) THEN PRINT CHR$(30);"RIGHT!":S=S+1:GOTO 150
+140 PRINT CHR$(28);"NO, IT IS ";K$(N)
+150 PRINT CHR$(31):NEXT Q
+160 PRINT "SCORE:";S;"OF 5"
+170 IF S=5 THEN PRINT "PERFECT!"
+180 PRINT:INPUT "AGAIN (Y/N)";A$
+190 IF A$="Y" THEN 50
+200 END
+210 DATA FRANCE,PARIS,ITALY,ROME
+220 DATA JAPAN,TOKYO,PERU,LIMA
+230 DATA EGYPT,CAIRO,NORWAY,OSLO
+240 DATA CANADA,OTTAWA,KENYA,NAIROBI
+250 DATA CHILE,SANTIAGO,AUSTRIA,VIENNA`],
     ["TIMELINE", `10 PRINT CHR$(147);CHR$(31);
 20 PRINT "1981. A VIC-20 AT"
 30 PRINT "HIGH SCHOOL, AND"
@@ -52,7 +76,45 @@
 60 FOR D=1 TO 200:NEXT D
 70 NEXT C
 80 POKE 36876,0:POKE 36879,27`],
+    ["SNOWBALL", `10 REM SNOWBALL: Z LEFT, M RIGHT
+20 REM POKE TO THE SCREEN, PEEK TO CRASH
+30 V=36878:T$=CHR$(97):POKE V,15
+40 POKE 36879,25:PRINT CHR$(147);CHR$(31)
+50 PRINT "      SNOWBALL":PRINT
+60 PRINT " ROLL DOWN THE SLOPE,":PRINT " DODGE THE TREES."
+70 PRINT:PRINT " Z = LEFT   M = RIGHT"
+80 PRINT:PRINT " PRESS ANY KEY":POKE 198,0
+90 GET K$:IF K$="" THEN 90
+100 PRINT CHR$(147):FOR I=1 TO 22:PRINT:NEXT
+110 X=10:D=0:W=150:P=7790+X
+120 POKE P,32:POKE 36876,0
+130 R=INT(RND(1)*20):PRINT CHR$(30);TAB(R);T$;
+140 IF R<12 AND RND(1)<.4 THEN PRINT TAB(R+4+INT(RND(1)*5));T$;
+150 PRINT
+160 GET K$:POKE 198,0:IF K$="Z" AND X>0 THEN X=X-1:POKE 36876,200
+170 IF K$="M" AND X<21 THEN X=X+1:POKE 36876,210
+180 P=7790+X:IF PEEK(P)<>32 THEN 300
+190 POKE P,81:POKE P+30720,2
+200 D=D+1:IF W>40 THEN W=W-.5
+210 FOR I=1 TO W:NEXT:GOTO 120
+300 POKE P,42:POKE P+30720,2:POKE 36876,0
+310 POKE 36877,200
+320 FOR L=15 TO 0 STEP -1:POKE V,L
+330 POKE 36879,26-(L AND 1)
+340 FOR I=1 TO 40:NEXT:NEXT
+350 POKE 36877,0:POKE 36879,25:POKE V,15
+360 PRINT CHR$(19);CHR$(144);"DISTANCE:";D
+370 PRINT "AGAIN? (Y/N)":POKE 198,0
+380 GET K$:IF K$="" THEN 380
+390 IF K$="Y" THEN 100
+395 IF K$<>"N" THEN 380
+400 POKE 36879,27:PRINT CHR$(147);CHR$(31);`],
   ];
+  // screen codes 64-127 of the upper case/graphics set (PETSCII 96-127 and 160-191 print them)
+  const SC = [..."@ABCDEFGHIJKLMNOPQRSTUVWXYZ[£]↑←", ..." !\"#$%&'()*+,-./0123456789:;<=>?",
+    ..."─♠│────││╮╰╯└╲╱┌┐●▁♥│╭╳○♣│♦┼▒│π◥", ..." ▌▄▔▁▏▒▕▒◤▕├▗└┐▂┌┴┬┤▎▍▐▔▀▃┘▖▝┘▘▚"];
+  const CODE = new Map(); SC.forEach((c, i) => { if (!CODE.has(c)) CODE.set(c, i); });
+  const petscii = k => k >= 96 && k < 128 ? SC[k - 32] : k >= 160 && k < 192 ? SC[k - 64] : k >= 192 && k < 224 ? SC[k - 128] : k >= 224 && k < 255 ? SC[k - 128] : k === 255 ? "π" : String.fromCharCode(k).toUpperCase();
   const ERRS = { SN: "SYNTAX", US: "UNDEF'D STATEMENT", NF: "NEXT WITHOUT FOR", RG: "RETURN WITHOUT GOSUB", OD: "OUT OF DATA",
     DZ: "DIVISION BY ZERO", TM: "TYPE MISMATCH", IQ: "ILLEGAL QUANTITY", BS: "BAD SUBSCRIPT", DD: "REDIM'D ARRAY",
     LS: "STRING TOO LONG", OV: "OVERFLOW", OM: "OUT OF MEMORY", CN: "CAN'T CONTINUE", UF: "UNDEF'D FUNCTION",
@@ -85,12 +147,15 @@
       else if (k === 18) rvs = true;
       else if (k === 146) rvs = false;
       else if (k in COLOR) fg = COLOR[k];
-      else if (k >= 32) put(ch.toUpperCase());
+      else if (k >= 32) put(petscii(k));
     }
     draw();
   }
   const say = s => out(s + "\n");
-  function draw() {
+  let drawQ = false;                                   // repaint once per frame, however many PRINTs and POKEs
+  const draw = () => { if (!drawQ) { drawQ = true; requestAnimationFrame(paint); } };
+  function paint() {
+    drawQ = false;
     if (!alive) return;
     const inv = !(reg & 8), showCur = !busy || inputCb;
     let h = "";
@@ -109,13 +174,15 @@
     bd.className = "vic-bd vs" + (reg & 7);
   }
 
-  // ---------- sound: 3 voices + noise POKEd at 36874-36877, volume at 36878 ----------
-  function voice(a, v) {
-    if (v < 128 || !vol) return;
-    const base = [4000, 8000, 16000, 0][a - 36874], f = base ? base / (128 - (v & 127)) : 0;
-    if (f) sfx.tone(f, .35, "square", .008 * vol);
-    else for (let i = 0; i < 6; i++) sfx.tone(200 + Math.random() * 3000, .03, "square", .004 * vol, i * .04);
+  // ---------- sound: 3 voices + noise POKEd at 36874-36877 (on while bit 7 is set), volume at 36878 ----------
+  let vreg = [0, 0, 0, 0], vox = [null, null, null, null];
+  function sound(i) {
+    const v = vreg[i], f = v > 127 && vol ? Math.min(8000, [3995, 7990, 15980, 31960][i] / (128 - (v & 127))) : 0;
+    if (!f) { vox[i]?.stop(); vox[i] = null; return; }
+    if (vox[i]) vox[i].set(f, .005 * vol); else vox[i] = sfx.hold(f, .005 * vol, i === 3 ? "noise" : "square");
   }
+  const voice = (a, v) => { vreg[a - 36874] = v; sound(a - 36874); };
+  const hush = () => { vreg = [0, 0, 0, 0]; for (let i = 0; i < 4; i++) sound(i); };
 
   // ---------- tokenizer: keywords are found anywhere, like the real cruncher (FORI=1TO9 works) ----------
   function tokenize(s) {
@@ -293,7 +360,12 @@
   const ref = t => op("(") ? arrRef(t.v) : { str: vkey(t.v).endsWith("$"), set: v => setVar(t.v, v) };
 
   // ---------- memory: only the addresses that mattered ----------
+  const SCREEN = 7680, COLRAM = 38400, CELLS = COLS * ROWS;   // unexpanded VIC: screen and colour memory
   function peekMem(a) {
+    if (a >= SCREEN && a < SCREEN + CELLS) { const c = cells[(a - SCREEN) / COLS | 0][(a - SCREEN) % COLS]; return (CODE.get(c.c) ?? 32) + (c.r ? 128 : 0); }
+    if (a >= COLRAM && a < COLRAM + CELLS) return cells[(a - COLRAM) / COLS | 0][(a - COLRAM) % COLS].f;
+    if (a >= 36874 && a <= 36877) return vreg[a - 36874];
+    if (a === 36878) return vol;
     if (a === 36879) return reg;
     if (a === 646) return fg;
     if (a === 197) return keys.length ? 0 : 64;
@@ -302,9 +374,11 @@
     return 0;
   }
   function poke(a, v) {
-    if (a === 36879) { reg = v; draw(); }
+    if (a >= SCREEN && a < SCREEN + CELLS) { const y = (a - SCREEN) / COLS | 0, x = (a - SCREEN) % COLS; cells[y][x] = { c: SC[v & 127], f: cells[y][x].f, r: v > 127 }; draw(); }
+    else if (a >= COLRAM && a < COLRAM + CELLS) { cells[(a - COLRAM) / COLS | 0][(a - COLRAM) % COLS].f = v & 7; draw(); }
+    else if (a === 36879) { reg = v; draw(); }
     else if (a === 646) fg = v & 7;
-    else if (a === 36878) vol = v & 15;
+    else if (a === 36878) { vol = v & 15; for (let i = 0; i < 4; i++) sound(i); }
     else if (a >= 36874 && a <= 36877) voice(a, v);
     else if (a === 198 && v === 0) keys = [];
   }
@@ -359,10 +433,9 @@
       t.set(n || 0);
     });
   }
-  async function hiss(ms) {                             // the datasette's pulses
+  async function hiss(ms) {                             // the datasette is silent: the tape never reached the TV speaker
     for (let t = 0; t < ms; t += 60) {
       if (stopReq || !alive) throw BREAK;
-      sfx.tone(1200 + Math.random() * 1800, .02, "square", .012);
       await new Promise(r => setTimeout(r, 60));
     }
   }
@@ -522,7 +595,7 @@
     } catch (e) {
       if (e === RESET) { busy = false; return power(); }
       if (!alive) return;
-      if (e === BREAK) { cont = L >= 0 ? [L, T, P] : null; if (col) out("\n"); say("BREAK" + (L >= 0 ? ` IN ${L}` : "")); }
+      if (e === BREAK) { hush(); cont = L >= 0 ? [L, T, P] : null; if (col) out("\n"); say("BREAK" + (L >= 0 ? ` IN ${L}` : "")); }
       else if (e.basic) { if (col) out("\n"); say(`?${e.message}  ERROR` + (L >= 0 ? ` IN ${L}` : "")); }
       else throw e;
     }
@@ -547,7 +620,7 @@
     if (k === "\b") { if (line) { line = line.slice(0, -1); out(String.fromCharCode(157)); cells[row][col] = blank(); draw(); } }
     else if (k === "home") out(String.fromCharCode(19));
     else if (k === "clr") out(String.fromCharCode(147));
-    else if (k.length === 1 && line.length < 88) { line += k; out(k); }
+    else if (k.length === 1 && line.length < 88) { line += k; out(k.toUpperCase()); }
     return null;
   }
   function feed(k) {
@@ -595,13 +668,13 @@
     inp.focus({ preventScroll: true });
   };
   function power() {                                    // the power-on screen
-    prog = new Map(); toksCache = new Map(); clr(); reg = 27; fg = 6; rvs = false; vol = 0; line = ""; cont = null; keys = [];
+    prog = new Map(); toksCache = new Map(); clr(); reg = 27; fg = 6; rvs = false; vol = 0; hush(); line = ""; cont = null; keys = [];
     t0 = Date.now(); clear();
     out("**** CBM BASIC V2 ****"); say(`${FREE} BYTES FREE`); say(""); say("READY.");
   }
   function exit() {
     if (!alive) return;
-    alive = false; stopReq = true; queue = [];
+    alive = false; stopReq = true; queue = []; hush();
     document.removeEventListener("keydown", onKey, true);
     if (keyWait) { const w = keyWait; keyWait = null; w("\x1b"); }
     if (inputCb) { const cb = inputCb; inputCb = null; cb(""); }
@@ -614,7 +687,7 @@
       el.innerHTML = `<div class="vic-bd"><pre class="vic-scr"></pre></div>
 <input class="vic-in" aria-label="VIC-20 keyboard" autocomplete="off" autocapitalize="characters" spellcheck="false">
 <p class="vic-keys"><button type="button" data-vic-stop>RUN/STOP</button> <button type="button" data-vic-exit>⏏ PC</button></p>
-<p class="vic-help">LOAD, then any key: the next program on the tape · LOAD "TIMELINE" · LIST · RUN · Esc = RUN/STOP<br>Simulated, not emulated: CBM BASIC V2 rewritten for this PC, no ROM inside.</p>`;
+<p class="vic-help">LOAD, then any key: the next program on the tape · LOAD "SNOWBALL" · LIST · RUN · Esc = RUN/STOP<br>Try POKE 36879,8 · POKE 36878,15:POKE 36876,220 (POKE 36876,0 stops it) · POKE 7680,83<br>Simulated, not emulated: CBM BASIC V2 rewritten for this PC, no ROM inside.</p>`;
       bd = el.querySelector(".vic-bd"); scr = el.querySelector(".vic-scr"); inp = el.querySelector(".vic-in");
       alive = true; busy = false; queue = []; pump.on = false; keyWait = null; inputCb = null; tapePos = 0; saved = [];
       power();
