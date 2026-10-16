@@ -27,16 +27,16 @@
 {"@context":"https://schema.org","@type":"Person","name":"Gabriel Martí","alternateName":"gabimarti","email":"mailto:contact@gabimarti.slmail.me","jobTitle":"Cybersecurity Consultant & Developer","url":"https://gabimarti.github.io/","address":{"@type":"PostalAddress","addressLocality":"Barcelona","addressCountry":"ES"},
 "sameAs":["https://github.com/gabimarti","https://x.com/310hkc41b","https://www.linkedin.com/in/gabimarti/","https://gabimarti.medium.com/"]}
 </script>
-<script src="init.js?v=0.49"></script>
-<link rel="stylesheet" href="style.css?v=0.49">
-<script src="site.js?v=0.49" defer></script>
+<script src="init.js?v=0.50"></script>
+<link rel="stylesheet" href="style.css?v=0.50">
+<script src="site.js?v=0.50" defer></script>
 </head>
 <body>
 <div class="wrap">
 <div class="term">
   <div class="bar">
     <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-    <span class="title"><span class="t-main">gabimarti@github.io: ~</span><span class="t-avatar">gabimarti@github.io: ~/avatar.txt</span><span class="t-repos">gabimarti@github.io: ~/repos</span></span>
+    <span class="title"><span class="t-main">gabimarti@github.io: ~</span><span class="t-avatar">gabimarti@github.io: ~/avatar.txt</span><span class="t-repos">gabimarti@github.io: ~/repos</span><span class="t-timeline">gabimarti@github.io: ~/timeline.txt</span></span>
     <a class="close" href="#" aria-label="Close / Cerrar">✕</a>
     <div class="tools">
       <button type="button" class="snd js-only" aria-pressed="true" aria-label="Sound on/off" title="Sound">🔊</button>
@@ -53,12 +53,18 @@
       <div id="boot-out" aria-live="polite"></div>
       <div id="boot-opts" hidden>
         <p class="grub-ttl">GNU GRUB  version 0.66</p>
-        <div class="grub">
+        <div class="grub" id="grub-main">
           <button type="button" data-mode="classic">Quick view</button>
           <button type="button" data-app="debian">Debian GNU/Linux</button>
           <button type="button" data-app="dos">MS-DOS 3.1</button>
           <button type="button" data-app="memtest">Memory test (memtest86+)</button>
+          <button type="button" data-sub="vintage">Vintage machines (emulated)  &gt;</button>
         </div>
+        <div class="grub" id="grub-vintage" hidden>
+          <button type="button" data-app="vic20">Commodore VIC-20 (1981)</button>
+          <button type="button" data-sub="main">&lt;  Back</button>
+        </div>
+        <p class="grub-note dim" hidden><span lang="en">Emulated: these machines never booted from a PC, let alone from GRUB.</span><span lang="es">Emulados: estas máquinas nunca arrancaron desde un PC, y menos desde GRUB.</span><span lang="ca">Emulats: aquestes màquines mai no van arrencar des d'un PC, i encara menys des de GRUB.</span></p>
         <p id="grub-hello"></p>
         <div id="grub-help" hidden>
           <p><span lang="en">Use the ↑ and ↓ keys (or tap) to select which entry is highlighted.<br>Press enter to boot the selected OS.</span><span lang="es">Usa las teclas ↑ y ↓ (o toca) para elegir la entrada resaltada.<br>Pulsa intro para arrancar el sistema elegido.</span><span lang="ca">Fes servir les tecles ↑ i ↓ (o toca) per triar l'entrada ressaltada.<br>Prem Retorn per arrencar el sistema triat.</span></p>
@@ -102,7 +108,7 @@
           <li><span lang="en">Learning a bit of everything, discovering something new every day.</span><span lang="es">Aprendiendo un poco de todo, descubriendo algo nuevo cada día.</span><span lang="ca">Aprenent una mica de tot, descobrint alguna cosa nova cada dia.</span></li>
           <li><span lang="en">I like to collaborate on ambitious projects.</span><span lang="es">Me gusta colaborar en proyectos ambiciosos.</span><span lang="ca">M'agrada col·laborar en projectes ambiciosos.</span></li>
         </ul>
-        <p class="cmd"><a href="#repos">ls ~/repos</a> <span class="dim"><span lang="en"># selected GitHub projects</span><span lang="es"># proyectos destacados en GitHub</span><span lang="ca"># projectes destacats a GitHub</span></span></p>
+        <p class="cmd"><a href="#repos">ls ~/repos</a> <span class="dim"><span lang="en"># GitHub projects</span><span lang="es"># proyectos en GitHub</span><span lang="ca"># projectes a GitHub</span></span> · <a href="#timeline">cat timeline.txt</a> <span class="dim"><span lang="en"># since 1981</span><span lang="es"># desde 1981</span><span lang="ca"># des de 1981</span></span></p>
       </section>
 
       <section class="blk">
@@ -215,6 +221,29 @@
         <li><a href="https://github.com/gabimarti/TFM-Analisis-Keyloggers-Ingenieria-Inversa">TFM-Analisis-Keyloggers-Ingenieria-Inversa/</a><br><span lang="en">My MSc thesis in Cybersecurity (La Salle, 2019, with honours): keyloggers analysed through reverse engineering. Documents, in Spanish.</span><span lang="es">Mi TFM del Máster en Ciberseguridad (La Salle, 2019, Matrícula de Honor): análisis de keyloggers mediante ingeniería inversa. Documentación.</span><span lang="ca">El meu TFM del Màster en Ciberseguretat (La Salle, 2019, Matrícula d'Honor): anàlisi de keyloggers mitjançant enginyeria inversa. Documentació en castellà.</span></li>
         <li><a href="https://github.com/gabimarti/Demons-eye-keylogger">Demons-eye-keylogger/</a> <span class="tag warn">PoC · TFM La Salle</span><br><span lang="en">Proof-of-concept keylogger in Python, written for that MSc thesis to study how keyloggers work and how to detect them. For research and teaching only.</span><span lang="es">Keylogger de prueba de concepto en Python, escrito para ese TFM para estudiar cómo funcionan los keyloggers y cómo detectarlos. Solo para investigación y docencia.</span><span lang="ca">Keylogger de prova de concepte en Python, escrit per a aquell TFM per estudiar com funcionen els keyloggers i com detectar-los. Només per a recerca i docència.</span></li>
         <li><a href="https://github.com/gabimarti/ingenieria_inversa_a_partir_del_codigo_fuente">ingenieria_inversa_a_partir_del_codigo_fuente/</a><br><span lang="en">Small C programs with their source code, then disassembled in Ghidra and Radare2: learn to read compiled code by comparing it with the original.</span><span lang="es">Pequeños programas en C con su código fuente, desensamblados después en Ghidra y Radare2: aprender a leer código compilado comparándolo con el original.</span><span lang="ca">Petits programes en C amb el codi font, desassemblats després amb Ghidra i Radare2: aprendre a llegir codi compilat comparant-lo amb l'original.</span></li>
+      </ul>
+      <p class="cmd"><a href="#">exit</a> <span class="dim"><span lang="en"># back</span><span lang="es"># volver</span><span lang="ca"># tornar</span></span></p>
+    </section>
+    <section id="timeline" tabindex="-1">
+      <p class="cmd">cat timeline.txt <span class="dim"><span lang="en"># c. = circa: some dates are memories, not records</span><span lang="es"># c. = hacia: algunas fechas son recuerdos, no registros</span><span lang="ca"># c. = cap a: algunes dates són records, no registres</span></span></p>
+      <ul class="out timeline" id="c-timeline">
+        <li><span class="yr">c. 1981</span> <span lang="en">Commodore VIC-20 at high school, and BASIC, my first language. No computer at home: I wrote the programs on paper and tested them at school.</span><span lang="es">Commodore VIC-20 en el instituto y BASIC, mi primer lenguaje. Sin ordenador en casa: escribía los programas en papel y los probaba en el instituto.</span><span lang="ca">Commodore VIC-20 a l'institut i BASIC, el meu primer llenguatge. Sense ordinador a casa: escrivia els programes en paper i els provava a l'institut.</span></li>
+        <li><span class="yr">c. 1982</span> <span lang="en">Casio FX-710P, a programmable calculator: more BASIC, now in my pocket.</span><span lang="es">Casio FX-710P, una calculadora programable: más BASIC, ahora en el bolsillo.</span><span lang="ca">Casio FX-710P, una calculadora programable: més BASIC, ara a la butxaca.</span></li>
+        <li><span class="yr">c. 1984</span> <span lang="en">My first computer, a Sinclair ZX Spectrum 48K, bought with my savings. BASIC, a bit of FORTH and Z80 assembler: I enjoyed writing games more than playing them.</span><span lang="es">Mi primer ordenador, un Sinclair ZX Spectrum 48K, comprado con mis ahorros. BASIC, algo de FORTH y ensamblador Z80: me gustaba más programar juegos que jugarlos.</span><span lang="ca">El meu primer ordinador, un Sinclair ZX Spectrum 48K, comprat amb els meus estalvis. BASIC, una mica de FORTH i assemblador Z80: m'agradava més programar jocs que jugar-hi.</span></li>
+        <li><span class="yr">c. 1985</span> <span lang="en">My first game, a BASIC listing published in the magazine ZX: 5,000 pesetas of prize. The magazine left some lines out, and a reader phoned me from the Canary Islands to ask for them.</span><span lang="es">Mi primer juego, un listado en BASIC publicado en la revista ZX: 5.000 pesetas de premio. A la revista se le escaparon unas líneas y un lector me llamó desde Canarias para pedírmelas.</span><span lang="ca">El meu primer joc, un llistat en BASIC publicat a la revista ZX: 5.000 pessetes de premi. A la revista se li van escapar unes línies i un lector em va trucar des de les Canàries per demanar-me-les.</span></li>
+        <li><span class="yr">1986</span> <span lang="en">Game reviewer in MicroHobby's reader jury, “Los Justicieros del Software”.</span><span lang="es">Crítico de juegos en el jurado de lectores de MicroHobby, «Los Justicieros del Software».</span><span lang="ca">Crític de jocs al jurat de lectors de MicroHobby, «Los Justicieros del Software».</span></li>
+        <li><span class="yr">c. 1987</span> <span lang="en">Teaching BASIC and LOGO on MSX computers at a computer school, to kids, teenagers and adults. I only knew Spectrum BASIC: the manuals taught me MSX BASIC first.</span><span lang="es">Profesor de BASIC y LOGO con ordenadores MSX en una academia, para niños, adolescentes y adultos. Solo conocía el BASIC del Spectrum: los manuales me enseñaron antes el de MSX.</span><span lang="ca">Professor de BASIC i LOGO amb ordinadors MSX en una acadèmia, per a nens, adolescents i adults. Només coneixia el BASIC de l'Spectrum: els manuals em van ensenyar abans el de l'MSX.</span></li>
+        <li><span class="yr">c. 1988</span> <span lang="en">Amstrad PCW 8512: CP/M, LocoScript, Z80 again, and my first paid program, a library manager I typed in by hand on the client's IBM PC Portable.</span><span lang="es">Amstrad PCW 8512: CP/M, LocoScript, otra vez Z80 y mi primer programa cobrado, un gestor de biblioteca que tecleé a mano en el IBM PC Portable del cliente.</span><span lang="ca">Amstrad PCW 8512: CP/M, LocoScript, altre cop Z80 i el meu primer programa cobrat, un gestor de biblioteca que vaig teclejar a mà a l'IBM PC Portable del client.</span></li>
+        <li><span class="yr">1989</span> <span lang="en">First PC, a Philips NMS 9100 (768 KB, 30 MB disk): MS-DOS 3.1 to 5, DR-DOS, BASIC, QuickBASIC and Pascal, and training in office software and programming.</span><span lang="es">Primer PC, un Philips NMS 9100 (768 KB, disco de 30 MB): MS-DOS 3.1 a 5, DR-DOS, BASIC, QuickBASIC y Pascal, y formación en ofimática y programación.</span><span lang="ca">Primer PC, un Philips NMS 9100 (768 KB, disc de 30 MB): MS-DOS 3.1 a 5, DR-DOS, BASIC, QuickBASIC i Pascal, i formació en ofimàtica i programació.</span></li>
+        <li><span class="yr"><span lang="en">1990s</span><span lang="es">años 90</span><span lang="ca">anys 90</span></span> <span lang="en">Clipper, my main language for business software, with my own library; C and 8086 assembler; CAJA PLUS, a shareware expense manager sold on floppies; CHECKVIR, my tool against boot-sector viruses.</span><span lang="es">Clipper, mi lenguaje principal para aplicaciones de gestión, con mi propia librería; C y ensamblador 8086; CAJA PLUS, un shareware de gastos vendido en disquetes; CHECKVIR, mi herramienta contra los virus de arranque.</span><span lang="ca">Clipper, el meu llenguatge principal per a aplicacions de gestió, amb la meva pròpia llibreria; C i assemblador 8086; CAJA PLUS, un shareware de despeses venut en disquets; CHECKVIR, la meva eina contra els virus d'arrencada.</span></li>
+        <li><span class="yr"><span lang="en">1990s</span><span lang="es">años 90</span><span lang="ca">anys 90</span></span> <span lang="en">BBSs at 1200 to 28,800 baud: a point of FidoNet, RedBBS and Binet, in the programming areas.</span><span lang="es">BBS a entre 1200 y 28.800 baudios: point de FidoNet, RedBBS y Binet, en las áreas de programación.</span><span lang="ca">BBS a entre 1200 i 28.800 bauds: point de FidoNet, RedBBS i Binet, a les àrees de programació.</span></li>
+        <li><span class="yr">1994</span> <span lang="en">Clipper programming articles for programmers' magazines.</span><span lang="es">Artículos de programación en Clipper en revistas para programadores.</span><span lang="ca">Articles de programació en Clipper en revistes per a programadors.</span></li>
+        <li><span class="yr">c. 1995</span> <span lang="en">Director of Operations: a whole management system written in a 4GL.</span><span lang="es">Director de Operaciones: todo un sistema de gestión escrito en un 4GL.</span><span lang="ca">Director d'Operacions: tot un sistema de gestió escrit en un 4GL.</span></li>
+        <li><span class="yr">c. 1996</span> <span lang="en">Industrial PLCs: Pascal applications for MS-DOS, then Delphi on Windows, with my own PLC communications library.</span><span lang="es">PLC industriales: aplicaciones en Pascal para MS-DOS y después Delphi en Windows, con mi propia librería de comunicaciones con PLC.</span><span lang="ca">PLC industrials: aplicacions en Pascal per a MS-DOS i després Delphi a Windows, amb la meva pròpia llibreria de comunicacions amb PLC.</span></li>
+        <li><span class="yr">2009</span> <span lang="en">ATI (Spanish computer professionals' association): board member in charge of technology. Interview in Novática nº 197.</span><span lang="es">ATI (Asociación de Técnicos de Informática): miembro de la junta, responsable de tecnología. Entrevista en Novática nº 197.</span><span lang="ca">ATI (Associació de Tècnics d'Informàtica): membre de la junta, responsable de tecnologia. Entrevista a Novática nº 197.</span></li>
+        <li><span class="yr">2010</span> <span lang="en">A talk on privacy in social networks: a fake profile I made got 95 friends in 15 days.</span><span lang="es">Una charla sobre privacidad en las redes sociales: un perfil falso que creé consiguió 95 amigos en 15 días.</span><span lang="ca">Una xerrada sobre privadesa a les xarxes socials: un perfil fals que vaig crear va aconseguir 95 amics en 15 dies.</span></li>
+        <li><span class="yr">2019</span> <span lang="en">MSc in Cybersecurity, La Salle.</span><span lang="es">Máster en Ciberseguridad, La Salle.</span><span lang="ca">Màster en Ciberseguretat, La Salle.</span></li>
+        <li><span class="yr"><span lang="en">now</span><span lang="es">hoy</span><span lang="ca">avui</span></span> <span lang="en">Cybersecurity, and still learning something new every day.</span><span lang="es">Ciberseguridad, y aprendiendo algo nuevo cada día.</span><span lang="ca">Ciberseguretat, i aprenent alguna cosa nova cada dia.</span></li>
       </ul>
       <p class="cmd"><a href="#">exit</a> <span class="dim"><span lang="en"># back</span><span lang="es"># volver</span><span lang="ca"># tornar</span></span></p>
     </section>

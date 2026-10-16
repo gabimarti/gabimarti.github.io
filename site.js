@@ -190,7 +190,11 @@ const GM = (() => {
     $("#grub-help").hidden = false;
   }
   // GRUB: entries without data-mode are shown but not bootable yet. Any key or tap stops the countdown.
-  const entries = () => [...bootOpts.querySelectorAll(".grub button")];
+  const entries = () => [...bootOpts.querySelectorAll(".grub:not([hidden]) button")];
+  function submenu(name) {            // "Vintage machines" lives in its own GRUB page; "Back" (or Esc) returns
+    bootOpts.querySelectorAll(".grub").forEach(g => { g.hidden = g.id !== "grub-" + (name || "main"); });
+    $(".grub-note").hidden = name !== "vintage"; select(0);
+  }
   let grubSel = 0, grubLeft = 0;
   function select(i) {
     const e = entries(); grubSel = (i + e.length) % e.length;
@@ -210,12 +214,12 @@ const GM = (() => {
     const run = ++bootRun;
     root.classList.remove("mode-classic", "mode-shell");
     shellEl.hidden = true; boot.hidden = false; bootOpts.hidden = true;
-    skip = false; typing = true; setUrl(null); grubSel = 0; grubLeft = 10; wantSetup = false; delOk = true;
+    skip = false; typing = true; setUrl(null); grubSel = 0; grubLeft = 10; wantSetup = false; delOk = true; submenu("main");
     await bootSeq(run);
     if (run !== bootRun) return;
     typing = false; grubTimer(run);
   }
-  // full-screen programs loaded on demand (bios.js: DEL during POST; memtest.js, debian.js: GRUB entries).
+  // full-screen programs loaded on demand (bios.js: DEL during POST; memtest.js, debian.js, vic20.js: GRUB entries).
   // When they end, open() may resolve a mode to switch to ("shell"); otherwise the POST starts again.
   async function runApp(name) {
     const run = ++bootRun; typing = false; delOk = false; appOn = true;
@@ -247,7 +251,7 @@ const GM = (() => {
     bootOut.innerHTML = `<div class="halt"><div>${msg}</div></div>`;
     await waitKey(); sfx.unlock(); showBoot();
   }
-  const VERSION = "1.30.2";                            // whole-site release, shown on the power-on screen: A.B.C = era.features.fixes
+  const VERSION = "1.31.0";                            // whole-site release, shown on the power-on screen: A.B.C = era.features.fixes
   const powerOn = () => screen(`<svg class="pwr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender", "Prem una tecla o fes clic per engegar")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar", "aquest lloc fa sons retro · 🔊 per silenciar")}</small><p class="pwr-tag">${B("My CV, inside a 90s PC: two operating systems, a BIOS Setup and secrets hidden in every corner.", "Mi CV, dentro de un PC de los 90: dos sistemas operativos, una BIOS y secretos escondidos en cada rincón.", "El meu CV, dins d'un PC dels 90: dos sistemes operatius, una BIOS i secrets amagats a cada racó.")}<br><small class="dim">${B("Explore it all: curious minds always find something more.", "Explóralo todo: los curiosos siempre encuentran algo más.", "Explora-ho tot: els curiosos sempre hi troben alguna cosa més.")}</small></p><p class="pwr-ver dim">Vers: ${VERSION}</p>`);
   const halt = msg => { sfx.fanStop(.5); return screen(msg); };
 
@@ -259,7 +263,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.49", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.50", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
@@ -293,11 +297,13 @@ const GM = (() => {
     $(".theme").addEventListener("click", toggleTheme); themeIcon();
     $(".snd").addEventListener("click", () => { sfx.toggle(); soundIcon(); }); soundIcon();
     addEventListener("pointerdown", sfx.unlock); addEventListener("keydown", sfx.unlock);
-    addEventListener("hashchange", sfx.blip);                 // classic view <-> avatar / repos
+    addEventListener("hashchange", sfx.blip);                 // classic view <-> avatar / repos / timeline
 
     document.addEventListener("click", e => {
       const g = e.target.closest(".grub button");
       if (g) { grubLeft = 0; select(entries().indexOf(g)); }
+      const sub = e.target.closest("[data-sub]");
+      if (sub) { e.preventDefault(); submenu(sub.dataset.sub); return; }
       if (e.target.closest("[data-setup]") && delOk) { wantSetup = true; return; }
       if (e.target.closest("[data-reboot]")) { e.preventDefault(); showBoot(); return; }
       const app = e.target.closest("[data-app]");
@@ -315,11 +321,12 @@ const GM = (() => {
       grubLeft = 0;
       if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); select(grubSel + (e.key === "ArrowDown" ? 1 : -1)); }
       else if (e.key === "Enter") { e.preventDefault(); entries()[grubSel].click(); }
+      else if (e.key === "Escape" && $("#grub-main").hidden) submenu("main");
       else if (e.key >= "1" && e.key <= String(entries().length)) select(+e.key - 1);
     });
 
     const mode = new URLSearchParams(location.search).get("mode");
-    if (location.hash === "#avatar" || location.hash === "#repos" || mode === "classic") setMode("classic");
+    if (["#avatar", "#repos", "#timeline"].includes(location.hash) || mode === "classic") setMode("classic");
     else if (mode === "shell") setMode("shell");
     else powerOn();
   });

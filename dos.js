@@ -56,6 +56,8 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
 [ ] BIOS Setup: press DEL during the memory test.
     4 undocumented features. F1 gives clues.
 [ ] memtest86+ (boot menu): let it run. Old RAM fails sometimes.
+[ ] This PC's owner keeps a museum on this disk. Its name is the obvious one.
+[ ] The boot menu keeps machines older than this PC. One still has a tape in.
 [ ] A 90s virus collector left his zoo on this disk. SCAN finds it.
 [ ] Once a year this PC throws a party. Its clock is easier to change
     than it looks.
@@ -121,6 +123,7 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
     CONTACT: Object.fromEntries(CONTACTS.map((k, i) => [k + ".URL", [null, null, () => html(`#c-contact li:nth-child(${i + 1}) a`)]])),
     UTILS: { "NOTES.TXT": [null, Y86, () => txt(NOTES)], "LOCKED.COM": [192, Y86] },
     WINDOWS: { "WIN.COM": [44170, " 3-10-92   3:10a"], "PROGMAN.EXE": [115312, " 3-10-92   3:10a"], "WRITE.EXE": [244976, " 3-10-92   3:10a"] },
+    MUSEUM: { "TIMELINE.TXT": [null, " 9-01-81  10:00a", () => html("#c-timeline")] },
     GAMES: { "SNAKE.EXE": [24576, Y86], "TETRIS.EXE": [32768, Y86], "README.TXT": [null, Y86, () => txt("C:\\GAMES - CD GAMES, then SNAKE or TETRIS.\nArrows (or WASD) move, P pauses, Q or Esc quits. On a phone, use the pad under the board.")] },
   };
   const BACKUP86 = `BACKUP86.TXT - 1986
@@ -173,7 +176,7 @@ ${Object.entries(VIRUSES).map(([f, v]) => `  ${f.padEnd(13)} ${v[2].padEnd(24)} 
 Run one by name (CD VIRUSES, then CASCADE). Some still wake up
 on their own on the right day, if this PC's clock agrees.`;
   FS.VIRUSES = { "ZOO.TXT": [null, " 1-05-93  12:01a", () => txt(ZOO)], ...Object.fromEntries(Object.entries(VIRUSES).map(([f, v]) => [f, [v[0], v[1]]])) };
-  const HIDDEN = new Set(["UTILS", "WTF", "MUSIC", "VIRUSES"]);
+  const HIDDEN = new Set(["UTILS", "WTF", "MUSIC", "VIRUSES", "MUSEUM"]);
   FS.WTF = WTF;                        // hidden directories (ATTRIB only lists files, so UTILS stays a secret)
   const ATTR0 = { "IO.SYS": "RHS", "MSDOS.SYS": "RHS", "42.TXT": "AH" };     // file attributes (default: A)
   const DAYS = "Sun Mon Tue Wed Thu Fri Sat".split(" ");

@@ -85,6 +85,8 @@ li::before { content: "› "; color: var(--dim); }
   .info > .blk:nth-child(-n+1) { column-span: all; }
   .blk .cmd { margin-top: .9rem; } .blk .cmd:first-child { margin-top: 0; } .blk { padding-bottom: .9rem; }
 }
+/* narrow 2-column windows (900-1099 px): lines wrap more, so compact like a short screen */
+@media (min-width: 900px) and (max-width: 1099px) { .info { font-size: 13.5px; line-height: 1.38; } .blk .cmd { margin-top: .55rem; } .blk { padding-bottom: .55rem; } }
 /* short screens (e.g. 1366x768 laptops): compact the 2-column classic view step by step so it still fits without scrolling */
 @media (min-width: 900px) and (max-height: 880px) {
   .info { line-height: 1.38; }
@@ -93,6 +95,7 @@ li::before { content: "› "; color: var(--dim); }
 @media (min-width: 900px) and (max-height: 800px) { .info { font-size: 13.5px; } }
 @media (min-width: 900px) and (max-height: 720px) { .info { font-size: 12.5px; line-height: 1.3; } }
 @media (min-width: 900px) and (max-height: 640px) { .info { font-size: 11.5px; line-height: 1.25; } .blk .cmd { margin-top: .4rem; } .blk { padding-bottom: .4rem; } }
+@media (min-width: 900px) and (max-width: 1099px) and (max-height: 640px) { .info { font-size: 10.5px; line-height: 1.22; } }
 .skills { display: grid; grid-template-columns: max-content 1fr; gap: 0 1.5ch; }
 .skills dt { color: var(--link); } .skills dd { margin: 0; }
 .contact-list li { display: grid; grid-template-columns: 11ch 1fr; text-indent: 0; padding-left: 0; }
@@ -100,13 +103,16 @@ li::before { content: "› "; color: var(--dim); }
 .contact-list li > span::before { content: "› "; color: var(--dim); }
 
 /* avatar / repos views (CSS only, #avatar / #repos target) */
-#avatar, #repos, .t-avatar, .t-repos { display: none; }
-.term:has(#avatar:target) #avatar, .term:has(#repos:target) #repos { display: block; }
-.term:has(:is(#avatar, #repos):target) :is(.info, .t-main) { display: none; }
-.term:has(#avatar:target) .t-avatar, .term:has(#repos:target) .t-repos { display: inline; }
-.term:has(:is(#avatar, #repos):target) .close { display: inline-block; }
-:is(#avatar, #repos):focus { outline: none; }
-:is(#avatar, #repos) .cmd:first-child { margin-top: 0; }
+#avatar, #repos, #timeline, .t-avatar, .t-repos, .t-timeline { display: none; }
+.term:has(#avatar:target) #avatar, .term:has(#repos:target) #repos, .term:has(#timeline:target) #timeline { display: block; }
+.term:has(:is(#avatar, #repos, #timeline):target) :is(.info, .t-main) { display: none; }
+.term:has(#avatar:target) .t-avatar, .term:has(#repos:target) .t-repos, .term:has(#timeline:target) .t-timeline { display: inline; }
+.term:has(:is(#avatar, #repos, #timeline):target) .close { display: inline-block; }
+:is(#avatar, #repos, #timeline):focus { outline: none; }
+:is(#avatar, #repos, #timeline) .cmd:first-child { margin-top: 0; }
+.timeline li { display: grid; grid-template-columns: 8ch 1fr; gap: 0 1ch; margin-bottom: .25rem; text-indent: 0; padding-left: 0; }
+.timeline li::before { content: none; }
+.timeline .yr { color: var(--accent); }
 .repos li { margin-bottom: .7rem; }
 .repos a { overflow-wrap: anywhere; }
 .tag { font-size: .85em; padding: 0 .5ch; margin-left: .5ch; border: 1px solid var(--accent); border-radius: 3px; color: var(--accent); }
@@ -118,7 +124,7 @@ li::before { content: "› "; color: var(--dim); }
 }
 
 /* ---------- modes: boot menu / classic / shell ---------- */
-html.js:not(.mode-classic) :is(.info, #avatar, #repos) { display: none !important; }
+html.js:not(.mode-classic) :is(.info, #avatar, #repos, #timeline) { display: none !important; }
 html:not(.js) .js-only { display: none; }
 #boot-out { white-space: pre-wrap; word-break: break-word; line-height: 1.3; }
 .ok { color: var(--accent); }
@@ -142,7 +148,7 @@ html:not(.js) .js-only { display: none; }
 .pwr-ver { margin-top: 2.5rem; font-size: .8em; letter-spacing: .05em; }
 .pwr { width: 3rem; height: 3rem; color: var(--accent); }   /* SVG: Android fonts lack the power glyph */
 #boot { height: 100%; display: flow-root; } #boot[hidden] { display: none; }   /* flow-root: .grub-ttl margin must not collapse out and add a scrollbar; [hidden] must still win */
-#boot-out:has(:is(.halt, .bios, .mt, .dos)) { height: 100%; }
+#boot-out:has(:is(.halt, .bios, .mt, .dos, .vic)) { height: 100%; }
 .del { font: inherit; color: var(--accent); background: none; border: 1px solid var(--accent); border-radius: 3px; padding: 0 .4ch; cursor: pointer; animation: del-blink 1s steps(1) infinite; }
 @keyframes del-blink { 50% { color: var(--panel); background: var(--accent); } }
 /* Award CMOS Setup (bios.js): always blue, whatever the site theme */
@@ -337,3 +343,31 @@ html:not(.js) .js-only { display: none; }
 .pc1 { color: #ff5555; } .pc2 { color: #55ff55; } .pc3 { color: #5555ff; } .pc4 { color: #ffff55; } .pc5 { color: #ff55ff; } .pc6 { color: #55ffff; }
 .dos-casino { margin: .3rem 0; color: #ffff55; white-space: pre-wrap; }
 #sh-out .intr { color: var(--err); }
+
+/* Commodore VIC-20 (vic20.js): 22x23 screen inside a border; colours come from POKE 36879 / 646 through classes (CSP) */
+.grub-note { margin: .6rem 0 0; }
+.vic { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; min-height: 100%; padding: .6rem; background: #111; color: #ccc; }
+.vic-bd { padding: 1.2rem min(2.6rem, 5vw); }
+.vic-scr { --vfs: min(1.25rem, calc((100vw - 7rem) / 27), calc((100dvh - 15rem) / 26)); --vw: calc(22 * (1ch + .06em)); width: var(--vw); margin: 0 calc(var(--vw) * .7) 0 0; transform: scaleX(1.7); transform-origin: left top; font: var(--vfs)/1.12 ui-monospace, Consolas, "Cascadia Code", monospace; letter-spacing: .06em; white-space: pre; cursor: text; }   /* the VIC drew wide characters: stretch the 22 columns, keep the layout width right */
+.vcur { animation: vblink 1s steps(1) infinite; }
+@keyframes vblink { 50% { background: transparent; color: transparent; } }
+.vic-in { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; }
+.vic-keys { display: flex; gap: 1ch; margin: 0; }
+.vic-keys button { font: inherit; color: #ddd; background: #333; border: 1px solid #666; padding: .1rem 1ch; cursor: pointer; }
+.vic-help { margin: 0; max-width: 46rem; text-align: center; font-size: .8rem; color: #888; }
+.vs0 { background: #000000; --vbg: #000000; } .vf0 { color: #000000; } .vr0 { background: #000000; color: var(--vbg); }
+.vs1 { background: #ffffff; --vbg: #ffffff; } .vf1 { color: #ffffff; } .vr1 { background: #ffffff; color: var(--vbg); }
+.vs2 { background: #b61f21; --vbg: #b61f21; } .vf2 { color: #b61f21; } .vr2 { background: #b61f21; color: var(--vbg); }
+.vs3 { background: #4df0ff; --vbg: #4df0ff; } .vf3 { color: #4df0ff; } .vr3 { background: #4df0ff; color: var(--vbg); }
+.vs4 { background: #b43fff; --vbg: #b43fff; } .vf4 { color: #b43fff; } .vr4 { background: #b43fff; color: var(--vbg); }
+.vs5 { background: #44e239; --vbg: #44e239; } .vf5 { color: #44e239; } .vr5 { background: #44e239; color: var(--vbg); }
+.vs6 { background: #1a34ff; --vbg: #1a34ff; } .vf6 { color: #1a34ff; } .vr6 { background: #1a34ff; color: var(--vbg); }
+.vs7 { background: #dcd71b; --vbg: #dcd71b; } .vf7 { color: #dcd71b; } .vr7 { background: #dcd71b; color: var(--vbg); }
+.vs8 { background: #ca5400; --vbg: #ca5400; } .vf8 { color: #ca5400; } .vr8 { background: #ca5400; color: var(--vbg); }
+.vs9 { background: #e9b072; --vbg: #e9b072; } .vf9 { color: #e9b072; } .vr9 { background: #e9b072; color: var(--vbg); }
+.vs10 { background: #e79293; --vbg: #e79293; } .vf10 { color: #e79293; } .vr10 { background: #e79293; color: var(--vbg); }
+.vs11 { background: #9af7fd; --vbg: #9af7fd; } .vf11 { color: #9af7fd; } .vr11 { background: #9af7fd; color: var(--vbg); }
+.vs12 { background: #e09fff; --vbg: #e09fff; } .vf12 { color: #e09fff; } .vr12 { background: #e09fff; color: var(--vbg); }
+.vs13 { background: #8fe493; --vbg: #8fe493; } .vf13 { color: #8fe493; } .vr13 { background: #8fe493; color: var(--vbg); }
+.vs14 { background: #8290ff; --vbg: #8290ff; } .vf14 { color: #8290ff; } .vr14 { background: #8290ff; color: var(--vbg); }
+.vs15 { background: #e5de85; --vbg: #e5de85; } .vf15 { color: #e5de85; } .vr15 { background: #e5de85; color: var(--vbg); }
