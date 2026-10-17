@@ -33,19 +33,22 @@
 20 BORDER 1: PAPER 5: INK 0: CLS
 30 LET c=5: LET t=0: LET mr=0: LET sr=1+INT (RND*8): LET sc=1+INT (RND*8)
 40 GO SUB 800
-100 IF mr THEN PRINT AT 2+2*mr,3*mc; PAPER 1;"  ": LET mr=0
-110 GO SUB 850
+100 GO SUB 850
 120 INPUT "Coordenada (ej. C5): ";a$
 130 IF LEN a$<>2 THEN GO TO 120
 140 LET f=CODE a$: IF f>96 THEN LET f=f-32
 150 LET q=f-64: LET r=CODE a$(2)-48
 160 IF q<1 OR q>8 OR r<1 OR r>8 THEN GO TO 120
 170 LET c=c-1: LET t=t+1: GO SUB 870
+175 IF mr THEN PRINT AT 2+2*mr,3*mc; PAPER 1;"  ": LET mr=0
 180 FOR i=1 TO 3: BORDER 2: BEEP .02,-10-i*5: BORDER 1: NEXT i
 190 IF r=sr AND q=sc THEN GO TO 500
 200 PRINT AT 2+2*r,3*q; PAPER 1; INK 6;CHR$ 146;CHR$ 146: LET mr=r: LET mc=q
-210 IF ABS (r-sr)<=1 AND ABS (q-sc)<=1 THEN PRINT AT 20,0; INK 2;"Cerca! El sonar lo ha oido.";AT 21,0;"Ganas una carga extra.";: LET c=c+1: BEEP .1,12: GO TO 230
-220 PRINT AT 20,0;"Agua. Ni rastro del submarino.";
+205 LET d=ABS (r-sr): IF ABS (q-sc)>d THEN LET d=ABS (q-sc)
+210 IF d=1 THEN PRINT AT 20,0; INK 2;"Muy cerca! El sonar lo oye.";AT 21,0;"Ganas una carga extra.";: LET c=c+1: BEEP .1,12: BEEP .1,12: GO TO 230
+215 IF d=2 THEN PRINT AT 20,0; INK 1;"Cerca. Se oyen sus helices.";: BEEP .1,5: GO TO 230
+220 IF d=3 THEN PRINT AT 20,0;"Un eco debil, algo lejos.";: GO TO 230
+225 PRINT AT 20,0;"Agua. Ni rastro del submarino.";
 230 GO SUB 600
 240 IF c>0 THEN GO TO 100
 250 GO TO 700
@@ -64,8 +67,8 @@
 740 IF a$="s" OR a$="S" THEN GO TO 20
 750 BORDER 7: PAPER 7: INK 0: CLS: GO TO 9999
 800 PRINT AT 0,0; PAPER 1; INK 7; BRIGHT 1;"    LA CAZA DEL SUBMARINO       "
-805 PRINT AT 1,0;"5 cargas. Cerca = carga extra."
-806 PRINT AT 2,0;"Tras cada carga, se mueve."
+805 PRINT AT 1,0;"5 cargas. Muy cerca = +1 carga."
+806 PRINT AT 2,0;"El sonar avisa. Luego se mueve."
 810 PRINT AT 3,3;"A  B  C  D  E  F  G  H"
 820 FOR r=1 TO 8: PRINT AT 2+2*r,1;r: FOR q=1 TO 8: PRINT AT 2+2*r,3*q; PAPER 1;"  ": NEXT q: NEXT r
 830 RETURN
