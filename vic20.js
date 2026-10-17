@@ -649,12 +649,19 @@
     if (e.ctrlKey || e.metaKey || e.altKey || e.key === "Tab") return;
     const k = { Enter: "\r", Backspace: "\b", Escape: "\x1b", Home: e.shiftKey ? "clr" : "home" }[e.key];
     e.stopPropagation();
-    if (k) { e.preventDefault(); feed(k); }
+    if (k) { e.preventDefault(); inp.value = typed = ""; feed(k); }
     else if (e.key.length === 1 && e.target !== inp) { e.preventDefault(); feed(e.key); }
   }
-  function onInput() {                                  // what landed in the hidden input (phones, paste)
-    const v = inp.value; inp.value = "";
-    for (const ch of v) feed(ch === "\n" ? "\r" : ch);
+  // what landed in the hidden input (phones, paste). Phone keyboards rewrite the word being composed, so only
+  // the difference is typed, and the input is emptied only between words (wiping it mid-word repeated digits).
+  let typed = "";
+  function onInput(e) {
+    const v = inp.value; let i = 0;
+    while (i < typed.length && typed[i] === v[i]) i++;
+    for (let j = typed.length; j > i; j--) feed("\b");
+    for (const ch of v.slice(i)) feed(ch === "\n" ? "\r" : ch);
+    typed = v;
+    if (!e.isComposing) inp.value = typed = "";
   }
   function onPaste(e) {
     const s = e.clipboardData?.getData("text");
@@ -687,7 +694,7 @@
       el.innerHTML = `<div class="vic-bd"><pre class="vic-scr"></pre></div>
 <input class="vic-in" aria-label="VIC-20 keyboard" autocomplete="off" autocapitalize="characters" spellcheck="false">
 <p class="vic-keys"><button type="button" data-vic-stop>RUN/STOP</button> <button type="button" data-vic-exit>⏏ PC</button></p>
-<p class="vic-help">LOAD, then any key: the next program on the tape · LOAD "SNOWBALL" · LIST · RUN · Esc = RUN/STOP<br>Try POKE 36879,8 · POKE 36878,15:POKE 36876,220 (POKE 36876,0 stops it) · POKE 7680,83<br>Simulated, not emulated: CBM BASIC V2 rewritten for this PC, no ROM inside.</p>`;
+<p class="vic-help">LOAD, then any key: the next program on the tape · LOAD "SNOWBALL" · LIST · RUN · Esc = RUN/STOP<br>Try POKE 36879,8 · POKE 36878,15:POKE 36876,220 (POKE 36876,0 stops it) · POKE 7911,81:POKE 38631,2 (a red ball mid-screen)<br>Simulated, not emulated: CBM BASIC V2 rewritten for this PC, no ROM inside.</p>`;
       bd = el.querySelector(".vic-bd"); scr = el.querySelector(".vic-scr"); inp = el.querySelector(".vic-in");
       alive = true; busy = false; queue = []; pump.on = false; keyWait = null; inputCb = null; tapePos = 0; saved = [];
       power();

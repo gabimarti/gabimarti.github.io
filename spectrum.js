@@ -28,52 +28,56 @@
   // phone call where the author dictated the missing lines (which MERGE also brings in).
   const GAME = `1 REM LA CAZA DEL SUBMARINO
 2 REM G. Marti - revista ZX, c.1985
-3 REM Reconstruido en 2026: el listado original se perdio
+3 REM Reconstruido en 2026 de memoria: el listado original se perdio
 10 GO SUB 900
 20 BORDER 1: PAPER 5: INK 0: CLS
-30 LET p=0: LET c=15: LET x=14: LET by=0
+30 LET c=5: LET t=0: LET mr=0: LET sr=1+INT (RND*8): LET sc=1+INT (RND*8)
 40 GO SUB 800
-50 LET sy=8+INT (RND*12): LET sx=0: LET sd=.5
-60 IF RND>.5 THEN LET sx=30: LET sd=-.5
-110 LET k$=INKEY$
-120 IF k$="o" AND x>0 THEN PRINT AT 3,x+2; PAPER 5;" ": LET x=x-1
-130 IF k$="p" AND x<29 THEN PRINT AT 3,x; PAPER 5;" ": LET x=x+1
-140 PRINT AT 3,x; PAPER 5; INK 0;CHR$ 144;CHR$ 145;CHR$ 146
-150 IF k$="m" AND by=0 AND c>0 THEN LET by=4: LET bx=x+1: LET c=c-1: BEEP .01,20: GO SUB 850
-160 PRINT AT sy,INT sx; PAPER 1;"  "
-170 LET sx=sx+sd: IF sx<0 OR sx>30 THEN GO TO 50
-180 PRINT AT sy,INT sx; PAPER 1; INK 7;CHR$ 147;CHR$ 148
-190 IF by=0 THEN GO TO 300
-200 PRINT AT by,bx; PAPER 1;" "
-210 LET by=by+1: IF by>21 THEN LET by=0: GO TO 300
-220 IF by=sy AND (bx=INT sx OR bx=INT sx+1) THEN GO TO 500
-230 PRINT AT by,bx; PAPER 1; INK 6;CHR$ 149
-300 IF c=0 AND by=0 THEN GO TO 700
-310 GO TO 110
-500 FOR i=1 TO 6: BORDER 2: BEEP .03,-20+i*3: BORDER 6: NEXT i: BORDER 1
-510 PRINT AT sy,INT sx; PAPER 1; INK 2; FLASH 1;"**"
-520 LET p=p+10*(sy-5): LET by=0: GO SUB 850
-530 PAUSE 25: PRINT AT sy,INT sx; PAPER 1;"  ": GO TO 50
-700 PRINT AT 9,6; PAPER 7; INK 2; FLASH 1;" FIN DE LA PARTIDA "
-710 PRINT AT 11,6; PAPER 7; INK 0;" PUNTOS: ";p;" "
-720 PRINT AT 13,3; PAPER 7; INK 1;" Por fin navega (1985-2026) "
-730 PRINT AT 15,6; PAPER 7; INK 0;" OTRA PARTIDA (s/n)? "
-740 LET k$=INKEY$: IF k$<>"s" AND k$<>"n" THEN GO TO 740
-750 IF k$="s" THEN GO TO 20
-760 BORDER 7: PAPER 7: INK 0: CLS: GO TO 9999
-800 PRINT AT 0,0; PAPER 5; INK 1; BRIGHT 1;"     LA CAZA DEL SUBMARINO      "
-805 PRINT AT 2,0; PAPER 5; INK 0;"O/P: mover   M: carga"
-810 GO SUB 850
-820 FOR i=4 TO 21: PRINT AT i,0; PAPER 1;"${" ".repeat(32)}";: NEXT i
+100 IF mr THEN PRINT AT 2+2*mr,3*mc; PAPER 1;"  ": LET mr=0
+110 GO SUB 850
+120 INPUT "Coordenada (ej. C5): ";a$
+130 IF LEN a$<>2 THEN GO TO 120
+140 LET f=CODE a$: IF f>96 THEN LET f=f-32
+150 LET q=f-64: LET r=CODE a$(2)-48
+160 IF q<1 OR q>8 OR r<1 OR r>8 THEN GO TO 120
+170 LET c=c-1: LET t=t+1: GO SUB 870
+180 FOR i=1 TO 3: BORDER 2: BEEP .02,-10-i*5: BORDER 1: NEXT i
+190 IF r=sr AND q=sc THEN GO TO 500
+200 PRINT AT 2+2*r,3*q; PAPER 1; INK 6;CHR$ 146;CHR$ 146: LET mr=r: LET mc=q
+210 IF ABS (r-sr)<=1 AND ABS (q-sc)<=1 THEN PRINT AT 20,0; INK 2;"Cerca! El sonar lo ha oido.";AT 21,0;"Ganas una carga extra.";: LET c=c+1: BEEP .1,12: GO TO 230
+220 PRINT AT 20,0;"Agua. Ni rastro del submarino.";
+230 GO SUB 600
+240 IF c>0 THEN GO TO 100
+250 GO TO 700
+500 PRINT AT 2+2*sr,3*sc; PAPER 1; INK 7; FLASH 1;CHR$ 144;CHR$ 145
+510 FOR i=1 TO 8: BORDER 2: BEEP .03,-20+i*3: BORDER 6: NEXT i: BORDER 1
+520 PRINT AT 20,0; INK 2;"HUNDIDO! en ";t;" lanzamientos";
+530 GO SUB 850: GO TO 720
+600 REM el submarino se mueve a una casilla vecina
+610 LET nr=sr+INT (RND*3)-1: LET nc=sc+INT (RND*3)-1
+620 IF nr<1 OR nr>8 OR nc<1 OR nc>8 OR (nr=sr AND nc=sc) THEN GO TO 610
+630 LET sr=nr: LET sc=nc: RETURN
+700 GO SUB 850: PRINT AT 20,0;"Sin cargas. El submarino escapa";
+710 PRINT AT 2+2*sr,3*sc; PAPER 1; INK 7;CHR$ 144;CHR$ 145
+720 PRINT AT 21,0; INK 1;"Por fin navega (1985-2026)";
+730 PAUSE 100: INPUT "Otra partida (s/n)? ";a$
+740 IF a$="s" OR a$="S" THEN GO TO 20
+750 BORDER 7: PAPER 7: INK 0: CLS: GO TO 9999
+800 PRINT AT 0,0; PAPER 1; INK 7; BRIGHT 1;"    LA CAZA DEL SUBMARINO       "
+805 PRINT AT 1,0;"5 cargas. Cerca = carga extra."
+806 PRINT AT 2,0;"Tras cada carga, se mueve."
+810 PRINT AT 3,3;"A  B  C  D  E  F  G  H"
+820 FOR r=1 TO 8: PRINT AT 2+2*r,1;r: FOR q=1 TO 8: PRINT AT 2+2*r,3*q; PAPER 1;"  ": NEXT q: NEXT r
 830 RETURN
-850 PRINT AT 1,0; PAPER 5; INK 0;"PUNTOS: ";p;"   CARGAS: ";c;" ": RETURN
+850 PRINT AT 19,0;"CARGAS: ";c;"   LANZADAS: ";t;"  ": RETURN
+870 PRINT AT 20,0;"                               ";AT 21,0;"                               ";: RETURN
 900 REM graficos definidos (UDG)
-910 FOR i=0 TO 47: READ n: POKE USR "a"+i,n: NEXT i
+910 FOR i=0 TO 23: READ n: POKE USR "a"+i,n: NEXT i
 920 RETURN
-930 DATA 0,0,0,1,3,255,127,63,24,24,126,126,255,255,255,255
-940 DATA 0,0,0,128,192,255,254,252,0,0,3,31,127,255,127,31
-950 DATA 64,64,224,248,254,255,254,248,0,60,126,90,126,60,0,0`;
-  const LOST = [30, 140, 930, 940, 950];
+930 DATA 0,0,0,31,127,255,127,0
+940 DATA 32,32,112,248,254,255,254,0
+950 DATA 73,42,28,127,28,42,73,0`;
+  const LOST = [30, 190, 930, 940, 950];
   const lineNo = l => +l.split(" ")[0], gameLines = GAME.split("\n"), lost = gameLines.filter(l => LOST.includes(lineNo(l)));
   const TAPE = [
     { name: "timeline", line: 10, text: `10 REM the Spectrum years
@@ -743,18 +747,18 @@
       if (c !== 32) glyph(charOf(c), i & 31, i >> 5, inv[i] ? paper : ink);
     }
     // the lower screen: border colour, its own ink; it grows upwards with long lines
-    let text = "", cursor = null;
-    if (msg) text = msg;
-    else if (busy) { if (inputCb) { text = inPrompt + line; cursor = "L"; } }
-    else { text = line; cursor = /(^\s*\d*\s*|:\s*|\bTHEN\s*)$/i.test(line) ? "K" : "L"; }
-    const rowsTxt = wrap(text + (cursor ? "\0" : "")), n = Math.max(2, rowsTxt.length), top = 24 - n;
+    // the cursor: a flashing block (no K/L letter: it read like a typed character); under a report too
+    let rowsTxt;
+    if (msg) rowsTxt = busy ? wrap(msg) : [...wrap(msg), "\0"];
+    else if (busy) rowsTxt = wrap(inputCb ? inPrompt + line + "\0" : "");
+    else rowsTxt = wrap(line + "\0");
+    const n = Math.max(2, rowsTxt.length), top = 24 - n;
     const ink = css(border < 4 ? 7 : 0), paper = css(border);
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = paper; ctx.fillRect(BD * S, (BD + top * 8) * S, W * S, n * 8 * S);
     rowsTxt.forEach((s, r) => [...s].forEach((ch, x) => {
       const y = 24 - rowsTxt.length + r;
       if (ch !== "\0") { if (ch !== " ") glyph(ch, x, y, ink); return; }
       if (flashOn) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = ink; ctx.fillRect((BD + x * 8) * S, (BD + y * 8) * S, 8 * S, 8 * S); }
-      glyph(cursor, x, y, flashOn ? paper : ink);
     }));
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
@@ -802,14 +806,21 @@
     e.stopPropagation();
     if (ARROWS[e.key]) { e.preventDefault(); press(ARROWS[e.key]); return; }
     const k = { Enter: "\r", Backspace: "\b", Escape: "\x1b" }[e.key];
-    if (k) { e.preventDefault(); if (k === "\r") press(k); else keyN++; feed(k); }
-    else if (e.key.length === 1) { press(e.key); if (e.target !== inp) { e.preventDefault(); feed(e.key); } }
+    if (k) { e.preventDefault(); inp.value = typed = ""; if (k === "\r") press(k); else keyN++; feed(k); }
+    else if (e.key.length === 1) { press(e.key); keyDown = true; if (e.target !== inp) { e.preventDefault(); feed(e.key); } }
   }
-  const onKeyUp = () => { held = null; };
-  function onInput() {                                  // what landed in the hidden input (phones, paste)
-    const v = inp.value; inp.value = "";
-    for (const ch of v) { press(ch); feed(ch === "\n" ? "\r" : ch); }
-    heldT = setTimeout(() => { held = null; }, 150);    // phone keyboards send no key-up
+  const onKeyUp = () => { held = null; keyDown = false; };
+  // what landed in the hidden input (phones, paste). Phone keyboards rewrite the word being composed, so only
+  // the difference is typed, and the input is emptied only between words (wiping it mid-word repeated letters).
+  let typed = "", keyDown = false;
+  function onInput(e) {
+    const v = inp.value; let i = 0;
+    while (i < typed.length && typed[i] === v[i]) i++;
+    for (let j = typed.length; j > i; j--) feed("\b");
+    for (const ch of v.slice(i)) { if (!keyDown) press(ch); feed(ch === "\n" ? "\r" : ch); }
+    typed = v;
+    if (!e.isComposing) inp.value = typed = "";
+    if (!keyDown) heldT = setTimeout(() => { held = null; }, 150);   // phone keyboards send no key-up
   }
   function onPaste(e) {
     const s = e.clipboardData?.getData("text");
