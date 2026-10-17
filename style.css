@@ -112,6 +112,7 @@ li::before { content: "› "; color: var(--dim); }
 :is(#avatar, #repos, #timeline) .cmd:first-child { margin-top: 0; }
 .timeline li { display: grid; grid-template-columns: 8ch 1fr; gap: 0 1ch; margin-bottom: .25rem; text-indent: 0; padding-left: 0; }
 .timeline li::before { content: none; }
+.timeline .tl-note { display: block; margin-bottom: .5rem; }
 .timeline .yr { color: var(--accent); }
 .repos li { margin-bottom: .7rem; }
 .repos a { overflow-wrap: anywhere; }
