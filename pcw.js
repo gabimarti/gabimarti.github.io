@@ -9,77 +9,102 @@
   const COLS = 90, ROWS = 32, CW = 12, CH = 24, SPEED = 40;   // CW x CH: canvas pixels per character; SPEED: statements per frame
   const GREEN = "#3ff23f", DARK = "#020d02";
   const FUNCS = new Set(["ABS", "ASC", "ATN", "CHR$", "COS", "EXP", "FIX", "HEX$", "INKEY$", "INSTR", "INT", "LEFT$", "LEN", "LOG",
-    "LOWER$", "MID$", "RIGHT$", "RND", "SGN", "SIN", "SPACE$", "SQR", "STR$", "STRING$", "TAN", "UPPER$", "VAL"]);
+    "LOWER$", "MID$", "RIGHT$", "EOF", "RND", "SGN", "SIN", "SPACE$", "SQR", "STR$", "STRING$", "TAN", "UPPER$", "VAL"]);
   const WORDS = new Set([...FUNCS, "AND", "OR", "XOR", "NOT", "MOD", "PRINT", "LPRINT", "USING", "TAB", "SPC", "LET", "IF", "THEN", "ELSE",
     "GOTO", "GOSUB", "RETURN", "ON", "FOR", "TO", "STEP", "NEXT", "WHILE", "WEND", "INPUT", "LINE", "DIM", "READ", "DATA", "RESTORE",
     "RANDOMIZE", "END", "STOP", "REM", "RUN", "NEW", "LIST", "LLIST", "CONT", "CLEAR", "LOAD", "SAVE", "FILES", "KILL", "NAME", "AS",
-    "SYSTEM", "SWAP", "DELETE", "WIDTH", "AUTO", "OPEN", "CLOSE", "CLS"]);
+    "SYSTEM", "SWAP", "DELETE", "WIDTH", "AUTO", "OPEN", "CLOSE", "CLS", "WRITE"]);
   class BErr { constructor(m) { this.m = m; } }
   const bad = m => new BErr(m), SYN = "Syntax error";
   const NUMRE = /^[+-]?(\d+\.?\d*|\.\d+)(E[+-]?\d+)?$/i;
 
   // ---------- the start-of-day disc ----------
-  const BIBLIO = `10 REM BIBLIOTECA - gestion de libros
+  // BIBLIO.BAS: the catalogue of a personal library, kept on the disc in LIBROS.DAT (title, author, publisher, ISBN, subject)
+  const BIBLIO = `10 REM BIBLIOTECA - fichero de una biblioteca personal
 20 REM G. Marti, c.1988. Mi primer programa cobrado.
 30 REM Escrito en este PCW, impreso y tecleado otra vez a mano en el IBM del cliente.
-40 REM Reconstruido de memoria en 2026: el original se perdio. Aqui no se graba nada.
-50 DIM T$(50),A$(50),P$(50): N=0: E$=CHR$(27)
-60 READ X$: IF X$="*" THEN 100
-70 N=N+1: T$(N)=X$: READ A$(N),P$(N): GOTO 60
-100 PRINT E$;"E";E$;"H";
+40 REM Reconstruido de memoria en 2026: el original se perdio. Los libros, en LIBROS.DAT
+50 MX=300: DIM T$(MX),A$(MX),E$(MX),I$(MX),M$(MX): N=0: CB=0: OD=0: C$=CHR$(27): F$="LIBROS.DAT"
+60 PRINT C$;"E";C$;"H";"Leyendo ";F$;"...": GOSUB 8000
+100 PRINT C$;"E";C$;"H";
 110 PRINT TAB(36);"B I B L I O T E C A"
 120 PRINT TAB(36);STRING$(19,"=")
 130 PRINT: PRINT TAB(31);"Libros en el fichero:";N: PRINT
 140 PRINT TAB(31);"1. Alta de un libro"
-150 PRINT TAB(31);"2. Listado de libros"
-160 PRINT TAB(31);"3. Buscar por titulo o autor"
-170 PRINT TAB(31);"4. Prestamo o devolucion"
-180 PRINT TAB(31);"5. Fin"
+150 PRINT TAB(31);"2. Listado por titulo"
+160 PRINT TAB(31);"3. Buscar por titulo, autor o tema"
+170 PRINT TAB(31);"4. Ficha de un libro (y baja)"
+180 PRINT TAB(31);"5. Grabar y terminar"
 190 PRINT: PRINT TAB(31);: INPUT "Opcion";O
 200 ON O GOSUB 1000,2000,3000,4000,5000
 210 GOTO 100
-1000 PRINT E$;"E";E$;"H";"ALTA DE UN LIBRO": PRINT
-1010 IF N=50 THEN PRINT "Fichero lleno.": GOTO 1090
-1020 LINE INPUT "Titulo: ";X$: IF X$="" THEN RETURN
-1030 LINE INPUT "Autor:  ";Y$
-1040 N=N+1: T$(N)=UPPER$(X$): A$(N)=UPPER$(Y$): P$(N)=""
-1050 PRINT: PRINT "Registrado con el numero";N
+1000 PRINT C$;"E";C$;"H";"ALTA DE UN LIBRO": PRINT
+1010 IF N=MX THEN PRINT "Fichero lleno.": GOTO 1090
+1020 LINE INPUT "Titulo:    ";X$: IF X$="" THEN RETURN
+1030 LINE INPUT "Autor:     ";Y$
+1040 LINE INPUT "Editorial: ";Z$
+1050 LINE INPUT "ISBN:      ";W$
+1060 LINE INPUT "Tema:      ";V$
+1070 N=N+1: T$(N)=UPPER$(X$): A$(N)=UPPER$(Y$): E$(N)=UPPER$(Z$): I$(N)=W$: M$(N)=UPPER$(V$): CB=1: OD=0
+1080 PRINT: PRINT "Anotado. Libros en el fichero:";N
 1090 GOSUB 9000: RETURN
-2000 PRINT E$;"E";E$;"H";
-2010 PRINT "NUM  TITULO";TAB(42);"AUTOR";TAB(70);"PRESTADO A"
+2000 IF OD=0 THEN PRINT C$;"E";C$;"H";"Ordenando por titulo...": GOSUB 7000
+2005 PRINT C$;"E";C$;"H";
+2010 PRINT "NUM  TITULO";TAB(44);"AUTOR";TAB(72);"TEMA"
 2020 PRINT STRING$(89,"-")
 2030 FOR I=1 TO N
-2040 PRINT USING "###  ";I;: PRINT LEFT$(T$(I),36);TAB(42);LEFT$(A$(I),26);TAB(70);P$(I)
-2050 IF I MOD 25=0 AND I<N THEN GOSUB 9000: PRINT E$;"E";E$;"H";
+2040 PRINT USING "###  ";I;: PRINT LEFT$(T$(I),36);TAB(44);LEFT$(A$(I),26);TAB(72);LEFT$(M$(I),17)
+2050 IF I MOD 25=0 AND I<N THEN GOSUB 9000: PRINT C$;"E";C$;"H";
 2060 NEXT I
 2070 GOSUB 9000: RETURN
-3000 PRINT E$;"E";E$;"H";"BUSCAR": PRINT
-3010 LINE INPUT "Texto a buscar (titulo o autor): ";X$: IF X$="" THEN RETURN
+3000 PRINT C$;"E";C$;"H";"BUSCAR": PRINT
+3010 LINE INPUT "Texto a buscar (titulo, autor o tema): ";X$: IF X$="" THEN RETURN
 3020 X$=UPPER$(X$): F=0: PRINT
 3030 FOR I=1 TO N
-3040 IF INSTR(T$(I),X$)>0 OR INSTR(A$(I),X$)>0 THEN F=F+1: PRINT USING "###  ";I;: PRINT T$(I);" - ";A$(I)
+3040 IF INSTR(T$(I),X$)>0 OR INSTR(A$(I),X$)>0 OR INSTR(M$(I),X$)>0 THEN F=F+1: PRINT USING "###  ";I;: PRINT T$(I);" - ";A$(I)
 3050 NEXT I
 3060 IF F=0 THEN PRINT "Ningun libro con ";CHR$(34);X$;CHR$(34)
 3070 GOSUB 9000: RETURN
-4000 PRINT E$;"E";E$;"H";"PRESTAMO O DEVOLUCION": PRINT
-4010 INPUT "Numero de libro";K: IF K<1 OR K>N THEN RETURN
-4020 PRINT T$(K);" - ";A$(K)
-4030 IF P$(K)<>"" THEN PRINT "Estaba prestado a ";P$(K);". Devuelto.": P$(K)="": GOTO 4090
-4040 LINE INPUT "Prestar a: ";X$: IF X$="" THEN RETURN
-4050 P$(K)=UPPER$(X$): PRINT "Anotado."
+4000 PRINT C$;"E";C$;"H";"FICHA DE UN LIBRO": PRINT
+4010 INPUT "Numero (el del listado)";K: IF K<1 OR K>N THEN RETURN
+4020 PRINT: PRINT "Titulo:    ";T$(K): PRINT "Autor:     ";A$(K): PRINT "Editorial: ";E$(K)
+4030 PRINT "ISBN:      ";I$(K): PRINT "Tema:      ";M$(K): PRINT
+4040 INPUT "Dar de baja (S/N)";X$: IF UPPER$(X$)<>"S" THEN RETURN
+4050 FOR I=K TO N-1: T$(I)=T$(I+1): A$(I)=A$(I+1): E$(I)=E$(I+1): I$(I)=I$(I+1): M$(I)=M$(I+1): NEXT I
+4060 N=N-1: CB=1: PRINT "Baja anotada."
 4090 GOSUB 9000: RETURN
-5000 PRINT E$;"E";E$;"H";"Fin. En 1988 los libros se grababan en el disco; aqui se pierden al salir.": END
-9000 PRINT: PRINT "Pulsa una tecla...";: WHILE INKEY$="": WEND: RETURN
-9500 REM fondo inicial: titulo, autor, prestado a
-9510 DATA "DON QUIJOTE DE LA MANCHA","MIGUEL DE CERVANTES",""
-9520 DATA "LA REGENTA","LEOPOLDO ALAS CLARIN",""
-9530 DATA "FORTUNATA Y JACINTA","BENITO PEREZ GALDOS","SOCIO 014"
-9540 DATA "TIRANT LO BLANC","JOANOT MARTORELL",""
-9550 DATA "CIEN ANOS DE SOLEDAD","GABRIEL GARCIA MARQUEZ",""
-9560 DATA "EL NOMBRE DE LA ROSA","UMBERTO ECO","SOCIO 102"
-9570 DATA "LA PLACA DEL DIAMANT","MERCE RODOREDA",""
-9580 DATA "PROGRAMACION EN BASIC","VARIOS AUTORES",""
-9590 DATA "*"`;
+5000 PRINT C$;"E";C$;"H";
+5010 IF CB THEN PRINT "Grabando ";F$;"...": GOSUB 8500
+5020 PRINT N;"libros en ";F$;". Hasta otra."
+5030 PRINT "SYSTEM vuelve a CP/M.": END
+7000 REM ordena por titulo (burbuja)
+7010 FOR I=1 TO N-1: FOR J=1 TO N-I
+7020 IF T$(J)>T$(J+1) THEN SWAP T$(J),T$(J+1): SWAP A$(J),A$(J+1): SWAP E$(J),E$(J+1): SWAP I$(J),I$(J+1): SWAP M$(J),M$(J+1)
+7030 NEXT J,I: OD=1: RETURN
+8000 REM lee el fichero del disco
+8010 OPEN "I",#1,F$
+8020 WHILE NOT EOF(1) AND N<MX
+8030 N=N+1: INPUT #1,T$(N),A$(N),E$(N),I$(N),M$(N)
+8040 WEND: CLOSE #1: RETURN
+8500 REM graba el fichero en el disco
+8510 OPEN "O",#1,F$
+8520 FOR I=1 TO N: WRITE #1,T$(I),A$(I),E$(I),I$(I),M$(I): NEXT I
+8530 CLOSE #1: CB=0: RETURN
+9000 PRINT: PRINT "Pulsa una tecla...";: WHILE INKEY$="": WEND: RETURN`;
+  const LIBROS = `"EL LENGUAJE DE PROGRAMACION C","B.W. KERNIGHAN / D.M. RITCHIE","PRENTICE-HALL","84-8320-818-0","INFORMATICA"
+"ALGORITMOS + ESTRUCTURAS DE DATOS = PROGRAMAS","NIKLAUS WIRTH","DEL CASTILLO","84-219-9212-0","INFORMATICA"
+"PROGRAMACION DEL Z80","RODNAY ZAKS","ANAYA MULTIMEDIA","84-7614-778-3","INFORMATICA"
+"MANUAL DEL USUARIO PCW 8256/8512","AMSTRAD","AMSTRAD","84-505-4401-7","INFORMATICA"
+"EL NOMBRE DE LA ROSA","UMBERTO ECO","LUMEN","84-264-8456-5","NOVELA"
+"EL PERFUME","PATRICK SUSKIND","SEIX BARRAL","84-322-8129-8","NOVELA"
+"LA CONJURA DE LOS NECIOS","JOHN KENNEDY TOOLE","ANAGRAMA","84-339-2331-5","NOVELA"
+"LA PLACA DEL DIAMANT","MERCE RODOREDA","CLUB EDITOR","84-7329-176-X","NOVELA"
+"1984","GEORGE ORWELL","DESTINO","84-233-6635-9","NOVELA"
+"YO, ROBOT","ISAAC ASIMOV","EDHASA","84-350-8429-9","CIENCIA FICCION"
+"EL SENOR DE LOS ANILLOS","J.R.R. TOLKIEN","MINOTAURO","84-450-0268-6","CIENCIA FICCION"
+"BREVE HISTORIA DEL TIEMPO","STEPHEN W. HAWKING","CRITICA","84-7423-180-9","CIENCIA"
+"DON QUIJOTE DE LA MANCHA","MIGUEL DE CERVANTES","CATEDRA","84-376-2560-2","CLASICOS"
+"TIRANT LO BLANC","JOANOT MARTORELL","EDICIONS 62","84-297-4169-0","CLASICOS"`;
   const DEMO = `10 REM DEMO: Mallard BASIC and the PCW screen codes
 20 E$=CHR$(27): PRINT E$;"E";E$;"f";
 30 FOR I=1 TO 14
@@ -96,9 +121,10 @@ box, and CP/M Plus: the system MS-DOS would later look so much like.
 
   - LocoScript, its word processor, wrote most of my letters.
   - Locomotive's BASIC, Z80 assembler again, and CP/M.
-  - My first paid program: a library manager (BIBLIO.BAS, on this disc). I wrote it here,
-    printed the listing on the dot-matrix printer and typed it in again, by hand, on the
-    client's IBM PC Portable, fixing the differences between the two BASICs.
+  - My first paid program: the catalogue of a personal library (BIBLIO.BAS, with its books
+    in LIBROS.DAT, on this disc). I wrote it here, printed the listing on the dot-matrix
+    printer and typed it in again, by hand, on the client's IBM PC Portable, fixing the
+    differences between the two BASICs.
   - My first crack: Head Over Heels. I disassembled its boot code and patched the copy
     protection, just to see if I could. A personal challenge, for my own copy.
   - A full program for a textile manufacturer: stock, customers, delivery notes, orders
@@ -112,7 +138,7 @@ Try: BASIC BIBLIO`;
   let row = 0, col = 0, revOn = 0, curVis = true, escSeq = null, waiting = false, running = false, stopReq = false;
   let kq = [], kwake = null, drive = "A", disc = {};
   let prog = new Map(), lc = null, vars = {}, arrs = {}, gosubs = [], fors = [], whiles = [], data = [], dptr = 0, cont = null;
-  let L = 0, T = [], P = 0, jmp = false, ended = false;
+  let L = 0, T = [], P = 0, jmp = false, ended = false, files = {}, sink = null;
 
   // ---------- the console: 90x32, scrolling, escape codes ----------
   function scroll() { scr.copyWithin(0, COLS); rev.copyWithin(0, COLS); scr.fill(32, (ROWS - 1) * COLS); rev.fill(0, (ROWS - 1) * COLS); }
@@ -170,7 +196,7 @@ Try: BASIC BIBLIO`;
   function freshDisc() {
     const A = {};
     for (const n of Object.keys(SYSF)) A[n] = { sys: true };
-    Object.assign(A, { "BIBLIO.BAS": { text: BIBLIO }, "DEMO.BAS": { text: DEMO }, "TIMELINE.TXT": { text: TIMELINE } });
+    Object.assign(A, { "BIBLIO.BAS": { text: BIBLIO }, "LIBROS.DAT": { text: LIBROS }, "DEMO.BAS": { text: DEMO }, "TIMELINE.TXT": { text: TIMELINE } });
     disc = { A, M: {} };
   }
   function fname(s, ext) {                              // "m:biblio" -> ["M", "BIBLIO.BAS"]
@@ -292,6 +318,7 @@ Try: BASIC BIBLIO`;
     const a = args(), x = a[0];
     const n = (i, lo = 0, hi = 255) => { const v = Math.round(num(a[i])); if (v < lo || v > hi) throw ill(); return v; };
     switch (f) {
+      case "EOF": return tf(atEnd(fileIn(n(0, 1, 15))));
       case "ABS": return Math.abs(num(x));
       case "ASC": if (!str(x).length) throw ill(); return x.charCodeAt(0);
       case "ATN": return Math.atan(num(x));
@@ -375,29 +402,32 @@ Try: BASIC BIBLIO`;
     while (i < fmt.length && !/[#&!\\+]/.test(fmt[i])) o += fmt[i++];
     return o;
   }
+  // PRINT writes to the screen, or (PRINT #n) to a file: sink is the open file
+  const w = s => { if (!sink) return out(s); for (const ch of String(s)) { if (ch === "\n") { sink.text += "\n"; sink.col = 0; } else { sink.text += ch; sink.col++; } } };
+  const cc = () => sink ? sink.col : col;
   function printStmt() {
     if (kw("USING")) {
       P++; const f = str(expr()); need("o", ";");
       const vals = []; let tail = true;
       while (!endStmt()) { if (op(";") || op(",")) { P++; tail = false; continue; } vals.push(expr()); tail = true; }
-      out(using(f, vals)); if (tail) out("\n"); return;
+      w(using(f, vals)); if (tail) w("\n"); return;
     }
     let newl = true;
     while (!endStmt()) {
       newl = true;
       if (op(";")) { P++; newl = false; continue; }
-      if (op(",")) { P++; const z = (Math.floor(col / 15) + 1) * 15; if (z >= COLS) out("\n"); else out(" ".repeat(z - col)); newl = false; continue; }
+      if (op(",")) { P++; const z = (Math.floor(cc() / 15) + 1) * 15; if (z >= COLS) w("\n"); else w(" ".repeat(z - cc())); newl = false; continue; }
       if (kw("TAB") || kw("SPC")) {
         const f = T[P++].v; need("o", "("); const v = Math.round(num(expr())); need("o", ")");
-        if (f === "SPC") out(" ".repeat(Math.max(0, v)));
-        else { const c = (Math.max(1, v) - 1) % COLS; if (c < col) out("\n"); out(" ".repeat(c - col)); }
+        if (f === "SPC") w(" ".repeat(Math.max(0, v)));
+        else { const c = (Math.max(1, v) - 1) % COLS; if (c < cc()) w("\n"); w(" ".repeat(c - cc())); }
         newl = false; continue;
       }
       const v = expr();
-      out(typeof v === "number" ? fmtN(v) + " " : v);
+      w(typeof v === "number" ? fmtN(v) + " " : v);
       newl = !(op(";") || op(","));
     }
-    if (newl) out("\n");
+    if (newl) w("\n");
   }
   async function inputStmt(lineMode) {                  // INPUT "Name";A$ asks "Name? "; with a comma, no "?"
     let prompt = lineMode ? "" : "? ";
@@ -424,13 +454,55 @@ Try: BASIC BIBLIO`;
     }
   }
 
+  // ---------- sequential files: OPEN "I"/"O"/"A",#n,"name"; PRINT #, WRITE #, INPUT #, LINE INPUT #, EOF, CLOSE ----------
+  function fileNo() { if (op("#")) P++; const n = Math.round(num(expr())); if (n < 1 || n > 15) throw bad("Bad file number"); return n; }
+  function fileIn(n) { const f = files[n]; if (!f) throw bad("File not open"); if (f.mode !== "I") throw bad("Bad file mode"); return f; }
+  function fileOut(n) { const f = files[n]; if (!f) throw bad("File not open"); if (f.mode === "I") throw bad("Bad file mode"); return f; }
+  function flush(n) { const f = files[n]; if (f && f.mode !== "I") f.disc[f.name] = { text: f.text.replace(/\n$/, "") }; delete files[n]; }
+  const closeAll = () => Object.keys(files).forEach(flush);
+  const atEnd = f => !/\S/.test(f.text.slice(f.pos));
+  async function openStmt() {
+    const mode = str(expr()).toUpperCase(); need("o", ","); const n = fileNo(); need("o", ","); const [d, name] = fname(str(expr()));
+    if (files[n]) throw bad("File already open");
+    if (!valid(name)) throw bad("Bad file name");
+    await whirr();
+    const old = disc[d][name];
+    if (mode === "I") { if (!old || old.sys) throw bad("File not found"); files[n] = { mode, name, text: old.text, pos: 0 }; }
+    else if (mode === "O" || mode === "A") files[n] = { mode, name, disc: disc[d], text: mode === "A" && old && !old.sys ? old.text + "\n" : "", col: 0 };
+    else throw bad("Bad file mode");
+  }
+  function readItem(f, whole) {                         // one field: "quoted" or up to a comma; LINE INPUT #: the whole line
+    if (atEnd(f)) throw bad("Input past end");
+    const t = f.text; let p = f.pos, v;
+    if (whole) { let e = t.indexOf("\n", p); if (e < 0) e = t.length; f.pos = e + 1; return t.slice(p, e); }
+    while (t[p] === " " || t[p] === "\n" || t[p] === "\r") p++;
+    if (t[p] === '"') { let e = t.indexOf('"', p + 1); if (e < 0) e = t.length; v = t.slice(p + 1, e); p = e + 1; while (p < t.length && t[p] !== "," && t[p] !== "\n") p++; }
+    else { let e = p; while (e < t.length && t[e] !== "," && t[e] !== "\n") e++; v = t.slice(p, e).trim(); p = e; }
+    if (t[p] === "," || t[p] === "\n") p++;
+    f.pos = p; return v;
+  }
+  function fileInput(whole) {
+    const f = fileIn(fileNo()); need("o", ",");
+    for (;;) {
+      const r = target(), v = readItem(f, whole);
+      if (isS(r.name)) r.set(v); else { if (v.trim() && !NUMRE.test(v.trim())) throw bad("Type mismatch"); r.set(+v || 0); }
+      if (whole || !op(",")) return;
+      P++;
+    }
+  }
+  function writeStmt() {                                // strings in quotes, numbers without spaces, commas between
+    const items = [];
+    while (!endStmt()) { if (op(",") || op(";")) { P++; continue; } const v = expr(); items.push(typeof v === "string" ? `"${v}"` : fmtN(v).trim()); }
+    w(items.join(",") + "\n");
+  }
+
   // ---------- statements ----------
   const endStmt = () => P >= T.length || op(":") || kw("ELSE");
   const lineArg = () => { const t = T[P]; if (!t || t.k !== "n") throw bad(SYN); P++; return t.v; };
   function goLine(n) { if (!prog.has(n)) throw bad("Undefined line number"); L = n; T = prog.get(n).T; P = 0; jmp = true; }
   const back = at => { [L, T, P] = at; jmp = true; };
   function clr() {
-    vars = {}; arrs = {}; gosubs = []; fors = []; whiles = []; data = []; dptr = 0;
+    closeAll(); vars = {}; arrs = {}; gosubs = []; fors = []; whiles = []; data = []; dptr = 0;
     for (const n of lines()) for (const t of prog.get(n).T) if (t.k === "d") {
       const s = t.v; let cur = "", q = false;
       for (let i = 0; i <= s.length; i++) {
@@ -446,12 +518,11 @@ Try: BASIC BIBLIO`;
     for (;;) {
       for (; i < ts.length; i++) {
         if (ts[i].k !== "k") continue;
-        if (ts[i].v === open) depth++;
-        else if (ts[i].v === close && depth-- === 0) {
-          L = ln; T = ts; P = i + 1; jmp = true;
-          if (close === "NEXT") while (is("v") || op(",")) P++;
-          return;
-        }
+        if (ts[i].v === open) { depth++; continue; }
+        if (ts[i].v !== close) continue;
+        let k = 1, j = i + 1;                           // NEXT J,I closes two loops
+        if (close === "NEXT") { k = 0; while (ts[j]?.k === "v") { k++; j++; if (ts[j]?.k === "o" && ts[j].v === ",") j++; else break; } k = Math.max(1, k); }
+        if ((depth -= k) < 0) { L = ln; T = ts; P = j; jmp = true; return; }
       }
       const nx = ln ? nextLine(ln) : null;
       if (nx === null) throw bad(open === "FOR" ? "FOR without NEXT" : "WHILE without WEND");
@@ -473,12 +544,17 @@ Try: BASIC BIBLIO`;
     P++;
     switch (t.v) {
       case "LET": { const r = target(); need("o", "="); r.set(expr()); return; }
-      case "PRINT": case "LPRINT": return printStmt();      // no printer attached: LPRINT shows it here
-      case "INPUT": return inputStmt(false);
-      case "LINE": need("k", "INPUT"); return inputStmt(true);
+      case "PRINT": case "LPRINT":                          // no printer attached: LPRINT shows it here
+        if (op("#")) { const f = fileOut(fileNo()); need("o", ","); sink = f; try { return printStmt(); } finally { sink = null; } }
+        return printStmt();
+      case "WRITE":
+        if (op("#")) { const f = fileOut(fileNo()); need("o", ","); sink = f; try { return writeStmt(); } finally { sink = null; } }
+        return writeStmt();
+      case "INPUT": return op("#") ? fileInput(false) : inputStmt(false);
+      case "LINE": need("k", "INPUT"); return op("#") ? fileInput(true) : inputStmt(true);
       case "REM": case "DATA": P = T.length; return;
       case "ELSE": P = T.length; return;                     // the THEN part ran: skip the rest
-      case "END": ended = true; cont = null; return;
+      case "END": closeAll(); ended = true; cont = null; return;
       case "STOP": throw { stop: true };
       case "GOTO": return goLine(lineArg());
       case "GOSUB": { const n = lineArg(); gosubs.push([L, T, P]); return goLine(n); }
@@ -539,7 +615,13 @@ Try: BASIC BIBLIO`;
       case "SWAP": { const a = target(); need("o", ","); const b = target(); const x = a.get(), y = b.get(); if (typeof x !== typeof y) throw bad("Type mismatch"); a.set(y); b.set(x); return; }
       case "WIDTH": while (!endStmt()) P++; return;
       case "CLS": throw bad(SYN);                         // Mallard has no CLS: PRINT CHR$(27)+"E"
-      case "OPEN": case "CLOSE": throw bad("File not open");
+      case "OPEN": return openStmt();
+      case "CLOSE": {
+        const any = Object.values(files).some(f => f.mode !== "I");
+        if (endStmt()) closeAll(); else for (;;) { flush(fileNo()); if (!op(",")) break; P++; }
+        if (any) await whirr();
+        return;
+      }
       default: return command(t.v);
     }
   }
@@ -802,7 +884,7 @@ No CLS in Mallard BASIC: PRINT CHR$(27)+"E" clears the screen. Esc = STOP.`;
       el.innerHTML = `<canvas class="pcw-scr" width="${COLS * CW}" height="${ROWS * CH}" aria-label="Amstrad PCW screen"></canvas>
 <input class="vic-in" aria-label="Amstrad PCW keyboard" autocomplete="off" autocapitalize="none" spellcheck="false">
 <p class="vic-keys"><button type="button" data-pcw-stop>STOP</button> <button type="button" data-pcw-exit>⏏ PC</button></p>
-<p class="vic-help">DIR · TYPE TIMELINE.TXT · BASIC BIBLIO · HELP · Esc = STOP<br>Simulated, not emulated: CP/M Plus and Mallard BASIC rewritten in JS, no ROM inside.</p>`;
+<p class="vic-help">DIR · TYPE TIMELINE.TXT · BASIC BIBLIO · HELP · SYSTEM leaves BASIC · Esc = STOP<br>Simulated, not emulated: CP/M Plus and Mallard BASIC rewritten in JS, no ROM inside.</p>`;
       cv = el.querySelector("canvas"); ctx = cv.getContext("2d"); inp = el.querySelector("input");
       ctx.font = `bold ${CH - 5}px ui-monospace, Consolas, "Courier New", monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       alive = true; running = false; stopReq = false; kq = []; kwake = null; drive = "A"; revOn = 0; escSeq = null; typed = "";
