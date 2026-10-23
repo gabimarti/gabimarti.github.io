@@ -57,8 +57,9 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
     4 undocumented features. F1 gives clues.
 [ ] memtest86+ (boot menu): let it run. Old RAM fails sometimes.
 [ ] This PC's owner keeps a museum on this disk. Its name is the obvious one.
-[ ] The boot menu keeps machines older than this PC, tapes still in.
+[ ] The boot menu keeps machines older than this PC, tapes and discs still in.
     On one of them, a 1985 game never ran as it was printed.
+    Another one still runs my first paid program. Ask it for a book.
 [ ] A 90s virus collector left his zoo on this disk. SCAN finds it.
 [ ] Once a year this PC throws a party. Its clock is easier to change
     than it looks.
