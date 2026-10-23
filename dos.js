@@ -737,7 +737,7 @@ on their own on the right day, if this PC's clock agrees.`;
     if (d !== "C") return err("Invalid drive specification");
     print("<br>WARNING, ALL DATA ON NON-REMOVABLE DISK<br>DRIVE C: WILL BE LOST!");
     if (!/^y/i.test(await askLine("Proceed with Format (Y/N)?"))) return;
-    print("Are you REALLY sure? 35 years of work live on this disk.");
+    print("Are you REALLY sure? Work since 1986 lives on this disk.");
     if (!/^y/i.test(await askLine("Last chance. Format anyway (Y/N)?"))) return print("Wise choice.");
     form.hidden = true;
     const bar = print("");
