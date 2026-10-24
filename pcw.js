@@ -105,15 +105,40 @@
 "BREVE HISTORIA DEL TIEMPO","STEPHEN W. HAWKING","CRITICA","84-7423-180-9","CIENCIA"
 "DON QUIJOTE DE LA MANCHA","MIGUEL DE CERVANTES","CATEDRA","84-376-2560-2","CLASICOS"
 "TIRANT LO BLANC","JOANOT MARTORELL","EDICIONS 62","84-297-4169-0","CLASICOS"`;
-  const DEMO = `10 REM DEMO: Mallard BASIC and the PCW screen codes
-20 E$=CHR$(27): PRINT E$;"E";E$;"f";
-30 FOR I=1 TO 14
-40 R=INT(RND*28): C=INT(RND*80)
-50 PRINT E$;"Y";CHR$(32+R);CHR$(32+C);E$;"p";" PCW 8512 ";E$;"q";
-60 NEXT I
-70 PRINT E$;"Y";CHR$(32+29);CHR$(32);"ESC E clears, ESC Y moves the cursor, ESC p and ESC q: reverse video."
-80 PRINT "PRINT USING: ";: PRINT USING "###.##";3.14159
-90 PRINT E$;"e";`;
+  const MASTER = `10 REM MASTERMIND - break the secret code in 10 tries
+20 REM Mallard BASIC on the Amstrad PCW 8512
+30 E$=CHR$(27): DIM S(4),G(4),U(4),V(4)
+40 PRINT E$;"E";E$;"H";E$;"p";SPACE$(35);"M A S T E R M I N D";SPACE$(36);E$;"q"
+50 PRINT: PRINT "I have chosen a code of 4 digits, each one from 1 to 6. Digits may repeat."
+60 PRINT "After each guess:  * = right digit in the right place"
+70 PRINT "                   + = right digit in the wrong place"
+80 PRINT "You have 10 tries. Q gives up.": PRINT
+90 FOR I=1 TO 4: S(I)=INT(RND*6)+1: NEXT I
+100 FOR T=1 TO 10
+110 PRINT "Try";T;: INPUT G$: G$=UPPER$(G$)
+120 IF G$="Q" THEN 300
+130 OK=(LEN(G$)=4)
+140 FOR I=1 TO 4: D=VAL(MID$(G$+"0000",I,1)): G(I)=D: IF D<1 OR D>6 THEN OK=0
+150 NEXT I
+160 IF NOT OK THEN PRINT "Four digits, 1 to 6, like 1234.": GOTO 110
+170 B=0: W=0
+180 FOR I=1 TO 4: U(I)=S(I): V(I)=G(I): IF V(I)=U(I) THEN B=B+1: U(I)=0: V(I)=-1
+190 NEXT I
+200 FOR I=1 TO 4: FOR J=1 TO 4: IF V(I)>0 AND V(I)=U(J) THEN W=W+1: U(J)=0: V(I)=-1
+210 NEXT J,I
+220 PRINT TAB(24);G$;"   ";STRING$(B,"*");STRING$(W,"+");STRING$(4-B-W,".")
+230 IF B=4 THEN 400
+240 NEXT T
+250 PRINT: PRINT "Out of tries. The code was ";: GOSUB 500: GOTO 600
+300 PRINT "You gave up. The code was ";: GOSUB 500: GOTO 600
+400 PRINT: PRINT CHR$(7);"Code broken in";T;"tries!"
+410 IF T<=4 THEN PRINT "Impressive. Are you sure you are not a computer?"
+420 GOTO 600
+500 FOR I=1 TO 4: PRINT CHR$(48+S(I));: NEXT I: PRINT: RETURN
+600 PRINT: PRINT "Another game (Y/N)? ";
+610 K$=UPPER$(INKEY$): IF K$<>"Y" AND K$<>"N" THEN 610
+620 PRINT K$: IF K$="Y" THEN 40
+630 PRINT "RUN plays again, SYSTEM goes back to CP/M.": END`;
   const TIMELINE = `THE AMSTRAD PCW YEARS (c. 1988)
 
 My second computer: an Amstrad PCW 8512. Green screen, two 3" disc drives, a printer in
@@ -130,7 +155,7 @@ the box, and CP/M Plus: the system MS-DOS would later look so much like.
   - A full program for a textile manufacturer: stock, customers, delivery notes, orders
     and invoices.
 
-Try: BASIC BIBLIO`;
+Try: BASIC BIBLIO, or BASIC MASTER for a game.`;
   const SYSF = { "J14CPM3.EMS": 25, "BASIC.COM": 29, "DATE.COM": 3, "SHOW.COM": 9, "HELP.COM": 7, "HELP.HLP": 83 };   // sizes in K, for SHOW
 
   let el, cv, ctx, inp, done, alive = false, dirty = true, frameN = 0, flashOn = true;
@@ -196,7 +221,7 @@ Try: BASIC BIBLIO`;
   function freshDisc() {
     const A = {};
     for (const n of Object.keys(SYSF)) A[n] = { sys: true };
-    Object.assign(A, { "BIBLIO.BAS": { text: BIBLIO }, "LIBROS.DAT": { text: LIBROS }, "DEMO.BAS": { text: DEMO }, "TIMELINE.TXT": { text: TIMELINE } });
+    Object.assign(A, { "BIBLIO.BAS": { text: BIBLIO }, "LIBROS.DAT": { text: LIBROS }, "MASTER.BAS": { text: MASTER }, "TIMELINE.TXT": { text: TIMELINE } });
     disc = { A, B: {}, M: {} };
   }
   function fname(s, ext) {                              // "m:biblio" -> ["M", "BIBLIO.BAS"]
@@ -214,7 +239,11 @@ Try: BASIC BIBLIO`;
   }
   const used = d => Object.entries(disc[d]).reduce((s, [n, f]) => s + (f.sys ? SYSF[n] || 1 : Math.max(1, Math.ceil((f.text || "").length / 1024))), 0);
   const free = d => Math.max(0, ({ A: 173, B: 706, M: 368 }[d]) - used(d));
-  const whirr = async () => { sfx.floppy(); await sleep(GM.reduce ? 80 : 700); };
+  const spin = (dur, steps) => {                       // the 3" drive: low motor hum and a few slow head steps
+    sfx.tone(48, dur, "sawtooth", .018); sfx.tone(96, dur, "triangle", .008);
+    for (let i = 0; i < steps; i++) sfx.tone(70 + Math.random() * 20, .04, "square", .03, .2 + i * (dur - .4) / Math.max(1, steps - 1));
+  };
+  const whirr = async () => { spin(.7, 2); await sleep(GM.reduce ? 80 : 700); };
 
   // ---------- BASIC: tokenizer (keywords are whole words; names are upper case) ----------
   function norm(s) {                                    // upper case outside quotes, until REM, ' or DATA
@@ -803,7 +832,7 @@ No CLS in Mallard BASIC: PRINT CHR$(27)+"E" clears the screen. Esc = STOP.`;
     cls(); curVis = false; dirty = true;
     await sleep(GM.reduce ? 100 : 600); if (!alive) return;
     sfx.tone(1250, .25, "square", .04);                  // the start-up bleep, then the disc
-    await sleep(GM.reduce ? 100 : 500); sfx.floppy(); await sleep(GM.reduce ? 100 : 1500); if (!alive) return;
+    await sleep(GM.reduce ? 100 : 500); spin(1.5, 3); await sleep(GM.reduce ? 100 : 1500); if (!alive) return;
     curVis = true;
     say("CP/M Plus Amstrad Consumer Electronics plc"); out("\n");
     say("v 1.4, 61K TPA, 2 disc drives, 368K drive M:"); out("\n");
@@ -884,7 +913,7 @@ No CLS in Mallard BASIC: PRINT CHR$(27)+"E" clears the screen. Esc = STOP.`;
       el.innerHTML = `<canvas class="pcw-scr" width="${COLS * CW}" height="${ROWS * CH}" aria-label="Amstrad PCW screen"></canvas>
 <input class="vic-in" aria-label="Amstrad PCW keyboard" autocomplete="off" autocapitalize="none" spellcheck="false">
 <p class="vic-keys"><button type="button" data-pcw-stop>STOP</button> <button type="button" data-pcw-exit>⏏ PC</button></p>
-<p class="vic-help">DIR · TYPE TIMELINE.TXT · BASIC BIBLIO · HELP · SYSTEM leaves BASIC · Esc = STOP<br>Simulated, not emulated: CP/M Plus and Mallard BASIC rewritten in JS, no ROM inside.</p>`;
+<p class="vic-help">DIR · TYPE TIMELINE.TXT · BASIC BIBLIO · BASIC MASTER · HELP · SYSTEM leaves BASIC · Esc = STOP<br>Simulated, not emulated: CP/M Plus and Mallard BASIC rewritten in JS, no ROM inside.</p>`;
       cv = el.querySelector("canvas"); ctx = cv.getContext("2d"); inp = el.querySelector("input");
       ctx.font = `bold ${CH - 5}px ui-monospace, Consolas, "Courier New", monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       alive = true; running = false; stopReq = false; kq = []; kwake = null; drive = "A"; revOn = 0; escSeq = null; typed = "";
