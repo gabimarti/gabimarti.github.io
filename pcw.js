@@ -1,7 +1,7 @@
 // Amstrad PCW 8512 for gabimarti.github.io (GRUB > Vintage machines). Loaded on demand by site.js.
 // Not an emulator and no disc image: CP/M Plus and Mallard BASIC (Locomotive Software) rewritten in JS.
 // Screen: 90x32 green text with the PCW's escape codes (ESC E clears, ESC H homes, ESC Y row col moves the cursor,
-// ESC p / ESC q reverse video). Drive A: is the 3" start-of-day disc; M: is the RAM disc. Files saved last a visit.
+// ESC p / ESC q reverse video). Drive A: is the 3" start-of-day disc (180K), B: the 720K second drive, M: the RAM disc. Files saved last a visit.
 // Esc is STOP: it breaks a program; at a prompt it goes back to the PC.
 "use strict";
 (() => {
@@ -116,8 +116,8 @@
 90 PRINT E$;"e";`;
   const TIMELINE = `THE AMSTRAD PCW YEARS (c. 1988)
 
-My second computer: an Amstrad PCW 8512. Green screen, a 3" disc drive, a printer in the
-box, and CP/M Plus: the system MS-DOS would later look so much like.
+My second computer: an Amstrad PCW 8512. Green screen, two 3" disc drives, a printer in
+the box, and CP/M Plus: the system MS-DOS would later look so much like.
 
   - LocoScript, its word processor, wrote most of my letters.
   - Locomotive's BASIC, Z80 assembler again, and CP/M.
@@ -197,7 +197,7 @@ Try: BASIC BIBLIO`;
     const A = {};
     for (const n of Object.keys(SYSF)) A[n] = { sys: true };
     Object.assign(A, { "BIBLIO.BAS": { text: BIBLIO }, "LIBROS.DAT": { text: LIBROS }, "DEMO.BAS": { text: DEMO }, "TIMELINE.TXT": { text: TIMELINE } });
-    disc = { A, M: {} };
+    disc = { A, B: {}, M: {} };
   }
   function fname(s, ext) {                              // "m:biblio" -> ["M", "BIBLIO.BAS"]
     let d = drive; s = s.trim().toUpperCase();
@@ -213,7 +213,7 @@ Try: BASIC BIBLIO`;
     return Object.keys(disc[d]).filter(n => re.test(n.includes(".") ? n : n + ".")).sort();
   }
   const used = d => Object.entries(disc[d]).reduce((s, [n, f]) => s + (f.sys ? SYSF[n] || 1 : Math.max(1, Math.ceil((f.text || "").length / 1024))), 0);
-  const free = d => Math.max(0, (d === "A" ? 173 : 368) - used(d));
+  const free = d => Math.max(0, ({ A: 173, B: 706, M: 368 }[d]) - used(d));
   const whirr = async () => { sfx.floppy(); await sleep(GM.reduce ? 80 : 700); };
 
   // ---------- BASIC: tokenizer (keywords are whole words; names are upper case) ----------
@@ -740,10 +740,10 @@ Try: BASIC BIBLIO`;
   }
   const HELP = `CP/M Plus on this PCW 8512 (simulated, not emulated)
 
-  DIR [d:][name]      the files on a disc: A: is the 3" disc, M: the RAM disc
+  DIR [d:][name]      the files on a disc: A: and B: are the 3" discs, M: the RAM disc
   TYPE name           shows a text file      ERA name       erases a file
   REN new=old         renames a file         SHOW [d:]      free space
-  DATE                the date and time      A: / M:        changes drive
+  DATE                the date and time      A: / B: / M:   changes drive
   BASIC [name]        Mallard BASIC, and runs a program from the disc
 
 In BASIC: LOAD "BIBLIO", RUN, LIST, SAVE "name", FILES, NEW, SYSTEM (back to CP/M).
@@ -752,7 +752,7 @@ No CLS in Mallard BASIC: PRINT CHR$(27)+"E" clears the screen. Esc = STOP.`;
     const [w0, ...rest] = s.trim().split(/\s+/), cmd = w0.toUpperCase(), arg = rest.join(" ");
     if (/^[A-P]:$/.test(cmd)) { if (cmd[0] in disc) drive = cmd[0]; else say(`CP/M Error On ${cmd[0]}: Invalid Drive`); return; }
     try {
-      switch (cmd.replace(/^[AM]:/, "").replace(/\.COM$/, "")) {
+      switch (cmd.replace(/^[ABM]:/, "").replace(/\.COM$/, "")) {
         case "DIR": {
           const [d, pat] = fname(arg || "*.*"); await whirr();
           const fs = matches(d, pat || "*.*");
@@ -782,7 +782,7 @@ No CLS in Mallard BASIC: PRINT CHR$(27)+"E" clears the screen. Esc = STOP.`;
           await whirr(); disc[d][nw] = disc[d][old]; delete disc[d][old]; return;
         }
         case "SHOW": {
-          const ds = arg ? [fname(/:$/.test(arg) ? arg : arg + ":")[0]] : ["A", "M"];
+          const ds = arg ? [fname(/:$/.test(arg) ? arg : arg + ":")[0]] : ["A", "B", "M"];
           for (const d of ds) say(`${d}: RW, Space: ${free(d)}k`);
           return;
         }
@@ -806,7 +806,7 @@ No CLS in Mallard BASIC: PRINT CHR$(27)+"E" clears the screen. Esc = STOP.`;
     await sleep(GM.reduce ? 100 : 500); sfx.floppy(); await sleep(GM.reduce ? 100 : 1500); if (!alive) return;
     curVis = true;
     say("CP/M Plus Amstrad Consumer Electronics plc"); out("\n");
-    say("v 1.4, 61K TPA, 1 disc drive, 368K drive M:"); out("\n");
+    say("v 1.4, 61K TPA, 2 disc drives, 368K drive M:"); out("\n");
     say("Type HELP for the commands. TIMELINE.TXT is on this disc."); out("\n");
     while (alive) {
       out(drive + ">");
