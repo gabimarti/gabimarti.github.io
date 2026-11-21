@@ -239,11 +239,29 @@ Try: BASIC BIBLIO, or BASIC MASTER for a game.`;
   }
   const used = d => Object.entries(disc[d]).reduce((s, [n, f]) => s + (f.sys ? SYSF[n] || 1 : Math.max(1, Math.ceil((f.text || "").length / 1024))), 0);
   const free = d => Math.max(0, ({ A: 173, B: 706, M: 368 }[d]) - used(d));
-  const spin = (dur, steps) => {                       // the 3" drive: low motor hum and a few slow head steps
-    sfx.tone(48, dur, "sawtooth", .018); sfx.tone(96, dur, "triangle", .008);
-    for (let i = 0; i < steps; i++) sfx.tone(70 + Math.random() * 20, .04, "square", .03, .2 + i * (dur - .4) / Math.max(1, steps - 1));
+  const clack = (at, loud = false) => {
+    const f = 1600 + Math.random() * 800;
+    if (sfx.noise) sfx.noise(loud ? .035 : .025, loud ? .7 : .45, f, at);
+    sfx.tone(110 + Math.random() * 40, .025, "square", loud ? .06 : .04, at);
   };
-  const whirr = async () => { spin(.7, 2); await sleep(GM.reduce ? 80 : 700); };
+  const spin = (retry = false) => {                    // the 3" Amstrad drive: motor hum + stepper seeks
+    if (retry) {
+      sfx.tone(55, 1.8, "sawtooth", .05);
+      sfx.tone(110, 1.7, "triangle", .025);
+      for (let i = 0; i < 4; i++) clack(.12 + i * .055);
+      for (let i = 0; i < 7; i++) clack(.60 + i * .035, true);
+      for (let i = 0; i < 4; i++) clack(1.15 + i * .055);
+    } else {
+      sfx.tone(55, .8, "sawtooth", .045);
+      sfx.tone(110, .75, "triangle", .02);
+      for (let i = 0; i < 5; i++) clack(.14 + i * .07);
+    }
+  };
+  const whirr = async (d = drive, retry = false) => {
+    if (d === "M") return;                              // RAM disc is silent
+    spin(retry);
+    await sleep(GM.reduce ? 80 : (retry ? 1800 : 800));
+  };
 
   // ---------- BASIC: tokenizer (keywords are whole words; names are upper case) ----------
   function norm(s) {                                    // upper case outside quotes, until REM, ' or DATA
@@ -494,8 +512,8 @@ Try: BASIC BIBLIO, or BASIC MASTER for a game.`;
     const mode = str(expr()).toUpperCase(); need("o", ","); const n = fileNo(); need("o", ","); const [d, name] = fname(str(expr()));
     if (files[n]) throw bad("File already open");
     if (!valid(name)) throw bad("Bad file name");
-    await whirr();
     const old = disc[d][name];
+    await whirr(d, mode === "I" && (!old || old.sys));
     if (mode === "I") { if (!old || old.sys) throw bad("File not found"); files[n] = { mode, name, text: old.text, pos: 0 }; }
     else if (mode === "O" || mode === "A") files[n] = { mode, name, disc: disc[d], text: mode === "A" && old && !old.sys ? old.text + "\n" : "", col: 0 };
     else throw bad("Bad file mode");
@@ -678,17 +696,17 @@ Try: BASIC BIBLIO, or BASIC MASTER for a game.`;
       case "SAVE": {
         const [d, n] = fname(str(expr()), "BAS"); if (op(",")) { P++; need("v"); }
         if (!valid(n)) throw bad("Bad file name");
-        await whirr(); disc[d][n] = { text: listing() }; return;
+        await whirr(d); disc[d][n] = { text: listing() }; return;
       }
       case "FILES": {
         const [d, pat] = endStmt() ? [drive, "*.*"] : fname(str(expr()));
-        await whirr();
         const fs = matches(d, pat || "*.*");
+        await whirr(d, !fs.length);
         if (!fs.length) throw bad("File not found");
         for (let i = 0; i < fs.length; i += 6) say(fs.slice(i, i + 6).map(n => n.padEnd(14)).join(""));
         say(`${free(d)}K free`); return;
       }
-      case "KILL": { const [d, n] = fname(str(expr())); if (!disc[d][n]) throw bad("File not found"); await whirr(); delete disc[d][n]; return; }
+      case "KILL": { const [d, n] = fname(str(expr())); await whirr(d, !disc[d][n]); if (!disc[d][n]) throw bad("File not found"); delete disc[d][n]; return; }
       case "NAME": {
         const [d, a] = fname(str(expr())); need("k", "AS"); const [, b] = fname(str(expr()));
         if (!disc[d][a]) throw bad("File not found"); if (disc[d][b]) throw bad("File already exists");
@@ -701,8 +719,9 @@ Try: BASIC BIBLIO, or BASIC MASTER for a game.`;
   }
   function goFirst() { const f = lines()[0]; if (f === undefined) { ended = true; return; } goLine(f); }
   async function loadProg(name) {
-    const [d, n] = fname(name, "BAS"); await whirr();
+    const [d, n] = fname(name, "BAS");
     const f = disc[d][n];
+    await whirr(d, !f || f.sys);
     if (!f || f.sys) throw bad("File not found");
     prog = new Map(); lc = null;
     for (const l of f.text.split("\n")) { const m = /^\s*(\d+)\s?(.*)$/.exec(l); if (m) store(+m[1], m[2]); }
@@ -779,36 +798,45 @@ In BASIC: LOAD "BIBLIO", RUN, LIST, SAVE "name", FILES, NEW, SYSTEM (back to CP/
 No CLS in Mallard BASIC: PRINT CHR$(27)+"E" clears the screen. Esc = STOP.`;
   async function cpmCmd(s) {
     const [w0, ...rest] = s.trim().split(/\s+/), cmd = w0.toUpperCase(), arg = rest.join(" ");
-    if (/^[A-P]:$/.test(cmd)) { if (cmd[0] in disc) drive = cmd[0]; else say(`CP/M Error On ${cmd[0]}: Invalid Drive`); return; }
+    if (/^[A-P]:$/.test(cmd)) {
+      if (cmd[0] in disc) { drive = cmd[0]; if (drive !== "M") await whirr(drive, !Object.keys(disc[drive]).length); }
+      else say(`CP/M Error On ${cmd[0]}: Invalid Drive`);
+      return;
+    }
     try {
       switch (cmd.replace(/^[ABM]:/, "").replace(/\.COM$/, "")) {
         case "DIR": {
-          const [d, pat] = fname(arg || "*.*"); await whirr();
+          const [d, pat] = fname(arg || "*.*");
           const fs = matches(d, pat || "*.*");
+          await whirr(d, !fs.length);
           if (!fs.length) { say("No File"); return; }
           for (let i = 0; i < fs.length; i += 5) say(`${d}: ` + fs.slice(i, i + 5).map(n => { const [b, e = ""] = n.split("."); return b.padEnd(8) + " " + e.padEnd(3); }).join(" : "));
           return;
         }
         case "TYPE": {
           if (!arg) { say("TYPE?"); return; }
-          const [d, n] = fname(arg); await whirr();
-          if (!disc[d][n]) { say("No File"); return; }
-          return typeFile({ ...disc[d][n], name: n });
+          const [d, n] = fname(arg);
+          const f = disc[d][n];
+          await whirr(d, !f);
+          if (!f) { say("No File"); return; }
+          return typeFile({ ...f, name: n });
         }
         case "ERA": case "ERASE": {
           if (!arg) { say("ERA?"); return; }
           const [d, pat] = fname(arg), fs = matches(d, pat);
           if (/^\*\.\*$/.test(pat)) { out(`ERASE ${d}:*.* (Y/N)? `); const k = await getKey(); say(k === "\x1b" ? "" : k || ""); if (!/y/i.test(k || "")) return; }
+          await whirr(d, !fs.length);
           if (!fs.length) { say("No File"); return; }
-          await whirr(); for (const n of fs) delete disc[d][n]; return;
+          for (const n of fs) delete disc[d][n]; return;
         }
         case "REN": case "RENAME": {
           const m = /^(\S+)\s*=\s*(\S+)$/.exec(arg); if (!m) { say("REN?"); return; }
           const [d, nw] = fname(m[1]), [, old] = fname(m[2]);
+          await whirr(d, !disc[d][old]);
           if (!disc[d][old]) { say("No File"); return; }
           if (disc[d][nw]) { say(`Not renamed: ${nw} file already exists`); return; }
           if (!valid(nw)) { say("REN?"); return; }
-          await whirr(); disc[d][nw] = disc[d][old]; delete disc[d][old]; return;
+          disc[d][nw] = disc[d][old]; delete disc[d][old]; return;
         }
         case "SHOW": {
           const ds = arg ? [fname(/:$/.test(arg) ? arg : arg + ":")[0]] : ["A", "B", "M"];
@@ -821,7 +849,7 @@ No CLS in Mallard BASIC: PRINT CHR$(27)+"E" clears the screen. Esc = STOP.`;
           return;
         }
         case "HELP": say(HELP); return;
-        case "BASIC": await whirr(); await basicMain(arg); return;
+        case "BASIC": await whirr("A"); await basicMain(arg); return;
         case "LOCOSCRIPT": case "LOCO": case "LOCOSCRI":
           say("LocoScript lives on its own start-of-day disc. This one is CP/M Plus: try BASIC, or TYPE TIMELINE.TXT"); return;
       }
@@ -832,7 +860,7 @@ No CLS in Mallard BASIC: PRINT CHR$(27)+"E" clears the screen. Esc = STOP.`;
     cls(); curVis = false; dirty = true;
     await sleep(GM.reduce ? 100 : 600); if (!alive) return;
     sfx.tone(1250, .25, "square", .04);                  // the start-up bleep, then the disc
-    await sleep(GM.reduce ? 100 : 500); spin(1.5, 3); await sleep(GM.reduce ? 100 : 1500); if (!alive) return;
+    await sleep(GM.reduce ? 100 : 500); await whirr("A"); await sleep(GM.reduce ? 100 : 300); if (!alive) return;
     curVis = true;
     say("CP/M Plus Amstrad Consumer Electronics plc"); out("\n");
     say("v 1.4, 61K TPA, 2 disc drives, 368K drive M:"); out("\n");
