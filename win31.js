@@ -20,6 +20,15 @@
     ["🚪", "Exit Windows", null, "exit"],
     ["💣", "Minesweeper", "Minesweeper", "mines", "Games"],
     ["♞", "Chess", "Chess", "chess", "Games"],
+    ["🧭", "3D Maze", "3D Maze", "maze", "Games"],
+    ["🏆", "Maze Reward", "Maze Reward - REWARD.WRI", io => {
+      const done = localStorage.getItem("GM_maze_done") === "1";
+      if (!done) return `<div class="w31-m-locked"><p><strong>Locked Chamber</strong></p><p>Complete the <strong>3D Maze</strong> in the Games group to unlock the four-decade historical archive reward and your personal certificate.</p></div>`;
+      const key = localStorage.getItem("GM_maze_key");
+      const player = localStorage.getItem("GM_maze_player");
+      const txt = GM.maze ? GM.maze.getRewardText(key, player) : "Completed!";
+      return `<pre class="w31-reward-pre">${esc(txt)}</pre>`;
+    }, "Games"],
   ];
   const GROUPS = ["Gabriel Martí", "Games"];
   let z = 10;
@@ -328,6 +337,11 @@
           try { await GM.need("chess.js"); } catch (e) { return; }
           const w = win(title, "", "w31-chesswin");
           io.sfx.blip(); return GM.chess.mount(w, io);
+        }
+        if (content === "maze") {
+          try { await GM.need("maze.js"); } catch (e) { return; }
+          const w = win(title, "", "w31-mazewin");
+          io.sfx.blip(); return GM.maze.mountWin31(w, io);
         }
         io.sfx.blip(); win(title, content(io));
       };

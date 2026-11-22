@@ -33,7 +33,7 @@ Things you can type:
   REBOOT      restart the PC (or Ctrl+Alt+Del)
 
 Too much typing? CV runs CV.BAT: my CV, one section at a time.
-Bored? C:\\GAMES has SNAKE and TETRIS.
+Bored? C:\\GAMES has SNAKE and TETRIS, or try MAZE (3D labyrinth).
 Prefer windows? Type WIN for Windows 3.1 (yes, on top of DOS, like in 1992).
 Start with:  TYPE ABOUT.TXT   then   DIR SKILLS   and   DIR CONTACT
 Tip: you can also tap the names in a DIR listing.
@@ -50,6 +50,7 @@ More to find on this PC, and beyond it: TYPE EXPLORE.TXT`;
 [ ] The commands every DOS user feared still work. Sort of.
 [ ] Drive A: is still there. Bring patience (and Retry).
 [ ] A 1997 BBS is still online, and its SYSOP still answers. Look in C:\\DOS.
+[ ] 3D Maze: MAZE.EXE tests your explorer instincts in first person.
 [ ] This PC used to play music. Its drivers still load at boot.
 [ ] Debian GNU/Linux (boot menu): 2 flags, one of them only for root.
     The admin keeps forgetting root's password, and writing notes about it.
@@ -120,13 +121,14 @@ REBOOT (or Ctrl+Alt+Del) takes you back to the boot menu.`;
       "EDLIN.COM": [7261, OLD], "FDISK.COM": [16737, OLD], "FIND.EXE": [6403, OLD], "FORMAT.COM": [11005, OLD],
       "LABEL.COM": [1826, OLD], "MEM.EXE": [32150, OLD], "MORE.COM": [282, OLD], "SORT.EXE": [1632, OLD],
       "SYS.COM": [4607, OLD], "TELNET.EXE": [64328, OLD], "TREE.COM": [1645, OLD], "SCAN.EXE": [94531, " 7-15-90   6:06p"],
+      "MAZE.EXE": [48128, OLD],
     },
     SKILLS: Object.fromEntries(SKILLS.map((k, i) => [k + ".TXT", [null, null, () => html(`#c-skills dd:nth-of-type(${i + 1})`)]])),
     CONTACT: Object.fromEntries(CONTACTS.map((k, i) => [k + ".URL", [null, null, () => html(`#c-contact li:nth-child(${i + 1}) a`)]])),
     UTILS: { "NOTES.TXT": [null, Y86, () => txt(NOTES)], "LOCKED.COM": [192, Y86] },
     WINDOWS: { "WIN.COM": [44170, " 3-10-92   3:10a"], "PROGMAN.EXE": [115312, " 3-10-92   3:10a"], "WRITE.EXE": [244976, " 3-10-92   3:10a"] },
     MUSEUM: { "TIMELINE.TXT": [null, " 9-01-81  10:00a", () => html("#c-timeline")] },
-    GAMES: { "SNAKE.EXE": [24576, Y86], "TETRIS.EXE": [32768, Y86], "README.TXT": [null, Y86, () => txt("C:\\GAMES - CD GAMES, then SNAKE or TETRIS.\nArrows (or WASD) move, P pauses, Q or Esc quits. On a phone, use the pad under the board.")] },
+    GAMES: { "SNAKE.EXE": [24576, Y86], "TETRIS.EXE": [32768, Y86], "MAZE.EXE": [48128, Y86], "README.TXT": [null, Y86, () => txt("C:\\GAMES - CD GAMES, then SNAKE, TETRIS or MAZE.\nArrows (or WASD) move, P pauses, Q or Esc quits. On a phone, use the pad under the board.")] },
   };
   const BACKUP86 = `BACKUP86.TXT - 1986
 The only backup I ever made.
@@ -640,7 +642,7 @@ on their own on the right day, if this PC's clock agrees.`;
     PING: ping,
     HACK: hack,
     WIN: windows,
-    SNAKE: () => game("snake"), TETRIS: () => game("tetris"),
+    SNAKE: () => game("snake"), TETRIS: () => game("tetris"), MAZE: a => maze(a),
     PLAY: play,
     HELP: () => { print("(HELP arrived with MS-DOS 5.0 in 1991: this PC peeked at the future. Here is README.TXT.)"); return CMDS.TYPE("\\README.TXT"); },
     TELNET: async a => {
@@ -654,7 +656,7 @@ on their own on the right day, if this PC's clock agrees.`;
     REBOOT: () => finish(),
   };
   // programs on disk: only run if found in cwd / PATH (empty the PATH and they are gone, like on a real PC)
-  const EXTERNAL = new Set(["SCAN", "CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET", "PLAY", "SNAKE", "TETRIS", "WIN"]);
+  const EXTERNAL = new Set(["SCAN", "CHKDSK", "DEBUG", "LOCKED", "FORMAT", "FDISK", "MEM", "TREE", "ATTRIB", "MORE", "FIND", "SORT", "EDIT", "LABEL", "TELNET", "PLAY", "SNAKE", "TETRIS", "MAZE", "WIN"]);
   // split on | outside quotes
   const pipes = t => { const parts = [""]; let q = false; for (const ch of t) { if (ch === '"') q = !q; if (ch === "|" && !q) parts.push(""); else parts[parts.length - 1] += ch; } return parts.map(s => s.trim()); };
   async function capture(fn) {                              // run a command with its output kept off screen, as plain text
@@ -801,6 +803,34 @@ on their own on the right day, if this PC's clock agrees.`;
     const score = await GM.games.run(name, print(""));
     print(`${name.toUpperCase()}: score ${score}`);
   }
+  async function maze(a) {                                  // C:\DOS\MAZE.EXE (maze.js, shared 3D maze)
+    try { await GM.need("maze.js"); } catch (e) { return err("Program too big to fit in memory"); }
+    form.hidden = true;
+    const name = a ? a.trim().split(/\s+/)[0] : "";
+    const box = print("");
+    try {
+      await GM.maze.runTerminal(box, {
+        env: "dos",
+        name,
+        sfx,
+        sleep,
+        esc,
+        onComplete: (key, player) => unlockMazeReward(key, player)
+      });
+    } finally {
+      form.hidden = false;
+      input.focus({ preventScroll: true });
+    }
+  }
+  function unlockMazeReward(key, player) {
+    if (!FS.SECRET) {
+      FS.SECRET = {
+        "REWARD.TXT": [null, Y86, () => txt(GM.maze.getRewardText(key, player))],
+        "MAZE.KEY": [null, Y86, () => txt(key)]
+      };
+      attrs["SECRET"] = 2; // hidden directory in C:\
+    }
+  }
   async function windows() {                                // WIN: Windows 3.1 on top of DOS (win31.js)
     try { await GM.need("win31.js"); } catch (e) { return err("Program too big to fit in memory"); }
     out.hidden = form.hidden = true;
@@ -860,6 +890,12 @@ on their own on the right day, if this PC's clock agrees.`;
         FS.MUSIC = { "PLAY.COM": [3187, Y86], "MPU401.SYS": [2048, Y86], "README.TXT": [null, Y86, () => txt(MUSIC_README)],
           MIDI: Object.fromEntries(GM.tunes.list.map(t => [t.file, [null, Y86, () => txt(`MThd\u2592\u2592\u2592\u2592 ${t.title}\nas heard in ${t.game}\n(binary MIDI data: PLAY it instead)`)]])) };
       } catch (e) { /* no music today */ }
+      if (localStorage.getItem("GM_maze_done") === "1") {
+        try {
+          await GM.need("maze.js");
+          unlockMazeReward(localStorage.getItem("GM_maze_key"), localStorage.getItem("GM_maze_player"));
+        } catch (e) {}
+      }
       env = { COMSPEC: "C:\\COMMAND.COM", PATH: "C:\\DOS;C:\\UTILS;C:\\WINDOWS", PROMPT: "$P$G" }; attrs = { ...ATTR0 };
       print("  Booting 'MS-DOS 3.1'<br><br>rootnoverify (hd0,1)<br>chainloader +1<br><br>"); await sleep(900);
       print("Starting MS-DOS...<br><br>"); await sleep(1400);

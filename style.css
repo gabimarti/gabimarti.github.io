@@ -262,6 +262,15 @@ html:not(.js) .js-only { display: none; }
 .w31-mswin [data-msflag][aria-pressed=true] { border-style: inset; font-weight: bold; }
 .w31-chesswin { width: auto; }
 .w31-chesswin .w31-body { background: #c0c0c0; }
+.w31-mazewin { width: min(34rem, 95%); }
+.w31-mazewin .w31-body { background: #c0c0c0; display: flex; flex-direction: column; gap: .3rem; padding: .4rem; }
+.w31-mcanvas { width: 100%; height: auto; aspect-ratio: 480 / 260; background: #000; border: 2px inset #fff; display: block; image-rendering: pixelated; }
+.w31-mstat { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; background: #fff; border: 2px inset #fff; padding: 2px 4px; }
+.w31-mmsg { font-size: 12px; background: #ffffd0; border: 1px solid #808080; padding: 3px 5px; min-height: 2.2em; max-height: 3.5em; overflow: auto; }
+.w31-mbtns { display: flex; flex-wrap: wrap; justify-content: center; gap: .25rem; margin-top: .1rem; }
+.w31-mbtns .w31-btn { padding: .2rem .5rem; font-size: 12px; }
+.w31-reward-pre { font: 9px/1.2 monospace !important; white-space: pre-wrap; margin: 0; }
+.w31-m-locked { padding: .5rem; font-size: 13px; }
 .w31-xstat { background: #fff; border: 2px inset #fff; padding: .15rem .4rem; margin-bottom: .4rem; min-height: 1.5em; }
 .w31-xboard { --sq: min(2.4rem, 8.5vw); display: grid; grid-template-columns: repeat(8, var(--sq)); width: max-content; margin: 0 auto; border: 3px solid #000; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 .w31-xboard button { width: var(--sq); height: var(--sq); padding: 0; border: 0; font: calc(var(--sq) * .8)/1 "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols 2", serif; cursor: pointer; }
