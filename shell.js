@@ -644,11 +644,13 @@ ${lab.join("\n")}
       await GM.maze.runTerminal(box, {
         env: "shell",
         name,
-        sfx,
+        sfx: GM.sfx,
         sleep,
         esc,
         onComplete: (key, player) => unlockMazeReward(key, player)
       });
+    } catch (e) {
+      err(`maze: ${e?.message || e}`);
     } finally {
       form.hidden = false;
       input.focus({ preventScroll: true });

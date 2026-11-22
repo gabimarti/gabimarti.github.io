@@ -420,6 +420,37 @@
       // Formal solvability verification
       if (verifySolvability(mazeObj)) {
         bestMaze = mazeObj;
+
+        // Generate 3-4 secret passages between parallel corridors (detour distance >= 6)
+        const secretPassages = {};
+        const passageCandidates = [];
+        for (let y = 2; y < height - 2; y++) {
+          for (let x = 2; x < width - 2; x++) {
+            if (grid[y][x] === 1) {
+              const h = (grid[y - 1][x] === 0 && grid[y + 1][x] === 0 && grid[y][x - 1] === 1 && grid[y][x + 1] === 1);
+              const v = (grid[y][x - 1] === 0 && grid[y + 1][x] === 0 && grid[y - 1][x] === 1 && grid[y + 1][x] === 1);
+              if ((h || v) && !doorsMap[`${x},${y}`]) {
+                passageCandidates.push({ x, y });
+              }
+            }
+          }
+        }
+        for (let i = passageCandidates.length - 1; i > 0; i--) {
+          const j = Math.floor(rng() * (i + 1));
+          [passageCandidates[i], passageCandidates[j]] = [passageCandidates[j], passageCandidates[i]];
+        }
+        const numPassages = Math.min(4, Math.max(2, passageCandidates.length));
+        for (let i = 0; i < numPassages; i++) {
+          const p = passageCandidates[i];
+          secretPassages[`${p.x},${p.y}`] = { x: p.x, y: p.y, opened: false, discovered: false };
+        }
+        bestMaze.secretPassages = secretPassages;
+
+        // Spawn point for Minotaur: distant open cell (distance >= 10 from start)
+        const farCells = reachableCells.filter(c => c.d >= 10 && (c.x > width / 3 || c.y > height / 3));
+        const minoCell = farCells[Math.floor(rng() * farCells.length)] || reachableCells[Math.floor(reachableCells.length / 2)];
+        bestMaze.minotaurSpawn = { x: minoCell.x, y: minoCell.y };
+
         break;
       }
     }
@@ -483,8 +514,76 @@
       start: { x: 1, y: 1 },
       exit,
       doors,
-      items
+      items,
+      secretPassages: {
+        [`${cols},${rows}`]: { x: cols, y: rows, opened: false, discovered: false }
+      },
+      minotaurSpawn: { x: width - 3, y: height - 3 }
     };
+  }
+
+  // BFS Pathfinding for Minotaur navigation towards target (player)
+  function getMinotaurStep(maze, mx, my, px, py) {
+    const startX = Math.floor(mx);
+    const startY = Math.floor(my);
+    const targetX = Math.floor(px);
+    const targetY = Math.floor(py);
+
+    if (startX === targetX && startY === targetY) {
+      return { x: startX, y: startY };
+    }
+
+    const isWalkable = (x, y) => {
+      if (x < 1 || x >= maze.width - 1 || y < 1 || y >= maze.height - 1) return false;
+      if (maze.grid[y][x] === 1) return false;
+      const doorId = maze.doors[`${x},${y}`];
+      if (doorId && !maze.openDoors?.has(doorId)) return false;
+      return true;
+    };
+
+    const queue = [[startX, startY]];
+    const cameFrom = new Map();
+    cameFrom.set(`${startX},${startY}`, null);
+
+    let found = false;
+    while (queue.length > 0) {
+      const [cx, cy] = queue.shift();
+      if (cx === targetX && cy === targetY) {
+        found = true;
+        break;
+      }
+      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+        const nx = cx + dx, ny = cy + dy;
+        const key = `${nx},${ny}`;
+        if (!cameFrom.has(key) && isWalkable(nx, ny)) {
+          cameFrom.set(key, [cx, cy]);
+          queue.push([nx, ny]);
+        }
+      }
+    }
+
+    if (!found) {
+      // If locked behind door, wander along open corridors
+      const validMoves = [];
+      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+        const nx = startX + dx, ny = startY + dy;
+        if (isWalkable(nx, ny)) validMoves.push({ x: nx, y: ny });
+      }
+      if (validMoves.length > 0) {
+        return validMoves[Math.floor(Math.random() * validMoves.length)];
+      }
+      return { x: startX, y: startY };
+    }
+
+    // Backtrack from target to find the first step from start
+    let curr = [targetX, targetY];
+    let prev = cameFrom.get(`${curr[0]},${curr[1]}`);
+    while (prev && (prev[0] !== startX || prev[1] !== startY)) {
+      curr = prev;
+      prev = cameFrom.get(`${curr[0]},${curr[1]}`);
+    }
+
+    return { x: curr[0], y: curr[1] };
   }
 
   // Formal Solvability Verifier
@@ -686,7 +785,7 @@
           cellType = dId;
         } else if (grid[mapY][mapX] === 1) {
           hit = 1;
-          cellType = 1;
+          cellType = (maze.secretPassages?.[`${mapX},${mapY}`] && !maze.secretPassages[`${mapX},${mapY}`].opened) ? "SECRET_PASSAGE" : 1;
         } else if (mapX === exit.x && mapY === exit.y) {
           hit = 1;
           cellType = "EXIT";
@@ -714,8 +813,8 @@
     return columns;
   }
 
-  // Project Sprites / Collectibles onto the raycasted view
-  function projectSprites(maze, posX, posY, dirX, dirY, planeX, planeY, screenWidth, zBuffer) {
+  // Project Sprites / Collectibles / Minotaur onto the raycasted view
+  function projectSprites(maze, posX, posY, dirX, dirY, planeX, planeY, screenWidth, zBuffer, minotaur) {
     const sprites = [];
     const invDet = 1.0 / (planeX * dirY - dirX * planeY || 1e-30);
 
@@ -748,93 +847,180 @@
       }
     }
 
+    // Project Minotaur
+    if (minotaur && minotaur.active) {
+      const spriteX = minotaur.x - posX;
+      const spriteY = minotaur.y - posY;
+      const transformX = invDet * (dirY * spriteX - dirX * spriteY);
+      const transformY = invDet * (-planeY * spriteX + planeX * spriteY);
+
+      if (transformY > 0.1) {
+        const spriteScreenX = Math.floor((screenWidth / 2) * (1 + transformX / transformY));
+        const spriteDist = Math.hypot(spriteX, spriteY);
+
+        if (spriteScreenX >= 0 && spriteScreenX < screenWidth) {
+          if (zBuffer[spriteScreenX] > transformY) {
+            sprites.push({
+              id: "MINOTAUR",
+              isMonster: true,
+              dist: spriteDist,
+              depth: transformY,
+              screenX: spriteScreenX
+            });
+          }
+        }
+      }
+    }
+
     // Sort far to close
     sprites.sort((a, b) => b.depth - a.depth);
     return sprites;
   }
 
   // ASCII 3D Viewport Renderer for Terminal (DOS and shell)
-  function renderAscii(gameInstance, screenCols = 80, screenRows = 18, options = {}) {
+  function renderAscii(gameInstance, screenCols = 80, screenRows = 20, options = {}) {
     const { maze, posX, posY, dirX, dirY, planeX, planeY } = gameInstance;
     const columns = castRays(maze, posX, posY, dirX, dirY, planeX, planeY, screenCols);
     const zBuffer = columns.map(c => c.perpWallDist);
-    const sprites = projectSprites(maze, posX, posY, dirX, dirY, planeX, planeY, screenCols, zBuffer);
+    const sprites = projectSprites(maze, posX, posY, dirX, dirY, planeX, planeY, screenCols, zBuffer, gameInstance.minotaur);
 
     const screen = Array.from({ length: screenRows }, () => Array(screenCols).fill(" "));
     const midY = Math.floor(screenRows / 2);
 
-    // Ceiling & Floor shading
+    // Ceiling & Floor shading with perspective cues
     for (let y = 0; y < screenRows; y++) {
       for (let x = 0; x < screenCols; x++) {
         if (y > midY) {
-          screen[y][x] = y > midY + 4 ? "·" : " ";
+          const dy = y - midY;
+          if (dy >= 8) screen[y][x] = (x + y) % 6 === 0 ? "_" : " ";
+          else if (dy >= 5) screen[y][x] = (x + y) % 4 === 0 ? "·" : " ";
+          else if (dy >= 3) screen[y][x] = (x + y) % 4 === 0 ? "." : " ";
+        } else if (y < midY - 6) {
+          screen[y][x] = (x + y) % 10 === 0 ? "." : " ";
         }
       }
     }
 
-    // Render Walls
+    // Render Walls with directional contrast and corner delineation
+    let lastEdge = -10;
     for (let x = 0; x < screenCols; x++) {
       const col = columns[x];
+      const prev = columns[x - 1];
       const dist = col.perpWallDist;
       const lineHeight = Math.min(screenRows, Math.floor(screenRows / dist));
       const drawStart = Math.max(0, Math.floor(midY - lineHeight / 2));
       const drawEnd = Math.min(screenRows - 1, Math.floor(midY + lineHeight / 2));
 
-      // Wall character based on distance, orientation and type
-      let char = " ";
+      // Crisp corner delineation between depth steps and wall transitions
+      const isWallEdge = prev && (col.mapX !== prev.mapX || col.mapY !== prev.mapY) &&
+        Math.abs(col.perpWallDist - prev.perpWallDist) > 0.35 && (x - lastEdge > 1);
+      if (isWallEdge) lastEdge = x;
+
+      // High-contrast directional wall shading
+      let bodyChar = " ";
       if (col.cellType === "EXIT") {
-        char = "*";
+        bodyChar = "*";
       } else if (typeof col.cellType === "string" && col.cellType.startsWith("DOOR_")) {
-        char = col.side === 0 ? "║" : "═";
+        bodyChar = col.side === 0 ? "║" : "═";
+      } else if (col.cellType === "SECRET_PASSAGE") {
+        if (dist < 2.0) bodyChar = "▒";
+        else if (dist < 3.8) bodyChar = "░";
+        else if (dist < 6.0) bodyChar = ":";
+        else bodyChar = ".";
+      } else if (col.side === 0) {
+        // North/South faces: bright direct light, solid blocks
+        if (dist < 2.0) bodyChar = "█";
+        else if (dist < 3.8) bodyChar = "▓";
+        else if (dist < 6.0) bodyChar = "▒";
+        else if (dist < 8.5) bodyChar = "░";
+        else bodyChar = "·";
       } else {
-        // Standard wall shading
-        if (dist < 1.8) char = col.side === 0 ? "█" : "▓";
-        else if (dist < 3.2) char = col.side === 0 ? "▓" : "▒";
-        else if (dist < 5.0) char = col.side === 0 ? "▒" : "░";
-        else if (dist < 8.0) char = "░";
-        else char = "·";
+        // East/West faces: shaded / textured contrast
+        if (dist < 2.0) bodyChar = "▓";
+        else if (dist < 3.8) bodyChar = "▒";
+        else if (dist < 6.0) bodyChar = "░";
+        else if (dist < 8.5) bodyChar = ":";
+        else bodyChar = ".";
       }
 
       for (let y = drawStart; y <= drawEnd; y++) {
-        screen[y][x] = char;
-      }
-    }
-
-    // Render Sprites / Items
-    for (const sp of sprites) {
-      const x = sp.screenX;
-      const dist = sp.depth;
-      const spHeight = Math.min(screenRows, Math.floor(screenRows / dist));
-      const y = Math.floor(midY);
-
-      if (y >= 0 && y < screenRows && x >= 0 && x < screenCols) {
-        const symbol = sp.item?.symbol || "?";
-        screen[y][x] = symbol;
-        if (dist < 3.5 && x > 0 && x < screenCols - 1) {
-          screen[y][x - 1] = "[";
-          screen[y][x + 1] = "]";
+        if (isWallEdge) {
+          screen[y][x] = "│";
+        } else if (y === drawStart && drawStart > 0 && dist < 8.5) {
+          screen[y][x] = "▄";
+        } else if (y === drawEnd && drawEnd < screenRows - 1 && dist < 8.5) {
+          screen[y][x] = "▀";
+        } else {
+          screen[y][x] = bodyChar;
         }
       }
     }
 
-    // Overlay Minimap on top-right corner if requested
+    // Render Sprites / Items / Minotaur
+    for (const sp of sprites) {
+      const x = sp.screenX;
+      const dist = sp.depth;
+      const y = Math.floor(midY);
+
+      if (y >= 0 && y < screenRows && x >= 0 && x < screenCols) {
+        if (sp.isMonster) {
+          if (dist < 2.5) {
+            // Close imposing Minotaur beast (3x3 horned presence)
+            if (y > 0) {
+              if (x > 0) screen[y - 1][x - 1] = "\\";
+              screen[y - 1][x] = "▼";
+              if (x < screenCols - 1) screen[y - 1][x + 1] = "/";
+            }
+            if (x > 0) screen[y][x - 1] = "(";
+            screen[y][x] = "O";
+            if (x < screenCols - 1) screen[y][x + 1] = ")";
+            if (y < screenRows - 1) {
+              if (x > 0) screen[y + 1][x - 1] = "/";
+              screen[y + 1][x] = "█";
+              if (x < screenCols - 1) screen[y + 1][x + 1] = "\\";
+            }
+          } else if (dist < 5.0) {
+            if (x > 0) screen[y][x - 1] = "{";
+            screen[y][x] = "M";
+            if (x < screenCols - 1) screen[y][x + 1] = "}";
+          } else {
+            screen[y][x] = "M";
+          }
+        } else {
+          const symbol = sp.item?.symbol || "?";
+          screen[y][x] = symbol;
+          if (dist < 3.5 && x > 0 && x < screenCols - 1) {
+            screen[y][x - 1] = "[";
+            screen[y][x + 1] = "]";
+          }
+        }
+      }
+    }
+
+    // Overlay Framed Minimap on top-right corner if requested
     if (options.minimap !== false) {
       const mapSize = 9;
-      const startX = screenCols - mapSize - 2;
+      const startX = screenCols - mapSize - 3;
       const curMapX = Math.floor(posX);
       const curMapY = Math.floor(posY);
       const half = Math.floor(mapSize / 2);
 
-      for (let my = 0; my < mapSize; my++) {
-        for (let mx = 0; mx < mapSize; mx++) {
-          const gx = curMapX + (mx - half);
-          const gy = curMapY + (my - half);
-          const scX = startX + mx;
+      for (let my = -1; my <= mapSize; my++) {
+        for (let mx = -1; mx <= mapSize; mx++) {
+          const scX = startX + mx + 1;
           const scY = 1 + my;
+          if (scX >= screenCols || scY >= screenRows) continue;
 
-          if (scX < screenCols && scY < screenRows) {
+          if (my === -1 && mx === -1) screen[scY][scX] = "┌";
+          else if (my === -1 && mx === mapSize) screen[scY][scX] = "┐";
+          else if (my === mapSize && mx === -1) screen[scY][scX] = "└";
+          else if (my === mapSize && mx === mapSize) screen[scY][scX] = "┘";
+          else if (my === -1 || my === mapSize) screen[scY][scX] = "─";
+          else if (mx === -1 || mx === mapSize) screen[scY][scX] = "│";
+          else {
+            const gx = curMapX + (mx - half);
+            const gy = curMapY + (my - half);
             if (mx === half && my === half) {
-              // Player direction indicator
               const ang = Math.atan2(dirY, dirX);
               let pChar = "▲";
               if (ang >= -Math.PI / 4 && ang < Math.PI / 4) pChar = "►";
@@ -844,10 +1030,14 @@
               screen[scY][scX] = pChar;
             } else if (gx >= 0 && gx < maze.width && gy >= 0 && gy < maze.height) {
               const dId = maze.doors[`${gx},${gy}`];
-              if (dId && !maze.openDoors?.has(dId)) {
+              if (gameInstance.minotaur?.active && gx === Math.floor(gameInstance.minotaur.x) && gy === Math.floor(gameInstance.minotaur.y)) {
+                screen[scY][scX] = "M";
+              } else if (dId && !maze.openDoors?.has(dId)) {
                 screen[scY][scX] = "+";
+              } else if (maze.secretPassages?.[`${gx},${gy}`]?.opened) {
+                screen[scY][scX] = "~";
               } else if (maze.grid[gy][gx] === 1) {
-                screen[scY][scX] = "#";
+                screen[scY][scX] = "█";
               } else if (maze.items[`${gx},${gy}`] && !maze.collectedItems?.has(maze.items[`${gx},${gy}`])) {
                 screen[scY][scX] = "*";
               } else if (gx === maze.exit.x && gy === maze.exit.y) {
@@ -871,7 +1061,7 @@
     const { maze, posX, posY, dirX, dirY, planeX, planeY } = gameInstance;
     const columns = castRays(maze, posX, posY, dirX, dirY, planeX, planeY, width);
     const zBuffer = columns.map(c => c.perpWallDist);
-    const sprites = projectSprites(maze, posX, posY, dirX, dirY, planeX, planeY, width, zBuffer);
+    const sprites = projectSprites(maze, posX, posY, dirX, dirY, planeX, planeY, width, zBuffer, gameInstance.minotaur);
 
     // Ceiling & Floor
     ctx.fillStyle = "#1e1e1e";
@@ -892,6 +1082,8 @@
         ctx.fillStyle = "#ffd700";
       } else if (typeof col.cellType === "string" && col.cellType.startsWith("DOOR_")) {
         ctx.fillStyle = col.side === 0 ? "#8b4513" : "#6b3309";
+      } else if (col.cellType === "SECRET_PASSAGE") {
+        ctx.fillStyle = col.side === 0 ? "#7a6245" : "#5e4b33";
       } else {
         const brightness = Math.max(20, Math.min(240, Math.floor(255 / (1 + dist * 0.35))));
         const factor = col.side === 0 ? 1.0 : 0.75;
@@ -902,7 +1094,7 @@
       ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
     }
 
-    // Render Sprites / Collectibles
+    // Render Sprites / Collectibles / Minotaur
     for (const sp of sprites) {
       const dist = sp.depth;
       const spriteHeight = Math.floor(height / dist);
@@ -910,11 +1102,51 @@
       const drawY = Math.floor(height / 2 - spriteHeight / 2);
 
       ctx.save();
-      ctx.fillStyle = "#00ffcc";
-      ctx.font = `${Math.max(12, Math.floor(spriteHeight * 0.65))}px monospace`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(sp.item?.char || "★", sp.screenX, height / 2);
+      if (sp.isMonster) {
+        const mSize = Math.max(16, Math.min(220, spriteHeight));
+        const cx = sp.screenX;
+        const cy = Math.floor(height / 2);
+
+        // Dark body silhouette
+        ctx.fillStyle = "#2b1810";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + mSize * 0.2, mSize * 0.35, mSize * 0.45, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bull Head
+        ctx.fillStyle = "#3d2216";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - mSize * 0.05, mSize * 0.24, mSize * 0.28, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ivory Horns
+        ctx.strokeStyle = "#e8e0d0";
+        ctx.lineWidth = Math.max(2, Math.floor(mSize * 0.07));
+        ctx.beginPath();
+        ctx.moveTo(cx - mSize * 0.12, cy - mSize * 0.15);
+        ctx.quadraticCurveTo(cx - mSize * 0.38, cy - mSize * 0.38, cx - mSize * 0.25, cy - mSize * 0.5);
+        ctx.moveTo(cx + mSize * 0.12, cy - mSize * 0.15);
+        ctx.quadraticCurveTo(cx + mSize * 0.38, cy - mSize * 0.38, cx + mSize * 0.25, cy - mSize * 0.5);
+        ctx.stroke();
+
+        // Glowing Red Eyes
+        const eyeOffset = Math.max(2, Math.floor(mSize * 0.08));
+        const eyeRadius = Math.max(1.5, Math.floor(mSize * 0.04));
+        ctx.fillStyle = "#ff1100";
+        ctx.shadowColor = "#ff0000";
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(cx - eyeOffset, cy - mSize * 0.08, eyeRadius, 0, Math.PI * 2);
+        ctx.arc(cx + eyeOffset, cy - mSize * 0.08, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.fillStyle = "#00ffcc";
+        ctx.font = `${Math.max(12, Math.floor(spriteHeight * 0.65))}px monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(sp.item?.char || "★", sp.screenX, height / 2);
+      }
       ctx.restore();
     }
 
@@ -945,9 +1177,15 @@
 
           if (gx >= 0 && gx < maze.width && gy >= 0 && gy < maze.height) {
             const dId = maze.doors[`${gx},${gy}`];
-            if (dId && !maze.openDoors?.has(dId)) {
+            if (gameInstance.minotaur?.active && gx === Math.floor(gameInstance.minotaur.x) && gy === Math.floor(gameInstance.minotaur.y)) {
+              ctx.fillStyle = "#ff0044";
+              ctx.fillRect(px + 1, py + 1, cellSize - 2, cellSize - 2);
+            } else if (dId && !maze.openDoors?.has(dId)) {
               ctx.fillStyle = "#b8860b";
               ctx.fillRect(px, py, cellSize, cellSize);
+            } else if (maze.secretPassages?.[`${gx},${gy}`]?.opened) {
+              ctx.fillStyle = "#8fbc8f";
+              ctx.fillRect(px + 2, py + 2, cellSize - 4, cellSize - 4);
             } else if (maze.grid[gy][gx] === 1) {
               ctx.fillStyle = "#666";
               ctx.fillRect(px, py, cellSize, cellSize);
@@ -991,6 +1229,21 @@
     let posY = maze.start.y + 0.5;
     let dirX = 0, dirY = 1;     // Initial direction facing Down
     let planeX = -0.66, planeY = 0; // Camera FOV ~66deg
+    // Orient player down an open corridor from start
+    if (maze.grid[maze.start.y]?.[maze.start.x + 1] === 0) {
+      dirX = 1; dirY = 0;
+      planeX = 0; planeY = 0.66;
+    }
+
+    const minotaurSpawn = maze.minotaurSpawn || { x: maze.width - 3, y: maze.height - 3 };
+    const minotaur = {
+      x: minotaurSpawn.x + 0.5,
+      y: minotaurSpawn.y + 0.5,
+      startX: minotaurSpawn.x + 0.5,
+      startY: minotaurSpawn.y + 0.5,
+      steps: 0,
+      active: true
+    };
 
     let finished = false;
     let lastEvent = null;
@@ -1009,11 +1262,55 @@
       get collectedItems() { return maze.collectedItems; },
       get openDoors() { return maze.openDoors; },
       get lastEvent() { return lastEvent; },
+      get minotaur() { return minotaur; },
+      get minotaurAlert() {
+        if (!minotaur || !minotaur.active) return "";
+        const d = Math.hypot(posX - minotaur.x, posY - minotaur.y);
+        if (d <= 3.5) return "NEAR";
+        if (d <= 7.0) return "HEARD";
+        return "";
+      },
+
+      respawn() {
+        posX = maze.start.x + 0.5;
+        posY = maze.start.y + 0.5;
+        if (maze.grid[maze.start.y]?.[maze.start.x + 1] === 0) {
+          dirX = 1; dirY = 0;
+          planeX = 0; planeY = 0.66;
+        } else {
+          dirX = 0; dirY = 1;
+          planeX = -0.66; planeY = 0;
+        }
+        minotaur.x = minotaur.startX;
+        minotaur.y = minotaur.startY;
+        minotaur.steps = 0;
+        lastEvent = { type: "RESPAWN" };
+        return lastEvent;
+      },
 
       // Move player forward/backward with collision sliding against walls & doors
       move(speed = 0.25) {
         if (finished) return null;
         lastEvent = null;
+
+        // Check if pushing into an unopened secret passage
+        if (speed > 0) {
+          const frontX = Math.floor(posX + dirX * 0.7);
+          const frontY = Math.floor(posY + dirY * 0.7);
+          const passKey = `${frontX},${frontY}`;
+          if (maze.secretPassages && maze.secretPassages[passKey] && !maze.secretPassages[passKey].opened) {
+            maze.secretPassages[passKey].opened = true;
+            maze.secretPassages[passKey].discovered = true;
+            maze.grid[frontY][frontX] = 0; // Collapses wall into passage!
+            lastEvent = {
+              type: "SECRET_PASSAGE",
+              x: frontX,
+              y: frontY
+            };
+            return lastEvent;
+          }
+        }
+
         const newX = posX + dirX * speed;
         const newY = posY + dirY * speed;
 
@@ -1030,6 +1327,25 @@
         // Collision checks with radius padding
         if (canWalk(newX + Math.sign(dirX * speed) * radius, posY)) posX = newX;
         if (canWalk(posX, newY + Math.sign(dirY * speed) * radius)) posY = newY;
+
+        // Advance Minotaur every 3 player moves
+        if (minotaur.active) {
+          minotaur.steps++;
+          if (minotaur.steps % 3 === 0) {
+            const nextStep = getMinotaurStep(maze, minotaur.x, minotaur.y, posX, posY);
+            minotaur.x = nextStep.x + 0.5;
+            minotaur.y = nextStep.y + 0.5;
+          }
+
+          // Check if caught by Minotaur
+          const mDist = Math.hypot(posX - minotaur.x, posY - minotaur.y);
+          if (mDist < 0.85) {
+            lastEvent = {
+              type: "MINOTAUR_CAUGHT"
+            };
+            return lastEvent;
+          }
+        }
 
         // Check cell event (item pickup or exit)
         const cellX = Math.floor(posX);
@@ -1176,6 +1492,7 @@
         ArrowUp: "U", w: "U", W: "U",
         ArrowDown: "D", s: "D", S: "D",
         m: "M", M: "M",
+        r: "RETRY",
         q: "Q", Q: "Q", Escape: "Q",
         " ": "SP", Enter: "ENT"
       }[e.key];
@@ -1185,7 +1502,7 @@
 
     const keys = [
       ["L", "↶ Giro"], ["U", "▲ Avanzar"], ["R", "Giro ↷"],
-      ["D", "▼ Atrás"], ["M", "🗺️ Mapa"], ["Q", "✕ Salir"]
+      ["D", "▼ Atrás"], ["M", "🗺️ Mapa"], ["RETRY", "🔄 Respawn"], ["Q", "✕ Salir"]
     ];
     const pad = document.createElement("div"); pad.className = "pad";
     pad.innerHTML = keys.map(([k, label]) => `<button type="button" data-k="${k}">${label}</button>`).join("");
@@ -1214,6 +1531,7 @@
         "",
         "Encuentra los 15 hitos historicos de cuatro decadas de programacion,",
         "recoge los manuales y abre las 5 puertas para alcanzar la salida.",
+        "¡Cuidado con el Minotauro que acecha en las sombras!",
         "",
         "Controles: [W/▲] Avanzar  [S/▼] Retroceder  [A/◄ D/►] Girar  [M] Mapa  [Q] Salir",
         "",
@@ -1230,20 +1548,31 @@
     let showMinimap = true;
     let msg = "¡Explora los pasillos y encuentra los hitos!";
     let submsg = "";
+    let isCaught = false;
     let over = false;
 
     const lang = (typeof GM !== "undefined" && GM.lang) || "es";
     const getTxt = obj => (obj && (obj[lang] || obj.es || obj.en)) || "";
 
     const draw = () => {
-      const ascii3d = game.renderAscii(80, 16, { minimap: showMinimap });
+      const ascii3d = game.renderAscii(80, 20, { minimap: showMinimap });
+      let statusAlert = "";
+      if (isCaught) {
+        statusAlert = " 💀 ¡EL MINOTAURO TE HA ATRAPADO! [Pulsa 🔄 Respawn o ENTER para reaparecer]";
+      } else if (game.minotaurAlert === "NEAR") {
+        statusAlert = " ⚠️ ¡Sientes el aliento del Minotauro muy cerca en un pasillo contiguo!";
+      } else if (game.minotaurAlert === "HEARD") {
+        statusAlert = " 🐾 Oyes pezuñas pesadas y un bramido distante entre los muros...";
+      }
+
       const hud = [
         "─".repeat(80),
         ` Explorador: ${game.playerName.padEnd(16)} | Hitos: ${String(game.collectedItems.size).padStart(2)}/15 | Puertas: ${game.openDoors.size}/5 | [M: Mapa  Q: Salir]`,
         "─".repeat(80),
         ` ${msg}`,
-        submsg ? ` ${submsg}` : ""
-      ].join("\n");
+        submsg ? ` ${submsg}` : "",
+        statusAlert ? statusAlert : ""
+      ].filter(Boolean).join("\n");
       screen.textContent = ascii3d + "\n" + hud;
     };
 
@@ -1260,6 +1589,15 @@
         if (action === "Q") {
           over = "quit";
           break;
+        } else if (action === "RETRY" || ((action === "ENT" || action === "SP") && isCaught)) {
+          isCaught = false;
+          game.respawn();
+          msg = "Has reaparecido en la entrada del laberinto.";
+          submsg = "Tus hitos y puertas abiertas se mantienen intactos. ¡Evita al Minotauro!";
+          sfx.blip?.();
+          draw();
+        } else if (isCaught) {
+          continue;
         } else if (action === "M") {
           showMinimap = !showMinimap;
           msg = showMinimap ? "Minimapa activado (esquina superior derecha)." : "Minimapa desactivado.";
@@ -1284,6 +1622,15 @@
               if (ev.unlockedDoor) {
                 submsg += ` -> ¡Puerta abierta: ${getTxt(ev.unlockedDoor.name)}!`;
               }
+            } else if (ev.type === "SECRET_PASSAGE") {
+              sfx.ok?.();
+              msg = "🚪 ¡PUERTA SECRETA DESCUBIERTA! El muro cede ante tu paso.";
+              submsg = "Has abierto un atajo para eludir al Minotauro.";
+            } else if (ev.type === "MINOTAUR_CAUGHT") {
+              sfx.err?.();
+              isCaught = true;
+              msg = "💀 ¡EL MINOTAURO TE HA ALCANZADO!";
+              submsg = "Pulsa [🔄 Respawn] o [Enter/Espacio] para reaparecer al inicio.";
             } else if (ev.type === "DOOR_LOCKED") {
               sfx.err?.();
               msg = `Puerta Bloqueada: ${getTxt(ev.door.name)}`;
@@ -1335,7 +1682,7 @@
     const body = w.querySelector(".w31-body");
     const name = cleanPlayerName(options.name || (typeof localStorage !== "undefined" && localStorage.getItem("GM_maze_player")) || "EXPLORER");
     body.innerHTML = `
-      <canvas class="w31-mcanvas" width="480" height="260"></canvas>
+      <canvas class="w31-mcanvas" width="560" height="300"></canvas>
       <div class="w31-mstat">
         <span class="w31-ms-player">Player: ${name}</span>
         <span class="w31-ms-items">Milestones: 0/15</span>
@@ -1348,7 +1695,8 @@
         <button type="button" class="w31-btn" data-mz="R" title="Turn Right">Turn R ↷</button>
         <button type="button" class="w31-btn" data-mz="D" title="Step Back">▼ Back</button>
         <button type="button" class="w31-btn" data-mz="M" title="Toggle Minimap">🗺️ Map</button>
-        <button type="button" class="w31-btn" data-mz="N" title="New Maze">🔄 New</button>
+        <button type="button" class="w31-btn" data-mz="RETRY" title="Respawn at Start">🔄 Respawn</button>
+        <button type="button" class="w31-btn" data-mz="N" title="New Maze">✨ New</button>
       </div>
     `;
 
@@ -1363,9 +1711,10 @@
 
     let game = createGame({ playerName: name, seed: options.seed });
     let showMinimap = true;
+    let isCaught = false;
 
     const draw = () => {
-      renderCanvas(game, ctx, 480, 260, { minimap: showMinimap });
+      renderCanvas(game, ctx, 560, 300, { minimap: showMinimap });
       statItems.textContent = `Milestones: ${game.collectedItems.size}/15`;
       statDoors.textContent = `Doors: ${game.openDoors.size}/5`;
     };
@@ -1375,11 +1724,20 @@
         showMinimap = !showMinimap;
         io.sfx?.blip?.();
         draw();
+      } else if (act === "RETRY") {
+        isCaught = false;
+        game.respawn();
+        io.sfx?.blip?.();
+        msgBox.textContent = "Has reaparecido en la entrada del laberinto. ¡Cuidado con el Minotauro!";
+        draw();
       } else if (act === "N") {
+        isCaught = false;
         io.sfx?.blip?.();
         game = createGame({ playerName: name });
         msgBox.textContent = "New maze generated. Good luck!";
         draw();
+      } else if (isCaught) {
+        return;
       } else if (act === "L") {
         game.turn(-0.25);
         draw();
@@ -1398,6 +1756,13 @@
               m += ` 🚪 ¡Puerta abierta: ${getTxt(ev.unlockedDoor.name)}!`;
             }
             msgBox.textContent = m;
+          } else if (ev.type === "SECRET_PASSAGE") {
+            io.sfx?.ok?.();
+            msgBox.textContent = "🚪 ¡Puerta secreta descubierta! Un atajo oculto se abre entre los pasillos.";
+          } else if (ev.type === "MINOTAUR_CAUGHT") {
+            io.sfx?.err?.();
+            isCaught = true;
+            msgBox.textContent = "💀 ¡El Minotauro te ha atrapado! Pulsa [🔄 Respawn] para reaparecer al inicio sin perder tus hitos.";
           } else if (ev.type === "DOOR_LOCKED") {
             io.sfx?.err?.();
             msgBox.textContent = `🔒 Puerta bloqueada: ${getTxt(ev.door.name)} (${getTxt(ev.door.msg)})`;
@@ -1407,18 +1772,18 @@
 
             // Victory animation on canvas
             const ratW = 60;
-            for (let x = -ratW; x < 480; x += 18) {
-              renderCanvas(game, ctx, 480, 260, { minimap: false });
+            for (let x = -ratW; x < 560; x += 20) {
+              renderCanvas(game, ctx, 560, 300, { minimap: false });
               ctx.save();
               ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-              ctx.fillRect(0, 80, 480, 100);
+              ctx.fillRect(0, 95, 560, 110);
               ctx.fillStyle = "#ffd700";
               ctx.font = "bold 20px Arial, sans-serif";
               ctx.textAlign = "center";
-              ctx.fillText("★ VICTORY! 3D MAZE COMPLETED ★", 240, 120);
+              ctx.fillText("★ VICTORY! 3D MAZE COMPLETED ★", 280, 135);
               ctx.fillStyle = "#fff";
               ctx.font = "14px monospace";
-              ctx.fillText("<:3 )~~~~  [Windows 95 3D Maze tribute rat]", x + ratW / 2, 155);
+              ctx.fillText("<:3 )~~~~  [Windows 95 3D Maze tribute rat]", x + ratW / 2, 170);
               ctx.restore();
               if (io.sleep) await io.sleep(40);
             }
@@ -1430,6 +1795,11 @@
           }
         } else {
           io.sfx?.tick?.();
+          if (game.minotaurAlert === "NEAR") {
+            msgBox.textContent = "⚠️ ¡El Minotauro está acechando en un pasillo contiguo!";
+          } else if (game.minotaurAlert === "HEARD") {
+            msgBox.textContent = "🐾 Ecos de pesadas pezuñas resuenan en la piedra...";
+          }
         }
         draw();
       }
@@ -1451,7 +1821,8 @@
         ArrowUp: "U", w: "U", W: "U",
         ArrowDown: "D", s: "D", S: "D",
         m: "M", M: "M",
-        n: "N", N: "N"
+        n: "N", N: "N",
+        r: "RETRY", R: "RETRY"
       }[e.key];
       if (act && !e.ctrlKey && !e.altKey && !e.metaKey) {
         e.preventDefault();

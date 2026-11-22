@@ -262,13 +262,13 @@ html:not(.js) .js-only { display: none; }
 .w31-mswin [data-msflag][aria-pressed=true] { border-style: inset; font-weight: bold; }
 .w31-chesswin { width: auto; }
 .w31-chesswin .w31-body { background: #c0c0c0; }
-.w31-mazewin { width: min(34rem, 95%); }
-.w31-mazewin .w31-body { background: #c0c0c0; display: flex; flex-direction: column; gap: .3rem; padding: .4rem; }
-.w31-mcanvas { width: 100%; height: auto; aspect-ratio: 480 / 260; background: #000; border: 2px inset #fff; display: block; image-rendering: pixelated; }
-.w31-mstat { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; background: #fff; border: 2px inset #fff; padding: 2px 4px; }
-.w31-mmsg { font-size: 12px; background: #ffffd0; border: 1px solid #808080; padding: 3px 5px; min-height: 2.2em; max-height: 3.5em; overflow: auto; }
-.w31-mbtns { display: flex; flex-wrap: wrap; justify-content: center; gap: .25rem; margin-top: .1rem; }
-.w31-mbtns .w31-btn { padding: .2rem .5rem; font-size: 12px; }
+.w31-mazewin { width: min(44rem, 96%); }
+.w31-mazewin .w31-body { background: #c0c0c0; display: flex; flex-direction: column; gap: .35rem; padding: .5rem; }
+.w31-mcanvas { width: 100%; height: auto; aspect-ratio: 560 / 300; background: #000; border: 2px inset #fff; display: block; image-rendering: pixelated; }
+.w31-mstat { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; background: #fff; border: 2px inset #fff; padding: 3px 6px; }
+.w31-mmsg { font-size: 12px; line-height: 1.35; background: #ffffd0; border: 1px solid #808080; padding: 4px 6px; min-height: 3.5em; max-height: 5.5em; overflow-y: auto; }
+.w31-mbtns { display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem; margin-top: .15rem; }
+.w31-mbtns .w31-btn { padding: .25rem .6rem; font-size: 12px; }
 .w31-reward-pre { font: 9px/1.2 monospace !important; white-space: pre-wrap; margin: 0; }
 .w31-m-locked { padding: .5rem; font-size: 13px; }
 .w31-xstat { background: #fff; border: 2px inset #fff; padding: .15rem .4rem; margin-bottom: .4rem; min-height: 1.5em; }
