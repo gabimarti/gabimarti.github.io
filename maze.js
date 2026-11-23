@@ -902,23 +902,26 @@
     } else if (type === "near") {
       if (typeof sfx.stomp === "function") sfx.stomp(true);
       else if (typeof sfx.tone === "function" && typeof sfx.noise === "function") {
-        sfx.noise(.12, .65, 220);
-        sfx.tone(65, .15, "sawtooth", .05);
-        sfx.noise(.12, .75, 200, .16);
-        sfx.tone(55, .18, "sawtooth", .06, .16);
+        sfx.noise(.18, .75, 180);
+        sfx.tone(62, .24, "sawtooth", .06);
+        sfx.tone(48, .32, "sawtooth", .06, .08);
+        sfx.noise(.16, .85, 150, .14);
+        sfx.tone(40, .38, "triangle", .08, .18);
       } else sfx.err?.();
     } else if (type === "heard") {
       if (typeof sfx.stomp === "function") sfx.stomp(false);
       else if (typeof sfx.tone === "function" && typeof sfx.noise === "function") {
-        sfx.noise(.08, .35, 280);
-        sfx.tone(70, .1, "triangle", .035);
+        sfx.noise(.09, .45, 240);
+        sfx.tone(68, .12, "triangle", .04);
+        sfx.noise(.07, .35, 210, .12);
       } else sfx.tick?.();
     } else if (type === "caught") {
       if (typeof sfx.defeat === "function") sfx.defeat();
       else if (typeof sfx.tone === "function" && typeof sfx.noise === "function") {
-        sfx.tone(130, .22, "sawtooth", .06);
-        sfx.tone(85, .32, "sawtooth", .07, .16);
-        sfx.noise(.3, .65, 340, .08);
+        sfx.tone(140, .2, "sawtooth", .07);
+        sfx.tone(90, .35, "sawtooth", .08, .1);
+        sfx.tone(55, .5, "sawtooth", .09, .22);
+        sfx.noise(.4, .85, 280, .15);
       } else sfx.err?.();
     }
   }
@@ -1022,28 +1025,68 @@
 
       if (y >= 0 && y < screenRows && x >= 0 && x < screenCols) {
         if (sp.isMonster) {
-          const mColor = "a12";
-          if (dist < 2.5) {
-            // Close imposing Minotaur beast (3x3 horned presence)
-            if (y > 0) {
-              if (x > 0) { screen[y - 1][x - 1] = "\\"; attrs[y - 1][x - 1] = mColor; }
-              screen[y - 1][x] = "▼"; attrs[y - 1][x] = mColor;
-              if (x < screenCols - 1) { screen[y - 1][x + 1] = "/"; attrs[y - 1][x + 1] = mColor; }
-            }
-            if (x > 0) { screen[y][x - 1] = "("; attrs[y][x - 1] = mColor; }
-            screen[y][x] = "O"; attrs[y][x] = mColor;
-            if (x < screenCols - 1) { screen[y][x + 1] = ")"; attrs[y][x + 1] = mColor; }
-            if (y < screenRows - 1) {
-              if (x > 0) { screen[y + 1][x - 1] = "/"; attrs[y + 1][x - 1] = mColor; }
-              screen[y + 1][x] = "█"; attrs[y + 1][x] = mColor;
-              if (x < screenCols - 1) { screen[y + 1][x + 1] = "\\"; attrs[y + 1][x + 1] = mColor; }
+          if (dist < 2.8) {
+            // Imposing towering multi-row beast (horns, brow, blazing eyes, nose ring, fangs, muscular torso)
+            const art = [
+              { dr: -3, dc: -5, text: "▲", color: "a15" },
+              { dr: -3, dc:  5, text: "▲", color: "a15" },
+              { dr: -2, dc: -6, text: "/█▄", color: "a15" },
+              { dr: -2, dc: -1, text: "▼", color: "a12" },
+              { dr: -2, dc:  4, text: "▄█\\", color: "a15" },
+              { dr: -1, dc: -7, text: "\\███▀", color: "a7" },
+              { dr: -1, dc: -2, text: "▄███▄", color: "a4" },
+              { dr: -1, dc:  3, text: "▀███/", color: "a7" },
+              { dr:  0, dc: -5, text: "██", color: "a4" },
+              { dr:  0, dc: -3, text: "(•)", color: "a12" },
+              { dr:  0, dc:  0, text: "█", color: "a4" },
+              { dr:  0, dc:  1, text: "(•)", color: "a12" },
+              { dr:  0, dc:  4, text: "██", color: "a4" },
+              { dr:  1, dc: -4, text: "██( ═╬═ )██", color: "a6" },
+              { dr:  2, dc: -5, text: "▄██\\ vvv /██▄", color: "a14" },
+              { dr:  3, dc: -6, text: "█████▀▀▀▀▀█████", color: "a4" },
+              { dr:  4, dc: -8, text: "█████████████████", color: "a8" }
+            ];
+            for (const item of art) {
+              const ry = y + item.dr;
+              if (ry >= 0 && ry < screenRows) {
+                for (let i = 0; i < item.text.length; i++) {
+                  const rx = x + item.dc + i;
+                  if (rx >= 0 && rx < screenCols) {
+                    screen[ry][rx] = item.text[i];
+                    attrs[ry][rx] = item.color;
+                  }
+                }
+              }
             }
           } else if (dist < 5.0) {
-            if (x > 0) { screen[y][x - 1] = "{"; attrs[y][x - 1] = mColor; }
-            screen[y][x] = "M"; attrs[y][x] = mColor;
-            if (x < screenCols - 1) { screen[y][x + 1] = "}"; attrs[y][x + 1] = mColor; }
+            // Mid distance: 4-row horned demonic silhouette
+            const artMid = [
+              { dr: -1, dc: -4, text: "\\█/   \\█/", color: "a15" },
+              { dr:  0, dc: -5, text: "▄██(•) (•)██▄", color: "a12" },
+              { dr:  1, dc: -4, text: "██\\ v /██", color: "a4" },
+              { dr:  2, dc: -5, text: "▀█████████▀", color: "a8" }
+            ];
+            for (const item of artMid) {
+              const ry = y + item.dr;
+              if (ry >= 0 && ry < screenRows) {
+                for (let i = 0; i < item.text.length; i++) {
+                  const rx = x + item.dc + i;
+                  if (rx >= 0 && rx < screenCols) {
+                    screen[ry][rx] = item.text[i];
+                    attrs[ry][rx] = item.color;
+                  }
+                }
+              }
+            }
           } else {
-            screen[y][x] = "M"; attrs[y][x] = mColor;
+            // Distant: two glowing red demonic eyes peering through the darkness
+            if (y > 0) {
+              if (x > 1) { screen[y - 1][x - 1] = "\\"; attrs[y - 1][x - 1] = "a7"; }
+              if (x < screenCols - 1) { screen[y - 1][x + 1] = "/"; attrs[y - 1][x + 1] = "a7"; }
+            }
+            if (x > 1) { screen[y][x - 1] = "•"; attrs[y][x - 1] = "a12"; }
+            screen[y][x] = " "; attrs[y][x] = "a0";
+            if (x < screenCols - 1) { screen[y][x + 1] = "•"; attrs[y][x + 1] = "a12"; }
           }
         } else {
           const symbol = sp.item?.symbol || "?";
@@ -1304,43 +1347,230 @@
 
       ctx.save();
       if (sp.isMonster) {
-        const mSize = Math.max(16, Math.min(220, spriteHeight));
+        const mSize = Math.max(20, Math.min(260, spriteHeight));
         const cx = sp.screenX;
         const cy = Math.floor(height / 2);
 
-        // Dark body silhouette
-        ctx.fillStyle = "#2b1810";
+        // 1. Ground contact shadow (soft radial darkness)
+        if (typeof ctx.createRadialGradient === "function") {
+          const shadowGrad = ctx.createRadialGradient(cx, cy + mSize * 0.54, 2, cx, cy + mSize * 0.54, mSize * 0.5);
+          shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.8)");
+          shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+          ctx.fillStyle = shadowGrad;
+        } else {
+          ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        }
         ctx.beginPath();
-        ctx.ellipse(cx, cy + mSize * 0.2, mSize * 0.35, mSize * 0.45, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx, cy + mSize * 0.54, mSize * 0.5, mSize * 0.14, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Bull Head
-        ctx.fillStyle = "#3d2216";
+        // 2. Muscular Upper Body & Massive Trapezius / Shoulders
+        ctx.fillStyle = "#160905"; // deep silhouette
         ctx.beginPath();
-        ctx.ellipse(cx, cy - mSize * 0.05, mSize * 0.24, mSize * 0.28, 0, 0, Math.PI * 2);
+        ctx.moveTo(cx - mSize * 0.5, cy + mSize * 0.52);
+        ctx.lineTo(cx - mSize * 0.44, cy + mSize * 0.08); // left arm outer
+        ctx.lineTo(cx - mSize * 0.32, cy - mSize * 0.12); // left trap peak
+        ctx.lineTo(cx + mSize * 0.32, cy - mSize * 0.12); // right trap peak
+        ctx.lineTo(cx + mSize * 0.44, cy + mSize * 0.08); // right arm outer
+        ctx.lineTo(cx + mSize * 0.5, cy + mSize * 0.52);
+        if (typeof ctx.closePath === "function") ctx.closePath();
         ctx.fill();
 
-        // Ivory Horns
-        ctx.strokeStyle = "#e8e0d0";
-        ctx.lineWidth = Math.max(2, Math.floor(mSize * 0.07));
+        // Muscular torso plate (chest & pectorals with depth gradient)
+        if (typeof ctx.createLinearGradient === "function") {
+          const torsoGrad = ctx.createLinearGradient(cx, cy - mSize * 0.1, cx, cy + mSize * 0.5);
+          torsoGrad.addColorStop(0, "#361b11");
+          torsoGrad.addColorStop(0.5, "#25120a");
+          torsoGrad.addColorStop(1, "#150804");
+          ctx.fillStyle = torsoGrad;
+        } else {
+          ctx.fillStyle = "#28140c";
+        }
         ctx.beginPath();
-        ctx.moveTo(cx - mSize * 0.12, cy - mSize * 0.15);
-        ctx.quadraticCurveTo(cx - mSize * 0.38, cy - mSize * 0.38, cx - mSize * 0.25, cy - mSize * 0.5);
-        ctx.moveTo(cx + mSize * 0.12, cy - mSize * 0.15);
-        ctx.quadraticCurveTo(cx + mSize * 0.38, cy - mSize * 0.38, cx + mSize * 0.25, cy - mSize * 0.5);
+        ctx.moveTo(cx - mSize * 0.38, cy + mSize * 0.1);
+        ctx.quadraticCurveTo(cx - mSize * 0.3, cy + mSize * 0.48, cx, cy + mSize * 0.5);
+        ctx.quadraticCurveTo(cx + mSize * 0.3, cy + mSize * 0.48, cx + mSize * 0.38, cy + mSize * 0.1);
+        if (typeof ctx.closePath === "function") ctx.closePath();
+        ctx.fill();
+
+        // Pectoral split & muscle clefts
+        ctx.strokeStyle = "#0e0503";
+        ctx.lineWidth = Math.max(1.5, mSize * 0.02);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx, cy + mSize * 0.38);
+        ctx.moveTo(cx, cy + mSize * 0.18);
+        ctx.quadraticCurveTo(cx - mSize * 0.16, cy + mSize * 0.22, cx - mSize * 0.3, cy + mSize * 0.14);
+        ctx.moveTo(cx, cy + mSize * 0.18);
+        ctx.quadraticCurveTo(cx + mSize * 0.16, cy + mSize * 0.22, cx + mSize * 0.3, cy + mSize * 0.14);
         ctx.stroke();
 
-        // Glowing Red Eyes
-        const eyeOffset = Math.max(2, Math.floor(mSize * 0.08));
-        const eyeRadius = Math.max(1.5, Math.floor(mSize * 0.04));
-        ctx.fillStyle = "#ff1100";
-        ctx.shadowColor = "#ff0000";
-        ctx.shadowBlur = 8;
+        // Claws / forearms resting forward
+        ctx.fillStyle = "#1e0e08";
         ctx.beginPath();
-        ctx.arc(cx - eyeOffset, cy - mSize * 0.08, eyeRadius, 0, Math.PI * 2);
-        ctx.arc(cx + eyeOffset, cy - mSize * 0.08, eyeRadius, 0, Math.PI * 2);
+        ctx.ellipse(cx - mSize * 0.36, cy + mSize * 0.32, mSize * 0.1, mSize * 0.2, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(cx + mSize * 0.36, cy + mSize * 0.32, mSize * 0.1, mSize * 0.2, 0.2, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
+
+        // 3. Demonic Bull Head
+        if (typeof ctx.createRadialGradient === "function") {
+          const headGrad = ctx.createRadialGradient(cx, cy - mSize * 0.05, 2, cx, cy - mSize * 0.05, mSize * 0.26);
+          headGrad.addColorStop(0, "#4a2416");
+          headGrad.addColorStop(0.7, "#2e150c");
+          headGrad.addColorStop(1, "#180804");
+          ctx.fillStyle = headGrad;
+        } else {
+          ctx.fillStyle = "#32170e";
+        }
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - mSize * 0.05, mSize * 0.25, mSize * 0.27, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Angular snout & jaw
+        ctx.fillStyle = "#220e07";
+        ctx.beginPath();
+        ctx.moveTo(cx - mSize * 0.18, cy);
+        ctx.lineTo(cx - mSize * 0.14, cy + mSize * 0.2);
+        ctx.quadraticCurveTo(cx, cy + mSize * 0.24, cx + mSize * 0.14, cy + mSize * 0.2);
+        ctx.lineTo(cx + mSize * 0.18, cy);
+        if (typeof ctx.closePath === "function") ctx.closePath();
+        ctx.fill();
+
+        // Open snarling mouth with sharp fangs
+        ctx.fillStyle = "#0c0202";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + mSize * 0.16, mSize * 0.12, mSize * 0.055, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sharp fangs (ivory teeth)
+        ctx.fillStyle = "#ded3be";
+        ctx.beginPath();
+        const fangH = mSize * 0.035;
+        ctx.moveTo(cx - mSize * 0.08, cy + mSize * 0.13); ctx.lineTo(cx - mSize * 0.065, cy + mSize * 0.13 + fangH); ctx.lineTo(cx - mSize * 0.05, cy + mSize * 0.13);
+        ctx.moveTo(cx + mSize * 0.08, cy + mSize * 0.13); ctx.lineTo(cx + mSize * 0.065, cy + mSize * 0.13 + fangH); ctx.lineTo(cx + mSize * 0.05, cy + mSize * 0.13);
+        ctx.moveTo(cx - mSize * 0.04, cy + mSize * 0.19); ctx.lineTo(cx - mSize * 0.03, cy + mSize * 0.19 - fangH); ctx.lineTo(cx - mSize * 0.02, cy + mSize * 0.19);
+        ctx.moveTo(cx + mSize * 0.04, cy + mSize * 0.19); ctx.lineTo(cx + mSize * 0.03, cy + mSize * 0.19 - fangH); ctx.lineTo(cx + mSize * 0.02, cy + mSize * 0.19);
+        ctx.fill();
+
+        // Dark flared nostrils
+        ctx.fillStyle = "#000000";
+        ctx.beginPath();
+        ctx.ellipse(cx - mSize * 0.055, cy + mSize * 0.09, mSize * 0.03, mSize * 0.022, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(cx + mSize * 0.055, cy + mSize * 0.09, mSize * 0.03, mSize * 0.022, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Steaming breath puffs from nostrils
+        ctx.fillStyle = "rgba(235, 240, 255, 0.28)";
+        ctx.beginPath();
+        ctx.ellipse(cx - mSize * 0.11, cy + mSize * 0.14, mSize * 0.065, mSize * 0.035, -0.4, 0, Math.PI * 2);
+        ctx.ellipse(cx + mSize * 0.11, cy + mSize * 0.14, mSize * 0.065, mSize * 0.035, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Heavy Brass Septum Nose Ring
+        ctx.strokeStyle = "#c59a3f";
+        ctx.lineWidth = Math.max(2, Math.floor(mSize * 0.028));
+        ctx.beginPath();
+        ctx.arc(cx, cy + mSize * 0.115, mSize * 0.05, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+
+        // 4. Heavy Ribbed Curved Horns with Ivory Core and Blood-Stained Needle Tips
+        const hornBaseW = Math.max(3, Math.floor(mSize * 0.075));
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        // Left Horn Main Shaft & Ivory Core
+        ctx.strokeStyle = "#504436";
+        ctx.lineWidth = hornBaseW;
+        ctx.beginPath();
+        ctx.moveTo(cx - mSize * 0.12, cy - mSize * 0.14);
+        if (typeof ctx.bezierCurveTo === "function") {
+          ctx.bezierCurveTo(cx - mSize * 0.42, cy - mSize * 0.35, cx - mSize * 0.48, cy - mSize * 0.52, cx - mSize * 0.28, cy - mSize * 0.65);
+        } else {
+          ctx.quadraticCurveTo(cx - mSize * 0.42, cy - mSize * 0.35, cx - mSize * 0.28, cy - mSize * 0.65);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = "#e5dec9";
+        ctx.lineWidth = Math.max(1.5, hornBaseW * 0.55);
+        ctx.beginPath();
+        ctx.moveTo(cx - mSize * 0.14, cy - mSize * 0.16);
+        if (typeof ctx.bezierCurveTo === "function") {
+          ctx.bezierCurveTo(cx - mSize * 0.4, cy - mSize * 0.36, cx - mSize * 0.46, cy - mSize * 0.51, cx - mSize * 0.28, cy - mSize * 0.65);
+        } else {
+          ctx.quadraticCurveTo(cx - mSize * 0.4, cy - mSize * 0.36, cx - mSize * 0.28, cy - mSize * 0.65);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = "#991111";
+        ctx.lineWidth = Math.max(1, hornBaseW * 0.35);
+        ctx.beginPath();
+        ctx.moveTo(cx - mSize * 0.32, cy - mSize * 0.61);
+        ctx.lineTo(cx - mSize * 0.28, cy - mSize * 0.65);
+        ctx.stroke();
+
+        // Right Horn Main Shaft & Ivory Core
+        ctx.strokeStyle = "#504436";
+        ctx.lineWidth = hornBaseW;
+        ctx.beginPath();
+        ctx.moveTo(cx + mSize * 0.12, cy - mSize * 0.14);
+        if (typeof ctx.bezierCurveTo === "function") {
+          ctx.bezierCurveTo(cx + mSize * 0.42, cy - mSize * 0.35, cx + mSize * 0.48, cy - mSize * 0.52, cx + mSize * 0.28, cy - mSize * 0.65);
+        } else {
+          ctx.quadraticCurveTo(cx + mSize * 0.42, cy - mSize * 0.35, cx + mSize * 0.28, cy - mSize * 0.65);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = "#e5dec9";
+        ctx.lineWidth = Math.max(1.5, hornBaseW * 0.55);
+        ctx.beginPath();
+        ctx.moveTo(cx + mSize * 0.14, cy - mSize * 0.16);
+        if (typeof ctx.bezierCurveTo === "function") {
+          ctx.bezierCurveTo(cx + mSize * 0.4, cy - mSize * 0.36, cx + mSize * 0.46, cy - mSize * 0.51, cx + mSize * 0.28, cy - mSize * 0.65);
+        } else {
+          ctx.quadraticCurveTo(cx + mSize * 0.4, cy - mSize * 0.36, cx + mSize * 0.28, cy - mSize * 0.65);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = "#991111";
+        ctx.lineWidth = Math.max(1, hornBaseW * 0.35);
+        ctx.beginPath();
+        ctx.moveTo(cx + mSize * 0.32, cy - mSize * 0.61);
+        ctx.lineTo(cx + mSize * 0.28, cy - mSize * 0.65);
+        ctx.stroke();
+        ctx.restore();
+
+        // 5. Terrifying Glowing Demonic Eyes (Furious Glare)
+        const eyeXOff = Math.max(3, Math.floor(mSize * 0.085));
+        const eyeY = cy - mSize * 0.075;
+        const eyeR = Math.max(2, Math.floor(mSize * 0.038));
+
+        // Angled menacing brow
+        ctx.strokeStyle = "#080202";
+        ctx.lineWidth = Math.max(2, mSize * 0.035);
+        ctx.beginPath();
+        ctx.moveTo(cx - mSize * 0.15, eyeY - eyeR * 1.5);
+        ctx.lineTo(cx, eyeY);
+        ctx.lineTo(cx + mSize * 0.15, eyeY - eyeR * 1.5);
+        ctx.stroke();
+
+        // Crimson eye aura glow
+        ctx.save();
+        ctx.shadowColor = "#ff0000";
+        ctx.shadowBlur = Math.max(6, Math.floor(mSize * 0.12));
+        ctx.fillStyle = "#ff1a00";
+        ctx.beginPath();
+        ctx.arc(cx - eyeXOff, eyeY, eyeR, 0, Math.PI * 2);
+        ctx.arc(cx + eyeXOff, eyeY, eyeR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Burning fiery yellow pupil center
+        ctx.fillStyle = "#ffff66";
+        ctx.beginPath();
+        ctx.arc(cx - eyeXOff, eyeY, Math.max(1, eyeR * 0.45), 0, Math.PI * 2);
+        ctx.arc(cx + eyeXOff, eyeY, Math.max(1, eyeR * 0.45), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       } else {
         ctx.fillStyle = "#00ffcc";
         ctx.font = `${Math.max(12, Math.floor(spriteHeight * 0.65))}px monospace`;
@@ -1827,11 +2057,18 @@
           submsg = "";
           sfx.blip?.();
           draw();
-        } else if (action === "L") {
-          game.turn(-0.25);
-          draw();
-        } else if (action === "R") {
-          game.turn(0.25);
+        } else if (action === "L" || action === "R") {
+          game.turn(action === "L" ? -0.25 : 0.25);
+          if (game.minotaurAlert === "NEAR") {
+            playMazeSound(sfx, "near");
+            submsg = "⚠️ ¡Sientes la respiración del Minotauro muy cerca!";
+          } else if (game.minotaurAlert === "HEARD") {
+            playMazeSound(sfx, "heard");
+            submsg = "🐾 Pasos pesados retumban cerca de tu posición...";
+          } else {
+            sfx.blip?.();
+            submsg = "";
+          }
           draw();
         } else if (action === "U" || action === "D") {
           const speed = action === "U" ? 0.35 : -0.35;
@@ -1989,11 +2226,17 @@
         draw();
       } else if (isCaught) {
         return;
-      } else if (act === "L") {
-        game.turn(-0.25);
-        draw();
-      } else if (act === "R") {
-        game.turn(0.25);
+      } else if (act === "L" || act === "R") {
+        game.turn(act === "L" ? -0.25 : 0.25);
+        if (game.minotaurAlert === "NEAR") {
+          playMazeSound(io.sfx || (typeof GM !== "undefined" && GM.sfx), "near");
+          msgBox.textContent = isCa ? "⚠️ El Minotaure està a l'aguait en un passadís contigu!" : (isEs ? "⚠️ ¡El Minotauro está acechando en un pasillo contiguo!" : "⚠️ The Minotaur is lurking in an adjacent hallway!");
+        } else if (game.minotaurAlert === "HEARD") {
+          playMazeSound(io.sfx || (typeof GM !== "undefined" && GM.sfx), "heard");
+          msgBox.textContent = isCa ? "🐾 Ecos de peülles pesades ressonen a la pedra..." : (isEs ? "🐾 Ecos de pesadas pezuñas resuenan en la piedra..." : "🐾 Heavy hooves echo against the stone...");
+        } else {
+          io.sfx?.blip?.();
+        }
         draw();
       } else if (act === "U" || act === "D") {
         const speed = act === "U" ? 0.35 : -0.35;
