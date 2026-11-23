@@ -341,6 +341,7 @@
         if (content === "maze") {
           try { await GM.need("maze.js"); } catch (e) { return; }
           const w = win(title, "", "w31-mazewin");
+          w.style.top = "2%"; w.style.left = "3%";
           io.sfx.blip(); return GM.maze.mountWin31(w, io);
         }
         io.sfx.blip(); win(title, content(io));

@@ -109,6 +109,12 @@ const GM = (() => {
         tone(55, 1.3, "sawtooth", .02);
         for (let i = 0; i < 9; i++) noise(.03, .5, 1500 + Math.random() * 900, .15 + i * .12 + Math.random() * .04);
       },
+      pickup: () => { tone(587, .06, "square", .04); tone(880, .08, "square", .04, .06); tone(1174, .12, "square", .045, .14); },
+      stomp: near => {
+        if (near) { noise(.12, .65, 220); tone(65, .15, "sawtooth", .05); noise(.12, .75, 200, .16); tone(55, .18, "sawtooth", .06, .16); }
+        else { noise(.08, .35, 280); tone(70, .1, "triangle", .035); }
+      },
+      defeat: () => { tone(130, .22, "sawtooth", .06); tone(85, .32, "sawtooth", .07, .16); noise(.3, .65, 340, .08); },
     };
   })();
   const soundIcon = () => { const b = $(".snd"); if (b) { b.textContent = sfx.on ? "🔊" : "🔇"; b.setAttribute("aria-pressed", sfx.on); } };
@@ -269,7 +275,7 @@ const GM = (() => {
     bootOut.innerHTML = `<div class="halt"><div>${msg}</div></div>`;
     await waitKey(); sfx.unlock(); showBoot();
   }
-  const VERSION = "1.38.0";                            // whole-site release, shown on the power-on screen: A.B.C = era.features.fixes
+  const VERSION = "1.39.0";                            // whole-site release, shown on the power-on screen: A.B.C = era.features.fixes
   const powerOn = () => screen(`<svg class="pwr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender", "Prem una tecla o fes clic per engegar")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar", "aquest lloc fa sons retro · 🔊 per silenciar")}</small><p class="pwr-tag">${B("My CV, inside a 90s PC: two operating systems, a BIOS Setup and secrets hidden in every corner.", "Mi CV, dentro de un PC de los 90: dos sistemas operativos, una BIOS y secretos escondidos en cada rincón.", "El meu CV, dins d'un PC dels 90: dos sistemes operatius, una BIOS i secrets amagats a cada racó.")}<br><small class="dim">${B("Explore it all: curious minds always find something more.", "Explóralo todo: los curiosos siempre encuentran algo más.", "Explora-ho tot: els curiosos sempre hi troben alguna cosa més.")}</small></p><p class="pwr-mob dim">${B("On a phone almost everything works, but it is best enjoyed in a computer browser.", "En el móvil funciona casi todo, pero se disfruta más en el navegador de un PC.", "Al mòbil funciona gairebé tot, però es gaudeix més al navegador d'un PC.")}</p><p class="pwr-ver dim">Vers: ${VERSION}</p>`);
   const halt = msg => { sfx.fanStop(.5); return screen(msg); };
 
@@ -281,7 +287,7 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.64", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.65", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });

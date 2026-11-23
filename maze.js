@@ -793,12 +793,16 @@
       }
 
       let perpWallDist;
+      let wallX;
       if (side === 0) {
         perpWallDist = (mapX - posX + (1 - stepX) / 2) / (rayDirX || 1e-30);
+        wallX = posY + perpWallDist * rayDirY;
       } else {
         perpWallDist = (mapY - posY + (1 - stepY) / 2) / (rayDirY || 1e-30);
+        wallX = posX + perpWallDist * rayDirX;
       }
       perpWallDist = Math.max(0.05, perpWallDist);
+      wallX -= Math.floor(wallX);
 
       columns.push({
         x,
@@ -806,7 +810,8 @@
         side,
         mapX,
         mapY,
-        cellType
+        cellType,
+        wallX
       });
     }
 
@@ -877,6 +882,47 @@
     return sprites;
   }
 
+  // ANSI 16-color palette mappings for collectibles and UI
+  const ITEM_COLORS = {
+    BASIC: "a10", LOGO: "a11", PASCAL: "a9", C: "a15", CLIPPER: "a12",
+    ZX12: "a13", MH71: "a14", PCW: "a10", HOH: "a11", CAJAPLUS: "a14",
+    CHECKVIR: "a12", BPU: "a9", FIDONET: "a11", ESI: "a13", LASALLE: "a14"
+  };
+
+  // Centralized retro audio player for maze events
+  function playMazeSound(sfx, type) {
+    if (!sfx) return;
+    if (type === "pickup") {
+      if (typeof sfx.pickup === "function") sfx.pickup();
+      else if (typeof sfx.tone === "function") {
+        sfx.tone(587, .06, "square", .04);
+        sfx.tone(880, .08, "square", .04, .06);
+        sfx.tone(1174, .12, "square", .045, .14);
+      } else sfx.ok?.();
+    } else if (type === "near") {
+      if (typeof sfx.stomp === "function") sfx.stomp(true);
+      else if (typeof sfx.tone === "function" && typeof sfx.noise === "function") {
+        sfx.noise(.12, .65, 220);
+        sfx.tone(65, .15, "sawtooth", .05);
+        sfx.noise(.12, .75, 200, .16);
+        sfx.tone(55, .18, "sawtooth", .06, .16);
+      } else sfx.err?.();
+    } else if (type === "heard") {
+      if (typeof sfx.stomp === "function") sfx.stomp(false);
+      else if (typeof sfx.tone === "function" && typeof sfx.noise === "function") {
+        sfx.noise(.08, .35, 280);
+        sfx.tone(70, .1, "triangle", .035);
+      } else sfx.tick?.();
+    } else if (type === "caught") {
+      if (typeof sfx.defeat === "function") sfx.defeat();
+      else if (typeof sfx.tone === "function" && typeof sfx.noise === "function") {
+        sfx.tone(130, .22, "sawtooth", .06);
+        sfx.tone(85, .32, "sawtooth", .07, .16);
+        sfx.noise(.3, .65, 340, .08);
+      } else sfx.err?.();
+    }
+  }
+
   // ASCII 3D Viewport Renderer for Terminal (DOS and shell)
   function renderAscii(gameInstance, screenCols = 80, screenRows = 20, options = {}) {
     const { maze, posX, posY, dirX, dirY, planeX, planeY } = gameInstance;
@@ -885,6 +931,7 @@
     const sprites = projectSprites(maze, posX, posY, dirX, dirY, planeX, planeY, screenCols, zBuffer, gameInstance.minotaur);
 
     const screen = Array.from({ length: screenRows }, () => Array(screenCols).fill(" "));
+    const attrs = Array.from({ length: screenRows }, () => Array(screenCols).fill("a7"));
     const midY = Math.floor(screenRows / 2);
 
     // Ceiling & Floor shading with perspective cues
@@ -892,11 +939,12 @@
       for (let x = 0; x < screenCols; x++) {
         if (y > midY) {
           const dy = y - midY;
-          if (dy >= 8) screen[y][x] = (x + y) % 6 === 0 ? "_" : " ";
-          else if (dy >= 5) screen[y][x] = (x + y) % 4 === 0 ? "·" : " ";
-          else if (dy >= 3) screen[y][x] = (x + y) % 4 === 0 ? "." : " ";
+          if (dy >= 8) { screen[y][x] = (x + y) % 6 === 0 ? "_" : " "; attrs[y][x] = "a8"; }
+          else if (dy >= 5) { screen[y][x] = (x + y) % 4 === 0 ? "·" : " "; attrs[y][x] = "a8"; }
+          else if (dy >= 3) { screen[y][x] = (x + y) % 4 === 0 ? "." : " "; attrs[y][x] = "a8"; }
         } else if (y < midY - 6) {
           screen[y][x] = (x + y) % 10 === 0 ? "." : " ";
+          attrs[y][x] = "a8";
         }
       }
     }
@@ -916,17 +964,21 @@
         Math.abs(col.perpWallDist - prev.perpWallDist) > 0.35 && (x - lastEdge > 1);
       if (isWallEdge) lastEdge = x;
 
-      // High-contrast directional wall shading
+      // High-contrast directional wall shading & ANSI colours
       let bodyChar = " ";
+      let wallColor = "a7";
       if (col.cellType === "EXIT") {
         bodyChar = "*";
+        wallColor = "a14";
       } else if (typeof col.cellType === "string" && col.cellType.startsWith("DOOR_")) {
         bodyChar = col.side === 0 ? "║" : "═";
+        wallColor = "a14";
       } else if (col.cellType === "SECRET_PASSAGE") {
         if (dist < 2.0) bodyChar = "▒";
         else if (dist < 3.8) bodyChar = "░";
         else if (dist < 6.0) bodyChar = ":";
         else bodyChar = ".";
+        wallColor = "a6";
       } else if (col.side === 0) {
         // North/South faces: bright direct light, solid blocks
         if (dist < 2.0) bodyChar = "█";
@@ -934,6 +986,7 @@
         else if (dist < 6.0) bodyChar = "▒";
         else if (dist < 8.5) bodyChar = "░";
         else bodyChar = "·";
+        wallColor = dist < 4.0 ? "a15" : "a7";
       } else {
         // East/West faces: shaded / textured contrast
         if (dist < 2.0) bodyChar = "▓";
@@ -941,17 +994,22 @@
         else if (dist < 6.0) bodyChar = "░";
         else if (dist < 8.5) bodyChar = ":";
         else bodyChar = ".";
+        wallColor = dist < 4.0 ? "a7" : "a8";
       }
 
       for (let y = drawStart; y <= drawEnd; y++) {
         if (isWallEdge) {
           screen[y][x] = "│";
+          attrs[y][x] = "a15";
         } else if (y === drawStart && drawStart > 0 && dist < 8.5) {
           screen[y][x] = "▄";
+          attrs[y][x] = "a8";
         } else if (y === drawEnd && drawEnd < screenRows - 1 && dist < 8.5) {
           screen[y][x] = "▀";
+          attrs[y][x] = "a8";
         } else {
           screen[y][x] = bodyChar;
+          attrs[y][x] = wallColor;
         }
       }
     }
@@ -964,34 +1022,37 @@
 
       if (y >= 0 && y < screenRows && x >= 0 && x < screenCols) {
         if (sp.isMonster) {
+          const mColor = "a12";
           if (dist < 2.5) {
             // Close imposing Minotaur beast (3x3 horned presence)
             if (y > 0) {
-              if (x > 0) screen[y - 1][x - 1] = "\\";
-              screen[y - 1][x] = "▼";
-              if (x < screenCols - 1) screen[y - 1][x + 1] = "/";
+              if (x > 0) { screen[y - 1][x - 1] = "\\"; attrs[y - 1][x - 1] = mColor; }
+              screen[y - 1][x] = "▼"; attrs[y - 1][x] = mColor;
+              if (x < screenCols - 1) { screen[y - 1][x + 1] = "/"; attrs[y - 1][x + 1] = mColor; }
             }
-            if (x > 0) screen[y][x - 1] = "(";
-            screen[y][x] = "O";
-            if (x < screenCols - 1) screen[y][x + 1] = ")";
+            if (x > 0) { screen[y][x - 1] = "("; attrs[y][x - 1] = mColor; }
+            screen[y][x] = "O"; attrs[y][x] = mColor;
+            if (x < screenCols - 1) { screen[y][x + 1] = ")"; attrs[y][x + 1] = mColor; }
             if (y < screenRows - 1) {
-              if (x > 0) screen[y + 1][x - 1] = "/";
-              screen[y + 1][x] = "█";
-              if (x < screenCols - 1) screen[y + 1][x + 1] = "\\";
+              if (x > 0) { screen[y + 1][x - 1] = "/"; attrs[y + 1][x - 1] = mColor; }
+              screen[y + 1][x] = "█"; attrs[y + 1][x] = mColor;
+              if (x < screenCols - 1) { screen[y + 1][x + 1] = "\\"; attrs[y + 1][x + 1] = mColor; }
             }
           } else if (dist < 5.0) {
-            if (x > 0) screen[y][x - 1] = "{";
-            screen[y][x] = "M";
-            if (x < screenCols - 1) screen[y][x + 1] = "}";
+            if (x > 0) { screen[y][x - 1] = "{"; attrs[y][x - 1] = mColor; }
+            screen[y][x] = "M"; attrs[y][x] = mColor;
+            if (x < screenCols - 1) { screen[y][x + 1] = "}"; attrs[y][x + 1] = mColor; }
           } else {
-            screen[y][x] = "M";
+            screen[y][x] = "M"; attrs[y][x] = mColor;
           }
         } else {
           const symbol = sp.item?.symbol || "?";
+          const iColor = ITEM_COLORS[sp.item?.id] || "a11";
           screen[y][x] = symbol;
+          attrs[y][x] = iColor;
           if (dist < 3.5 && x > 0 && x < screenCols - 1) {
-            screen[y][x - 1] = "[";
-            screen[y][x + 1] = "]";
+            screen[y][x - 1] = "["; attrs[y][x - 1] = "a8";
+            screen[y][x + 1] = "]"; attrs[y][x + 1] = "a8";
           }
         }
       }
@@ -1011,12 +1072,12 @@
           const scY = 1 + my;
           if (scX >= screenCols || scY >= screenRows) continue;
 
-          if (my === -1 && mx === -1) screen[scY][scX] = "┌";
-          else if (my === -1 && mx === mapSize) screen[scY][scX] = "┐";
-          else if (my === mapSize && mx === -1) screen[scY][scX] = "└";
-          else if (my === mapSize && mx === mapSize) screen[scY][scX] = "┘";
-          else if (my === -1 || my === mapSize) screen[scY][scX] = "─";
-          else if (mx === -1 || mx === mapSize) screen[scY][scX] = "│";
+          if (my === -1 && mx === -1) { screen[scY][scX] = "┌"; attrs[scY][scX] = "a8"; }
+          else if (my === -1 && mx === mapSize) { screen[scY][scX] = "┐"; attrs[scY][scX] = "a8"; }
+          else if (my === mapSize && mx === -1) { screen[scY][scX] = "└"; attrs[scY][scX] = "a8"; }
+          else if (my === mapSize && mx === mapSize) { screen[scY][scX] = "┘"; attrs[scY][scX] = "a8"; }
+          else if (my === -1 || my === mapSize) { screen[scY][scX] = "─"; attrs[scY][scX] = "a8"; }
+          else if (mx === -1 || mx === mapSize) { screen[scY][scX] = "│"; attrs[scY][scX] = "a8"; }
           else {
             const gx = curMapX + (mx - half);
             const gy = curMapY + (my - half);
@@ -1028,29 +1089,59 @@
               else if (ang >= -(3 * Math.PI) / 4 && ang < -Math.PI / 4) pChar = "▲";
               else pChar = "◄";
               screen[scY][scX] = pChar;
+              attrs[scY][scX] = "a10";
             } else if (gx >= 0 && gx < maze.width && gy >= 0 && gy < maze.height) {
               const dId = maze.doors[`${gx},${gy}`];
               if (gameInstance.minotaur?.active && gx === Math.floor(gameInstance.minotaur.x) && gy === Math.floor(gameInstance.minotaur.y)) {
                 screen[scY][scX] = "M";
+                attrs[scY][scX] = "a12";
               } else if (dId && !maze.openDoors?.has(dId)) {
                 screen[scY][scX] = "+";
+                attrs[scY][scX] = "a14";
               } else if (maze.secretPassages?.[`${gx},${gy}`]?.opened) {
                 screen[scY][scX] = "~";
+                attrs[scY][scX] = "a6";
               } else if (maze.grid[gy][gx] === 1) {
                 screen[scY][scX] = "█";
+                attrs[scY][scX] = "a8";
               } else if (maze.items[`${gx},${gy}`] && !maze.collectedItems?.has(maze.items[`${gx},${gy}`])) {
                 screen[scY][scX] = "*";
+                attrs[scY][scX] = "a11";
               } else if (gx === maze.exit.x && gy === maze.exit.y) {
                 screen[scY][scX] = "E";
+                attrs[scY][scX] = "a14";
               } else {
                 screen[scY][scX] = "·";
+                attrs[scY][scX] = "a8";
               }
             } else {
               screen[scY][scX] = " ";
+              attrs[scY][scX] = "a7";
             }
           }
         }
       }
+    }
+
+    if (options.color) {
+      return screen.map((row, y) => {
+        let html = "";
+        let curCls = null;
+        let text = "";
+        for (let x = 0; x < screenCols; x++) {
+          const ch = row[x];
+          const cls = attrs[y][x] || "a7";
+          if (cls !== curCls) {
+            if (text) html += curCls && curCls !== "a7" ? `<span class="${curCls}">${text}</span>` : text;
+            curCls = cls;
+            text = ch;
+          } else {
+            text += ch;
+          }
+        }
+        if (text) html += curCls && curCls !== "a7" ? `<span class="${curCls}">${text}</span>` : text;
+        return html;
+      }).join("\n");
     }
 
     return screen.map(r => r.join("")).join("\n");
@@ -1063,35 +1154,145 @@
     const zBuffer = columns.map(c => c.perpWallDist);
     const sprites = projectSprites(maze, posX, posY, dirX, dirY, planeX, planeY, width, zBuffer, gameInstance.minotaur);
 
-    // Ceiling & Floor
-    ctx.fillStyle = "#1e1e1e";
+    // Ceiling & Floor with subtle retro depth gradients
+    const ceilGrad = ctx.createLinearGradient(0, 0, 0, height / 2);
+    ceilGrad.addColorStop(0, "#121212");
+    ceilGrad.addColorStop(1, "#242424");
+    ctx.fillStyle = ceilGrad;
     ctx.fillRect(0, 0, width, height / 2);
-    ctx.fillStyle = "#3a3a3a";
+
+    const floorGrad = ctx.createLinearGradient(0, height / 2, 0, height);
+    floorGrad.addColorStop(0, "#2a2a2a");
+    floorGrad.addColorStop(1, "#404040");
+    ctx.fillStyle = floorGrad;
     ctx.fillRect(0, height / 2, width, height / 2);
 
-    // Render Walls
+    // Render Walls with procedural brick texture, mortar joints, individual brick variations and stains
     for (let x = 0; x < width; x++) {
       const col = columns[x];
       const dist = col.perpWallDist;
       const lineHeight = Math.floor(height / dist);
       const drawStart = Math.max(0, Math.floor(height / 2 - lineHeight / 2));
       const drawEnd = Math.min(height, Math.floor(height / 2 + lineHeight / 2));
+      const wallX = col.wallX || 0;
+      const att = Math.max(0.12, Math.min(1.0, 1.0 / (1 + dist * 0.35)));
+      const isDoor = typeof col.cellType === "string" && col.cellType.startsWith("DOOR_");
 
-      // Wall color / shading
-      if (col.cellType === "EXIT") {
-        ctx.fillStyle = "#ffd700";
-      } else if (typeof col.cellType === "string" && col.cellType.startsWith("DOOR_")) {
-        ctx.fillStyle = col.side === 0 ? "#8b4513" : "#6b3309";
-      } else if (col.cellType === "SECRET_PASSAGE") {
-        ctx.fillStyle = col.side === 0 ? "#7a6245" : "#5e4b33";
-      } else {
-        const brightness = Math.max(20, Math.min(240, Math.floor(255 / (1 + dist * 0.35))));
+      if (isDoor) {
+        // Vertical wooden planks with wood grain and iron bolts
         const factor = col.side === 0 ? 1.0 : 0.75;
-        const c = Math.floor(brightness * factor);
-        ctx.fillStyle = `rgb(${c},${c},${Math.floor(c * 1.05)})`;
-      }
+        const plankIdx = Math.floor(wallX * 4);
+        const isPlankSeam = (wallX * 4) % 1.0 < 0.08;
+        if (isPlankSeam) {
+          ctx.fillStyle = `rgb(${Math.floor(25 * att)},${Math.floor(12 * att)},${Math.floor(6 * att)})`;
+          ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
+        } else {
+          const pVar = ((plankIdx * 23) % 7) * 4 - 12;
+          const r = Math.floor((125 + pVar) * factor * att);
+          const g = Math.floor((68 + pVar * 0.5) * factor * att);
+          const b = Math.floor((28 + pVar * 0.3) * factor * att);
+          ctx.fillStyle = `rgb(${r},${g},${b})`;
+          ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
 
-      ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
+          // Iron stud bolts at 25% and 75% height
+          const stud1Y = Math.floor(drawStart + (drawEnd - drawStart) * 0.25);
+          const stud2Y = Math.floor(drawStart + (drawEnd - drawStart) * 0.75);
+          const studX = (wallX * 4) % 1.0;
+          if (studX >= 0.42 && studX <= 0.58) {
+            ctx.fillStyle = `rgb(${Math.floor(40 * att)},${Math.floor(40 * att)},${Math.floor(45 * att)})`;
+            ctx.fillRect(x, stud1Y - 1, 1, 3);
+            ctx.fillRect(x, stud2Y - 1, 1, 3);
+          }
+        }
+      } else {
+        // Procedural courses of masonry / bricks / stone
+        const isExit = col.cellType === "EXIT";
+        const isSecret = col.cellType === "SECRET_PASSAGE";
+        const numCourses = isSecret ? 4 : (isExit ? 6 : 8);
+        const bricksPerRow = isSecret ? 2 : 4;
+        const factor = col.side === 0 ? 1.0 : 0.72;
+
+        for (let row = 0; row < numCourses; row++) {
+          const cY1 = Math.floor(height / 2 - lineHeight / 2 + (row / numCourses) * lineHeight);
+          const cY2 = Math.floor(height / 2 - lineHeight / 2 + ((row + 1) / numCourses) * lineHeight);
+          if (cY2 <= 0 || cY1 >= height) continue;
+          const courseH = cY2 - cY1;
+          if (courseH <= 0) continue;
+
+          // Mortar thickness (horizontal joint at top of course)
+          const mortarH = (row > 0 && courseH >= 5) ? Math.max(1, Math.min(2, Math.floor(courseH * 0.08))) : 0;
+
+          // Draw horizontal mortar seam if within viewport
+          if (mortarH > 0) {
+            const mY1 = Math.max(0, cY1);
+            const mY2 = Math.min(height, cY1 + mortarH);
+            if (mY2 > mY1) {
+              const mDark = Math.floor(40 * att * factor);
+              ctx.fillStyle = `rgb(${mDark},${mDark},${Math.floor(mDark * 1.1)})`;
+              ctx.fillRect(x, mY1, 1, mY2 - mY1);
+            }
+          }
+
+          // Brick body vertical range (below horizontal mortar seam)
+          const bY1 = Math.max(0, cY1 + mortarH);
+          const bY2 = Math.min(height, cY2);
+          if (bY2 <= bY1) continue;
+
+          const shift = (row % 2 === 1) ? 0.5 : 0.0;
+          const bx = (wallX + shift) % 1.0;
+          const bFrac = (bx * bricksPerRow) % 1.0;
+          const bIdx = Math.floor(bx * bricksPerRow);
+          const isVertMortar = bFrac < (isSecret ? 0.06 : 0.08);
+
+          if (isVertMortar && courseH >= 5) {
+            // Vertical mortar joint between bricks
+            const mDark = Math.floor(40 * att * factor);
+            ctx.fillStyle = `rgb(${mDark},${mDark},${Math.floor(mDark * 1.1)})`;
+            ctx.fillRect(x, bY1, 1, bY2 - bY1);
+          } else if (isExit) {
+            // Golden exit portal with radiance
+            const bVar = (((col.mapX * 19 + col.mapY * 11 + row * 7 + bIdx) % 7) - 3) * 6;
+            ctx.fillStyle = `rgb(${Math.min(255, Math.floor((235 + bVar) * att * factor))},${Math.min(255, Math.floor((195 + bVar) * att * factor))},${Math.floor(25 * att)})`;
+            ctx.fillRect(x, bY1, 1, bY2 - bY1);
+          } else if (isSecret) {
+            // Secret passage: ancient carved dark stone blocks
+            const hash = Math.sin(col.mapX * 29 + col.mapY * 13 + row * 9 + bIdx * 5) * 43758.5453;
+            const bVar = (hash - Math.floor(hash)) * 0.28 - 0.14;
+            const baseC = Math.floor(105 * att * factor * (1 + bVar));
+            ctx.fillStyle = `rgb(${Math.floor(baseC * 1.05)},${Math.floor(baseC * 0.88)},${Math.floor(baseC * 0.7)})`;
+            ctx.fillRect(x, bY1, 1, bY2 - bY1);
+          } else {
+            // Standard red/terracotta brick wall with 3D bevel and individual variations
+            const hash = Math.sin(col.mapX * 31.7 + col.mapY * 17.3 + row * 11.3 + bIdx * 7.1) * 43758.5453;
+            const bVar = (hash - Math.floor(hash)) * 0.28 - 0.14;
+            const hasStain = ((hash * 13.7) % 1.0) > 0.72;
+            const stainFactor = hasStain ? 0.72 : 1.0;
+            const baseVal = 180 * att * factor * (1.0 + bVar) * stainFactor;
+            
+            const r = Math.min(255, Math.max(0, Math.floor(baseVal * 1.18)));
+            const g = Math.min(255, Math.max(0, Math.floor(baseVal * (hasStain ? 0.78 : 0.62))));
+            const b = Math.min(255, Math.max(0, Math.floor(baseVal * 0.48)));
+
+            // 3D Bevel: top edge catches light, bottom edge has shadow
+            if (bY2 - bY1 > 4) {
+              // Top highlight
+              ctx.fillStyle = `rgb(${Math.min(255, Math.floor(r * 1.25))},${Math.min(255, Math.floor(g * 1.25))},${Math.min(255, Math.floor(b * 1.25))})`;
+              ctx.fillRect(x, bY1, 1, 1);
+              // Bottom shadow
+              ctx.fillStyle = `rgb(${Math.floor(r * 0.75)},${Math.floor(g * 0.75)},${Math.floor(b * 0.75)})`;
+              ctx.fillRect(x, bY2 - 1, 1, 1);
+              // Main brick face
+              if (bY2 - 1 > bY1 + 1) {
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.fillRect(x, bY1 + 1, 1, bY2 - 1 - (bY1 + 1));
+              }
+            } else {
+              ctx.fillStyle = `rgb(${r},${g},${b})`;
+              ctx.fillRect(x, bY1, 1, bY2 - bY1);
+            }
+          }
+        }
+      }
     }
 
     // Render Sprites / Collectibles / Minotaur
@@ -1525,7 +1726,7 @@
     if (!options.name) {
       screen.textContent = [
         "╔════════════════════════════════════════════════════════════════════════════╗",
-        "║                MAZE 3D - GABRIEL MARTI RETRO LABYRINTH                   ║",
+        "║                MAZE 3D - GABRIEL MARTI RETRO LABYRINTH                     ║",
         "║                     First-Person 2.5D Exploration                          ║",
         "╚════════════════════════════════════════════════════════════════════════════╝",
         "",
@@ -1554,26 +1755,48 @@
     const lang = (typeof GM !== "undefined" && GM.lang) || "es";
     const getTxt = obj => (obj && (obj[lang] || obj.es || obj.en)) || "";
 
+    function wrapLines(text, maxLen = 76) {
+      if (!text || text.length <= maxLen) return [text || ""];
+      const words = text.split(/\s+/);
+      const lines = [];
+      let cur = "";
+      for (const w of words) {
+        if ((cur ? cur + " " + w : w).length <= maxLen) {
+          cur = cur ? cur + " " + w : w;
+        } else {
+          if (cur) lines.push(cur);
+          cur = w;
+        }
+      }
+      if (cur) lines.push(cur);
+      return lines;
+    }
+
     const draw = () => {
-      const ascii3d = game.renderAscii(80, 20, { minimap: showMinimap });
+      const ascii3d = game.renderAscii(80, 20, { minimap: showMinimap, color: true });
       let statusAlert = "";
       if (isCaught) {
-        statusAlert = " 💀 ¡EL MINOTAURO TE HA ATRAPADO! [Pulsa 🔄 Respawn o ENTER para reaparecer]";
+        statusAlert = "💀 ¡EL MINOTAURO TE HA ATRAPADO! [Pulsa 🔄 Respawn o ENTER para reaparecer]";
       } else if (game.minotaurAlert === "NEAR") {
-        statusAlert = " ⚠️ ¡Sientes el aliento del Minotauro muy cerca en un pasillo contiguo!";
+        statusAlert = "⚠️ ¡Sientes el aliento del Minotauro muy cerca en un pasillo contiguo!";
       } else if (game.minotaurAlert === "HEARD") {
-        statusAlert = " 🐾 Oyes pezuñas pesadas y un bramido distante entre los muros...";
+        statusAlert = "🐾 Oyes pezuñas pesadas y un bramido distante entre los muros...";
       }
 
-      const hud = [
-        "─".repeat(80),
-        ` Explorador: ${game.playerName.padEnd(16)} | Hitos: ${String(game.collectedItems.size).padStart(2)}/15 | Puertas: ${game.openDoors.size}/5 | [M: Mapa  Q: Salir]`,
-        "─".repeat(80),
-        ` ${msg}`,
-        submsg ? ` ${submsg}` : "",
-        statusAlert ? statusAlert : ""
-      ].filter(Boolean).join("\n");
-      screen.textContent = ascii3d + "\n" + hud;
+      const hudLines = [
+        `<span class="a8">${"─".repeat(78)}</span>`,
+        `<span class="a7"> Explorador: </span><span class="a15">${game.playerName.padEnd(14)}</span><span class="a7"> | Hitos: </span><span class="a10">${String(game.collectedItems.size).padStart(2)}/15</span><span class="a7"> | Puertas: </span><span class="a14">${game.openDoors.size}/5</span><span class="a8"> | [M: Mapa  Q: Salir]</span>`,
+        `<span class="a8">${"─".repeat(78)}</span>`
+      ];
+      wrapLines(msg, 76).forEach(l => hudLines.push(` <span class="a15">${l}</span>`));
+      if (submsg) {
+        wrapLines(submsg, 76).forEach(l => hudLines.push(` <span class="a7">${l}</span>`));
+      }
+      if (statusAlert) {
+        const aCls = isCaught ? "a12" : (game.minotaurAlert === "NEAR" ? "a12" : "a14");
+        wrapLines(statusAlert, 76).forEach(l => hudLines.push(` <span class="${aCls}">${l}</span>`));
+      }
+      screen.innerHTML = ascii3d + "\n" + hudLines.join("\n");
     };
 
     draw();
@@ -1615,7 +1838,7 @@
           const ev = game.move(speed);
           if (ev) {
             if (ev.type === "ITEM_PICKUP") {
-              sfx.ok?.();
+              playMazeSound(sfx, "pickup");
               const item = ev.item;
               msg = `¡Hito recogido! [${item.char || item.symbol}] ${getTxt(item.name)}`;
               submsg = getTxt(item.desc);
@@ -1623,11 +1846,11 @@
                 submsg += ` -> ¡Puerta abierta: ${getTxt(ev.unlockedDoor.name)}!`;
               }
             } else if (ev.type === "SECRET_PASSAGE") {
-              sfx.ok?.();
+              playMazeSound(sfx, "pickup");
               msg = "🚪 ¡PUERTA SECRETA DESCUBIERTA! El muro cede ante tu paso.";
               submsg = "Has abierto un atajo para eludir al Minotauro.";
             } else if (ev.type === "MINOTAUR_CAUGHT") {
-              sfx.err?.();
+              playMazeSound(sfx, "caught");
               isCaught = true;
               msg = "💀 ¡EL MINOTAURO TE HA ALCANZADO!";
               submsg = "Pulsa [🔄 Respawn] o [Enter/Espacio] para reaparecer al inicio.";
@@ -1636,11 +1859,21 @@
               msg = `Puerta Bloqueada: ${getTxt(ev.door.name)}`;
               submsg = getTxt(ev.door.msg);
             } else if (ev.type === "MAZE_COMPLETE") {
+              playMazeSound(sfx, "pickup");
               over = "complete";
               break;
             }
           } else {
-            sfx.tick?.();
+            if (game.minotaurAlert === "NEAR") {
+              playMazeSound(sfx, "near");
+              submsg = "⚠️ ¡Sientes la respiración del Minotauro muy cerca!";
+            } else if (game.minotaurAlert === "HEARD") {
+              playMazeSound(sfx, "heard");
+              submsg = "🐾 Pasos pesados retumban cerca de tu posición...";
+            } else {
+              sfx.tick?.();
+              submsg = "";
+            }
           }
           draw();
         }
@@ -1681,22 +1914,41 @@
   function mountWin31(w, io, options = {}) {
     const body = w.querySelector(".w31-body");
     const name = cleanPlayerName(options.name || (typeof localStorage !== "undefined" && localStorage.getItem("GM_maze_player")) || "EXPLORER");
+    const lang = (typeof GM !== "undefined" && GM.lang) || options.lang || "es";
+    const isEs = lang === "es";
+    const isCa = lang === "ca";
+
+    const btnL = isCa ? "↶ Girar E" : (isEs ? "↶ Girar I" : "↶ Turn L");
+    const btnU = isCa ? "▲ Avançar" : (isEs ? "▲ Avanzar" : "▲ Step");
+    const btnR = isCa ? "Girar D ↷" : (isEs ? "Girar D ↷" : "Turn R ↷");
+    const btnD = isCa ? "▼ Enrere" : (isEs ? "▼ Retroceder" : "▼ Back");
+    const btnM = isCa ? "🗺️ Mapa" : (isEs ? "🗺️ Mapa" : "🗺️ Map");
+    const btnRetry = "🔄 Respawn";
+    const btnN = isCa ? "✨ Nou" : (isEs ? "✨ Nuevo" : "✨ New");
+
+    const lblPlayer = isCa ? "Explorador" : (isEs ? "Explorador" : "Player");
+    const lblItems = isCa ? "Fites" : (isEs ? "Hitos" : "Milestones");
+    const lblDoors = isCa ? "Portes" : (isEs ? "Puertas" : "Doors");
+    const initMsg = isCa ? "Explora el laberint 3D per descobrir les fites històriques i trobar la sortida!"
+      : (isEs ? "¡Explora el laberinto 3D para descubrir los hitos históricos y alcanzar la salida!"
+      : "Explore the 3D maze to discover historical milestones and reach the exit!");
+
     body.innerHTML = `
       <canvas class="w31-mcanvas" width="560" height="300"></canvas>
       <div class="w31-mstat">
-        <span class="w31-ms-player">Player: ${name}</span>
-        <span class="w31-ms-items">Milestones: 0/15</span>
-        <span class="w31-ms-doors">Doors: 0/5</span>
+        <span class="w31-ms-player">${lblPlayer}: ${name}</span>
+        <span class="w31-ms-items">${lblItems}: 0/15</span>
+        <span class="w31-ms-doors">${lblDoors}: 0/5</span>
       </div>
-      <div class="w31-mmsg" aria-live="polite">Explore the 3D maze to discover historical milestones and reach the exit!</div>
+      <div class="w31-mmsg" aria-live="polite">${initMsg}</div>
       <div class="w31-mbtns">
-        <button type="button" class="w31-btn" data-mz="L" title="Turn Left">↶ Turn L</button>
-        <button type="button" class="w31-btn" data-mz="U" title="Step Forward">▲ Step</button>
-        <button type="button" class="w31-btn" data-mz="R" title="Turn Right">Turn R ↷</button>
-        <button type="button" class="w31-btn" data-mz="D" title="Step Back">▼ Back</button>
-        <button type="button" class="w31-btn" data-mz="M" title="Toggle Minimap">🗺️ Map</button>
-        <button type="button" class="w31-btn" data-mz="RETRY" title="Respawn at Start">🔄 Respawn</button>
-        <button type="button" class="w31-btn" data-mz="N" title="New Maze">✨ New</button>
+        <button type="button" class="w31-btn" data-mz="L" title="Turn Left">${btnL}</button>
+        <button type="button" class="w31-btn" data-mz="U" title="Step Forward">${btnU}</button>
+        <button type="button" class="w31-btn" data-mz="R" title="Turn Right">${btnR}</button>
+        <button type="button" class="w31-btn" data-mz="D" title="Step Back">${btnD}</button>
+        <button type="button" class="w31-btn" data-mz="M" title="Toggle Minimap">${btnM}</button>
+        <button type="button" class="w31-btn" data-mz="RETRY" title="Respawn at Start">${btnRetry}</button>
+        <button type="button" class="w31-btn" data-mz="N" title="New Maze">${btnN}</button>
       </div>
     `;
 
@@ -1706,7 +1958,6 @@
     const statDoors = body.querySelector(".w31-ms-doors");
     const msgBox = body.querySelector(".w31-mmsg");
 
-    const lang = (typeof GM !== "undefined" && GM.lang) || "es";
     const getTxt = obj => (obj && (obj[lang] || obj.es || obj.en)) || "";
 
     let game = createGame({ playerName: name, seed: options.seed });
@@ -1715,8 +1966,8 @@
 
     const draw = () => {
       renderCanvas(game, ctx, 560, 300, { minimap: showMinimap });
-      statItems.textContent = `Milestones: ${game.collectedItems.size}/15`;
-      statDoors.textContent = `Doors: ${game.openDoors.size}/5`;
+      statItems.textContent = `${lblItems}: ${game.collectedItems.size}/15`;
+      statDoors.textContent = `${lblDoors}: ${game.openDoors.size}/5`;
     };
 
     const handleAction = async act => {
@@ -1749,25 +2000,27 @@
         const ev = game.move(speed);
         if (ev) {
           if (ev.type === "ITEM_PICKUP") {
-            io.sfx?.ok?.();
+            playMazeSound(io.sfx || (typeof GM !== "undefined" && GM.sfx), "pickup");
             const item = ev.item;
-            let m = `¡Hito recogido! [${item.char || item.symbol}] ${getTxt(item.name)}: ${getTxt(item.desc)}`;
+            let m = `✨ ¡Hito recogido! [${item.char || item.symbol}] ${getTxt(item.name)}: ${getTxt(item.desc)}`;
             if (ev.unlockedDoor) {
               m += ` 🚪 ¡Puerta abierta: ${getTxt(ev.unlockedDoor.name)}!`;
             }
             msgBox.textContent = m;
+            msgBox.classList.add("w31-pickup-flash");
+            setTimeout(() => msgBox.classList.remove("w31-pickup-flash"), 1200);
           } else if (ev.type === "SECRET_PASSAGE") {
-            io.sfx?.ok?.();
+            playMazeSound(io.sfx || (typeof GM !== "undefined" && GM.sfx), "pickup");
             msgBox.textContent = "🚪 ¡Puerta secreta descubierta! Un atajo oculto se abre entre los pasillos.";
           } else if (ev.type === "MINOTAUR_CAUGHT") {
-            io.sfx?.err?.();
+            playMazeSound(io.sfx || (typeof GM !== "undefined" && GM.sfx), "caught");
             isCaught = true;
             msgBox.textContent = "💀 ¡El Minotauro te ha atrapado! Pulsa [🔄 Respawn] para reaparecer al inicio sin perder tus hitos.";
           } else if (ev.type === "DOOR_LOCKED") {
             io.sfx?.err?.();
             msgBox.textContent = `🔒 Puerta bloqueada: ${getTxt(ev.door.name)} (${getTxt(ev.door.msg)})`;
           } else if (ev.type === "MAZE_COMPLETE") {
-            io.sfx?.ok?.();
+            playMazeSound(io.sfx || (typeof GM !== "undefined" && GM.sfx), "pickup");
             msgBox.textContent = "🎉 ¡Laberinto completado con éxito! Recompensa desbloqueada en Maze Reward.";
 
             // Victory animation on canvas
@@ -1794,11 +2047,14 @@
             }
           }
         } else {
-          io.sfx?.tick?.();
           if (game.minotaurAlert === "NEAR") {
+            playMazeSound(io.sfx || (typeof GM !== "undefined" && GM.sfx), "near");
             msgBox.textContent = "⚠️ ¡El Minotauro está acechando en un pasillo contiguo!";
           } else if (game.minotaurAlert === "HEARD") {
+            playMazeSound(io.sfx || (typeof GM !== "undefined" && GM.sfx), "heard");
             msgBox.textContent = "🐾 Ecos de pesadas pezuñas resuenan en la piedra...";
+          } else {
+            io.sfx?.tick?.();
           }
         }
         draw();
@@ -1841,7 +2097,9 @@
         observer.disconnect();
       }
     });
-    observer.observe(w.parentElement || document.body, { childList: true });
+    if (w.parentElement || (typeof document !== "undefined" && document.body)) {
+      observer.observe(w.parentElement || document.body, { childList: true });
+    }
 
     return { game, draw };
   }

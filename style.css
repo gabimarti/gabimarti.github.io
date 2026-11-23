@@ -188,9 +188,13 @@ html:not(.js) .js-only { display: none; }
 .dos .dos-form { display: flex; } .dos .dos-form[hidden] { display: none; }
 .dos .dos-prompt { white-space: pre; }
 .dos #dos-in { flex: 1; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; caret-color: #aaa; }
-/* MS-DOS TELNET BBS (bbs.js): ANSI-like colours */
+/* MS-DOS TELNET BBS (bbs.js) & MAZE (maze.js): ANSI-like colours */
 :is(.dos, #shell) .bbs { margin: 0; }
 :is(.dos, #shell) .c-cy { color: #55ffff; } :is(.dos, #shell) .c-ye { color: #ffff55; } :is(.dos, #shell) .c-ma { color: #ff55ff; } :is(.dos, #shell) .c-gr { color: #55ff55; } :is(.dos, #shell) .c-rd { color: #ff5555; }
+:is(.dos, #shell) .a0 { color: #000; } :is(.dos, #shell) .a1 { color: #0000aa; } :is(.dos, #shell) .a2 { color: #00aa00; } :is(.dos, #shell) .a3 { color: #00aaaa; }
+:is(.dos, #shell) .a4 { color: #aa0000; } :is(.dos, #shell) .a5 { color: #aa00aa; } :is(.dos, #shell) .a6 { color: #aa5500; } :is(.dos, #shell) .a7 { color: #aaaaaa; }
+:is(.dos, #shell) .a8 { color: #555555; } :is(.dos, #shell) .a9 { color: #5555ff; } :is(.dos, #shell) .a10 { color: #55ff55; } :is(.dos, #shell) .a11 { color: #55ffff; }
+:is(.dos, #shell) .a12 { color: #ff5555; } :is(.dos, #shell) .a13 { color: #ff55ff; } :is(.dos, #shell) .a14 { color: #ffff55; } :is(.dos, #shell) .a15 { color: #ffffff; }
 #shell .bbs { background: #000; color: #aaa; padding: .3rem 1ch; }   /* the BBS keeps its black screen inside the shell */
 #shell .matrix { margin: 0; background: #000; color: #33ff33; text-shadow: 0 0 4px #33ff33; overflow: hidden; }
 /* console games (games.js), in MS-DOS and in the shell */
@@ -262,13 +266,15 @@ html:not(.js) .js-only { display: none; }
 .w31-mswin [data-msflag][aria-pressed=true] { border-style: inset; font-weight: bold; }
 .w31-chesswin { width: auto; }
 .w31-chesswin .w31-body { background: #c0c0c0; }
-.w31-mazewin { width: min(44rem, 96%); }
-.w31-mazewin .w31-body { background: #c0c0c0; display: flex; flex-direction: column; gap: .35rem; padding: .5rem; }
-.w31-mcanvas { width: 100%; height: auto; aspect-ratio: 560 / 300; background: #000; border: 2px inset #fff; display: block; image-rendering: pixelated; }
-.w31-mstat { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; background: #fff; border: 2px inset #fff; padding: 3px 6px; }
-.w31-mmsg { font-size: 12px; line-height: 1.35; background: #ffffd0; border: 1px solid #808080; padding: 4px 6px; min-height: 3.5em; max-height: 5.5em; overflow-y: auto; }
-.w31-mbtns { display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem; margin-top: .15rem; }
-.w31-mbtns .w31-btn { padding: .25rem .6rem; font-size: 12px; }
+.w31-mazewin { width: min(44rem, 96%); max-height: 94%; }
+.w31-mazewin .w31-body { background: #c0c0c0; display: flex; flex-direction: column; gap: .25rem; padding: .35rem; overflow: hidden; }
+.w31-mcanvas { display: block; margin: 0 auto; flex: 1 1 auto; min-height: 0; max-width: 100%; max-height: min(210px, 38vh); width: auto; height: auto; aspect-ratio: 560 / 300; object-fit: contain; background: #000; border: 2px inset #fff; image-rendering: pixelated; }
+.w31-win.w31-maxed .w31-mcanvas { max-height: min(340px, 55vh); }
+.w31-mstat { flex-shrink: 0; display: flex; justify-content: space-between; font-weight: bold; font-size: 11px; background: #fff; border: 2px inset #fff; padding: 2px 6px; }
+.w31-mmsg { flex-shrink: 0; font-size: 11px; line-height: 1.3; background: #ffffd0; border: 1px solid #808080; padding: 3px 6px; min-height: 2.4em; max-height: 3.4em; overflow-y: auto; }
+.w31-mbtns { flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: .25rem; margin-top: .1rem; }
+.w31-mbtns .w31-btn { padding: .2rem .55rem; font-size: 11px; }
+.w31-pickup-flash { background: #ffff80 !important; border-color: #ffaa00 !important; transition: background 0.8s ease; }
 .w31-reward-pre { font: 9px/1.2 monospace !important; white-space: pre-wrap; margin: 0; }
 .w31-m-locked { padding: .5rem; font-size: 13px; }
 .w31-xstat { background: #fff; border: 2px inset #fff; padding: .15rem .4rem; margin-bottom: .4rem; min-height: 1.5em; }
