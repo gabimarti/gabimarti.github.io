@@ -1,6 +1,6 @@
 # gabimarti.github.io
 
-Personal site of Gabriel Martí ([@gabimarti](https://github.com/gabimarti)): cybersecurity consultant, reverser and developer.
+Personal site of Gabriel Martí ([@gabimarti](https://github.com/gabimarti)): cybersecurity & software development specialist and reverser.
 
 🌐 **https://gabimarti.github.io/**
 
