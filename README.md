@@ -8,14 +8,14 @@ Personal site of Gabriel Martí ([@gabimarti](https://github.com/gabimarti)): cy
 
 A static site styled as a retro terminal, with no frameworks, no build step, no cookies and no trackers.
 
-- **Boot**: 90s-style BIOS POST (memory test, drive detection, system summary) with synthesized retro sounds (mute with 🔊) — press DEL (or tap it) for the BIOS Setup, which hides a few easter eggs —, then a GRUB boot menu (Quick view, Debian boot → shell, MS-DOS 3.10, memtest86+) that auto-boots the Quick view.
-- **Quick view**: everything on one page. It's also what you get without JavaScript, so search engines see the full content. `ls ~/repos` opens a panel with selected GitHub projects (also `cat repos.txt` in the shell and `TYPE REPOS.TXT` in MS-DOS).
+- **Quick view** (the home page): everything on one page, shown right away. It's also what you get without JavaScript, so search engines see the full content. `./power-on.sh` (or Enter) turns on the retro PC.
+- **Retro PC** (`./power-on.sh`, `?mode=pc`): power-on screen, 90s-style BIOS POST (memory test, drive detection, system summary) with synthesized retro sounds (mute with 🔊) — press DEL (or tap it) for the BIOS Setup, which hides a few easter eggs —, then a GRUB boot menu (Debian boot → shell, MS-DOS 3.10, memtest86+, vintage machines) that auto-boots Debian. ✕ or Esc goes back to the quick view. `ls ~/repos` opens a panel with selected GitHub projects (also `cat repos.txt` in the shell and `TYPE REPOS.TXT` in MS-DOS).
 - **Interactive shell** (`gmsh`, loaded only when chosen): a fake Linux terminal. Try `help`, `whoami`, `ls -a`, `cat avatar.txt`, `neofetch`, `myip`, `dig`… Scripts (`./cv.sh`), pipes and filters (`grep`, `less`, `sort`, `wc`…), `alias`/`export`/`PS1` and read-only `vi`/`nano` work too. There are two flags to find, and a root challenge (`su`) that unlocks an encrypted CV. `cat explore.txt` (and `EXPLORE.TXT` in MS-DOS) lists what there is to find across the whole machine: both systems, the BIOS Setup and memtest.
 - **MS-DOS 3.10** (GRUB entry): a small COMMAND.COM with batch files (`CV` runs `CV.BAT`, the CV one section at a time with `PAUSE` and beeps), pipes and filters (`TYPE README.TXT | FIND "DIR"`, `MORE < file`, `SORT`), `TREE`, `ATTRIB`, `SET`, `PATH`, `PROMPT`, `LABEL`, `MEM`, a read-only blue `EDIT`, a drive A: that sounds like one, SNAKE and TETRIS in `C:\GAMES` (also `snake`/`tetris` in the shell), a few easter eggs for those who type what every DOS user feared, `TELNET` to a 1997 BBS (news, files, a door game and a chat with a scripted SYSOP), and the `LOCKED.COM` + `DEBUG` reversing challenge.
 - Strict Content-Security-Policy (only own scripts and styles, no inline code).
 - Three languages (EN/ES/CA: `?lang=en|es|ca`, the browser language, or the buttons; the BIOS Setup, MS-DOS, the Debian boot log and memtest stay in English, as on a real 90s PC), light/dark theme toggle, fixed-size window that compacts on short screens so the quick view never scrolls on desktop, mobile-friendly, WCAG AA/AAA contrast.
 
-Direct links: [`?mode=classic`](https://gabimarti.github.io/?mode=classic) · [`?mode=shell`](https://gabimarti.github.io/?mode=shell) · [`#avatar`](https://gabimarti.github.io/#avatar) · [`#repos`](https://gabimarti.github.io/#repos)
+Direct links: [`?mode=pc`](https://gabimarti.github.io/?mode=pc) · [`?mode=shell`](https://gabimarti.github.io/?mode=shell) · [`#avatar`](https://gabimarti.github.io/#avatar) · [`#repos`](https://gabimarti.github.io/#repos)
 
 ## Files
 
@@ -38,7 +38,7 @@ Direct links: [`?mode=classic`](https://gabimarti.github.io/?mode=classic) · [`
 | `robots.txt` | Allows search engines, blocks AI training crawlers |
 | `.well-known/security.txt` | Security contact ([RFC 9116](https://www.rfc-editor.org/rfc/rfc9116)) |
 | `google*.html` | Google Search Console ownership verification |
-| `init.js` | Pre-paint setup (JS flag + saved theme), a file so the CSP can forbid inline scripts |
+| `init.js` | Pre-paint setup (JS flag + start mode, so the quick view shows from the first paint + saved theme), a file so the CSP can forbid inline scripts |
 | `.nojekyll` | Publish files as-is (no Jekyll build) |
 
 ## Contact

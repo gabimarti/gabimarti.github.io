@@ -1,4 +1,5 @@
-// gabimarti.github.io — language, theme, sound, 90s BIOS boot and modes. The shell (shell.js) is loaded on demand.
+// gabimarti.github.io — language, theme, sound, modes and the retro PC (90s BIOS boot). The quick view is the home page;
+// ./power-on.sh (?mode=pc) turns the PC on. The shell (shell.js) and the systems are loaded on demand.
 "use strict";
 const GM = (() => {
   const $ = s => document.querySelector(s), root = document.documentElement;
@@ -156,9 +157,9 @@ const GM = (() => {
   // ---------- 90s BIOS boot (POST screen, then system summary, then the mode menu) ----------
   let boot, bootOut, bootOpts, shellEl;
   const T = {
-    en: { load: "Loading profile .......... ", hello: "Hello, I'm Gabriel Martí — cybersecurity consultant, reverser & developer.\nHow would you like to explore this site?" },
-    es: { load: "Cargando perfil .......... ", hello: "Hola, soy Gabriel Martí — consultor de ciberseguridad, reverser y desarrollador.\n¿Cómo quieres explorar este sitio?" },
-    ca: { load: "Carregant perfil ......... ", hello: "Hola, soc en Gabriel Martí — consultor de ciberseguretat, reverser i desenvolupador.\nCom vols explorar aquest lloc?" },
+    en: { load: "Loading profile .......... ", hello: "Hello, I'm Gabriel Martí — cybersecurity consultant, reverser & developer.\nChoose a system to boot (Esc or ✕ takes you back to the quick view)." },
+    es: { load: "Cargando perfil .......... ", hello: "Hola, soy Gabriel Martí — consultor de ciberseguridad, reverser y desarrollador.\nElige un sistema para arrancar (Esc o ✕ te devuelven a la vista rápida)." },
+    ca: { load: "Carregant perfil ......... ", hello: "Hola, soc en Gabriel Martí — consultor de ciberseguretat, reverser i desenvolupador.\nTria un sistema per arrencar (Esc o ✕ et tornen a la vista ràpida)." },
   };
   const CPU = "Curiosity(TM) 486DX2-66MHz";
   const DRIVES = [["Primary Master", "GM-HDD 1986MB"], ["Primary Slave", "None"], ["Secondary Master", "CD-ROM 52X"], ["Secondary Slave", "ZIP 100"]];
@@ -227,7 +228,7 @@ const GM = (() => {
     await type(hello, t.hello, () => 28 + Math.random() * 40, c => snd(() => sfx.clack(c))); if (!alive()) return;   // typed by a person
     $("#grub-help").hidden = false;
   }
-  // GRUB: entries without data-mode are shown but not bootable yet. Any key or tap stops the countdown.
+  // GRUB: only the emulated systems (the quick view is the home page). Any key or tap stops the countdown.
   const entries = () => [...bootOpts.querySelectorAll(".grub:not([hidden]) button")];
   function submenu(name) {            // "Vintage machines" lives in its own GRUB page; "Back" (or Esc) returns
     bootOpts.querySelectorAll(".grub").forEach(g => { g.hidden = g.id !== "grub-" + (name || "main"); });
@@ -250,9 +251,9 @@ const GM = (() => {
   }
   async function showBoot() {
     const run = ++bootRun;
-    root.classList.remove("mode-classic", "mode-shell");
+    root.classList.remove("mode-classic", "mode-shell"); root.classList.add("mode-pc");
     shellEl.hidden = true; boot.hidden = false; bootOpts.hidden = true;
-    skip = false; typing = true; setUrl(null); grubSel = 0; grubLeft = 10; wantSetup = false; delOk = true; submenu("main");
+    skip = false; typing = true; setUrl("pc"); grubSel = 0; grubLeft = 10; wantSetup = false; delOk = true; submenu("main");
     await bootSeq(run);
     if (run !== bootRun) return;
     typing = false; grubTimer(run);
@@ -260,7 +261,7 @@ const GM = (() => {
   // full-screen programs loaded on demand (bios.js: DEL during POST; memtest.js, debian.js, vic20.js, spectrum.js, pcw.js: GRUB entries).
   // When they end, open() may resolve a mode to switch to ("shell"); otherwise the POST starts again.
   async function runApp(name) {
-    const run = ++bootRun; typing = false; delOk = false; appOn = true;
+    const run = ++bootRun; typing = false; delOk = false; appOn = true; root.classList.remove("mode-pc");   // no ✕ while a system runs
     bootOpts.hidden = true; bootOut.textContent = ""; sfx.blip();
     let next;
     try { await need(name + ".js"); if (run === bootRun) next = await api[name].open(bootOut); }
@@ -275,21 +276,25 @@ const GM = (() => {
     if (run === bootRun) { typing = false; grubTimer(run); }
   }
   // wait for a key or click (ignoring the title bar buttons); the event doesn't reach other handlers
+  // (leaving for the quick view cancels the wait)
+  let waitOff = null;
   const waitKey = () => new Promise(res => {
+    const off = () => { removeEventListener("keydown", h, true); removeEventListener("click", h, true); clearTimeout(t); waitOff = null; };
     const h = e => {
       if (e.type === "click" ? e.target.closest(".bar") : (e.ctrlKey || e.metaKey || e.altKey || e.key === "Tab")) return;
-      e.stopPropagation(); e.preventDefault();
-      removeEventListener("keydown", h, true); removeEventListener("click", h, true); res();
+      if (e.key === "Escape") return;                    // Esc goes back to the quick view
+      e.stopPropagation(); e.preventDefault(); off(); res();
     };
-    setTimeout(() => { addEventListener("keydown", h, true); addEventListener("click", h, true); });
+    const t = setTimeout(() => { addEventListener("keydown", h, true); addEventListener("click", h, true); });
+    waitOff?.(); waitOff = off;
   });
   async function screen(msg) {           // full-window message (power on / halted), then boot
-    bootRun++; root.classList.remove("mode-classic", "mode-shell");
-    shellEl.hidden = true; boot.hidden = false; bootOpts.hidden = true; typing = false; setUrl(null);
+    bootRun++; root.classList.remove("mode-classic", "mode-shell"); root.classList.add("mode-pc");
+    shellEl.hidden = true; boot.hidden = false; bootOpts.hidden = true; typing = false; setUrl("pc");
     bootOut.innerHTML = `<div class="halt"><div>${msg}</div></div>`;
     await waitKey(); sfx.unlock(); showBoot();
   }
-  const VERSION = "1.40.0";                            // whole-site release, shown on the power-on screen: A.B.C = era.features.fixes
+  const VERSION = "1.41.0";                            // whole-site release, shown on the power-on screen: A.B.C = era.features.fixes
   const powerOn = () => screen(`<svg class="pwr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg><br><br>${B("Press any key or click to power on", "Pulsa una tecla o haz clic para encender", "Prem una tecla o fes clic per engegar")}<br><br><small class="dim">${B("this site makes retro sounds · 🔊 to mute", "este sitio hace sonidos retro · 🔊 para silenciar", "aquest lloc fa sons retro · 🔊 per silenciar")}</small><p class="pwr-tag">${B("My CV, inside a 90s PC: two operating systems, a BIOS Setup and secrets hidden in every corner.", "Mi CV, dentro de un PC de los 90: dos sistemas operativos, una BIOS y secretos escondidos en cada rincón.", "El meu CV, dins d'un PC dels 90: dos sistemes operatius, una BIOS i secrets amagats a cada racó.")}<br><small class="dim">${B("Explore it all: curious minds always find something more.", "Explóralo todo: los curiosos siempre encuentran algo más.", "Explora-ho tot: els curiosos sempre hi troben alguna cosa més.")}</small></p><p class="pwr-mob dim">${B("On a phone almost everything works, but it is best enjoyed in a computer browser.", "En el móvil funciona casi todo, pero se disfruta más en el navegador de un PC.", "Al mòbil funciona gairebé tot, però es gaudeix més al navegador d'un PC.")}</p><p class="pwr-ver dim">Vers: ${VERSION}</p>`);
   const halt = msg => { sfx.fanStop(.5); return screen(msg); };
 
@@ -301,16 +306,16 @@ const GM = (() => {
   }
 
   // ---------- modes ----------
-  const V = "0.66", loaded = {};                       // V: cache-buster for the on-demand scripts
+  const V = "0.67", loaded = {};                       // V: cache-buster for the on-demand scripts
   const need = f => loaded[f] ||= new Promise((ok, ko) => {
     const s = document.createElement("script"); s.src = `${f}?v=${V}`; s.onload = ok; s.onerror = ko; document.head.append(s);
   });
   async function setMode(mode) {
-    bootRun++; skip = true; typing = false; boot.hidden = true;
+    bootRun++; skip = true; typing = false; boot.hidden = true; waitOff?.();
     sfx.fanStop(.6); sfx.blip();
-    root.classList.remove("mode-classic", "mode-shell");
+    root.classList.remove("mode-classic", "mode-shell", "mode-pc");
     root.classList.add("mode-" + mode);
-    if (!location.hash) setUrl(mode);
+    if (!location.hash) setUrl(mode === "classic" ? null : mode);   // the quick view is the plain URL
     $("main").scrollTop = 0;
     if (mode === "shell") {
       shellEl.hidden = false;
@@ -323,7 +328,7 @@ const GM = (() => {
   let clockOff = 0;
   const now = () => new Date(Date.now() + clockOff), setNow = d => { clockOff = d - Date.now(); };
   const party = () => { const d = now(); return d.getMonth() === 9 && d.getDate() === 15; };   // 10-15: every system throws a party (never say why)
-  const api = { $, B, esc, sleep, reduce, type, sfx, need, now, setNow, party, setLang, toggleTheme, setTheme, isLight, setMode, showBoot, halt, shell: null };
+  const api = { $, B, esc, sleep, reduce, type, sfx, need, now, setNow, party, setLang, toggleTheme, setTheme, isLight, setMode, showBoot, powerOn, halt, shell: null };
 
   // ---------- start ----------
   document.addEventListener("DOMContentLoaded", () => {
@@ -343,7 +348,8 @@ const GM = (() => {
       const sub = e.target.closest("[data-sub]");
       if (sub) { e.preventDefault(); submenu(sub.dataset.sub); return; }
       if (e.target.closest("[data-setup]") && delOk) { wantSetup = true; return; }
-      if (e.target.closest("[data-reboot]")) { e.preventDefault(); showBoot(); return; }
+      if (e.target.closest("[data-power]")) { e.preventDefault(); powerOn(); return; }
+      if (e.target.closest(".close") && root.classList.contains("mode-pc")) { e.preventDefault(); setMode("classic"); return; }
       const app = e.target.closest("[data-app]");
       if (app) { e.preventDefault(); runApp(app.dataset.app); return; }
       const m = e.target.closest("[data-mode]");
@@ -351,7 +357,8 @@ const GM = (() => {
       if (!boot.hidden && typing) skip = true;
     });
     document.addEventListener("keydown", e => {
-      if (root.classList.contains("mode-classic") && e.key === "Enter" && !e.target.closest("a, button, input")) { showBoot(); return; }
+      if (root.classList.contains("mode-classic") && e.key === "Enter" && !e.target.closest("a, button, input")) { powerOn(); return; }
+      if (root.classList.contains("mode-pc") && e.key === "Escape" && (bootOpts.hidden || !$("#grub-main").hidden)) { e.preventDefault(); setMode("classic"); return; }   // in a GRUB submenu, Esc goes back to its main page
       if (boot.hidden || appOn || bootOut.querySelector(".halt")) return;
       if (e.key === "Delete" && delOk) { wantSetup = true; return; }
       if (typing) { skip = true; return; }
@@ -364,9 +371,9 @@ const GM = (() => {
     });
 
     const mode = new URLSearchParams(location.search).get("mode");
-    if (["#avatar", "#repos", "#timeline"].includes(location.hash) || mode === "classic") setMode("classic");
-    else if (mode === "shell") setMode("shell");
-    else powerOn();
+    if (mode === "shell") setMode("shell");
+    else if (mode === "pc") powerOn();
+    else setMode("classic");                                // home page (also ?mode=classic, the old link, and #avatar/#repos/#timeline)
   });
   return api;
 })();
