@@ -13,7 +13,7 @@ A static site styled as a retro terminal, with no frameworks, no build step, no 
 - **Interactive shell** (`gmsh`, loaded only when chosen): a fake Linux terminal. Try `help`, `whoami`, `ls -a`, `cat avatar.txt`, `neofetch`, `myip`, `dig`… Scripts (`./cv.sh`), pipes and filters (`grep`, `less`, `sort`, `wc`…), `alias`/`export`/`PS1` and read-only `vi`/`nano` work too. There are two flags to find, and a root challenge (`su`) that unlocks an encrypted CV. `cat explore.txt` (and `EXPLORE.TXT` in MS-DOS) lists what there is to find across the whole machine: both systems, the BIOS Setup and memtest.
 - **MS-DOS 3.10** (GRUB entry): a small COMMAND.COM with batch files (`CV` runs `CV.BAT`, the CV one section at a time with `PAUSE` and beeps), pipes and filters (`TYPE README.TXT | FIND "DIR"`, `MORE < file`, `SORT`), `TREE`, `ATTRIB`, `SET`, `PATH`, `PROMPT`, `LABEL`, `MEM`, a read-only blue `EDIT`, a drive A: that sounds like one, SNAKE and TETRIS in `C:\GAMES` (also `snake`/`tetris` in the shell), a few easter eggs for those who type what every DOS user feared, `TELNET` to a 1997 BBS (news, files, a door game and a chat with a scripted SYSOP), and the `LOCKED.COM` + `DEBUG` reversing challenge.
 - Strict Content-Security-Policy (only own scripts and styles, no inline code).
-- Three languages (EN/ES/CA: `?lang=en|es|ca`, the browser language, or the buttons; the BIOS Setup, MS-DOS, the Debian boot log and memtest stay in English, as on a real 90s PC), light/dark theme toggle, fixed-size window that compacts on short screens so the quick view never scrolls on desktop, mobile-friendly, WCAG AA/AAA contrast.
+- Three languages, each with its own URL: `/` (Spanish, the default), [`/en/`](https://gabimarti.github.io/en/) and [`/ca/`](https://gabimarti.github.io/ca/), with `hreflang` links between them. The EN/ES/CA buttons switch on the fly without a reload. The old `?lang=en|es|ca` links still work. The BIOS Setup, MS-DOS, the Debian boot log and memtest stay in English, as on a real 90s PC. Light/dark theme toggle, fixed-size window that compacts on short screens so the quick view never scrolls on desktop, mobile-friendly, WCAG AA/AAA contrast.
 
 Direct links: [`?mode=pc`](https://gabimarti.github.io/?mode=pc) · [`?mode=shell`](https://gabimarti.github.io/?mode=shell) · [`#avatar`](https://gabimarti.github.io/#avatar) · [`#repos`](https://gabimarti.github.io/#repos)
 
@@ -21,7 +21,9 @@ Direct links: [`?mode=pc`](https://gabimarti.github.io/?mode=pc) · [`?mode=shel
 
 | File | Purpose |
 |---|---|
-| `index.html` | Content (quick view, also what search engines index) |
+| `index.html` | Content (quick view, also what search engines index); the Spanish page at `/` |
+| `en/index.html`, `ca/index.html` | English and Catalan pages: the same content with their own `<head>` (title, description, canonical, `hreflang`, Open Graph, JSON-LD). Generated from `index.html`, never edited by hand |
+| `sitemap.xml` | The 3 language URLs with their `hreflang` alternates, announced in `robots.txt` |
 | `style.css` | Styles |
 | `site.js` | Language, theme, boot menu and modes |
 | `shell.js` | Interactive shell, loaded on demand |

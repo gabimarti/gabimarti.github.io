@@ -193,7 +193,7 @@ on their own on the right day, if this PC's clock agrees.`;
 
   // ---------- LOCKED.COM: a real-looking image built from vault.json (key and XORed bytes) ----------
   let vaultP = null;
-  const vault = () => vaultP ||= fetch("vault.json", { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).catch(e => { vaultP = null; throw e; });
+  const vault = () => vaultP ||= fetch("/vault.json", { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).catch(e => { vaultP = null; throw e; });
   const SEG = "1F2A";
   async function lockedImage() {                            // [bytes at 0100.., code listing]
     const { key, enc } = (await vault()).dos, k = hx(key);
